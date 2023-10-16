@@ -13,7 +13,7 @@ find_package(glfw3 CONFIG REQUIRED)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "src/*.hpp")
 
-include_directories("src/")
+include_directories("src/**")
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

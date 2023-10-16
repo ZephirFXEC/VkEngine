@@ -10,8 +10,10 @@ namespace vke {
 
 class VkWindow {
   public:
-    VkWindow(int height, int width, std::string name);
+    VkWindow(int width, int height, std::string name);
     ~VkWindow();
+
+    bool shouldClose() { return glfwWindowShouldClose(window); }
 
   private:
     void initWindow();

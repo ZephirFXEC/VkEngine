@@ -2,7 +2,7 @@
 
 namespace vke {
 
-VkWindow::VkWindow(int height, int width, std::string name)
+VkWindow::VkWindow(int width, int height, std::string name)
     : height(height), width(width), name(name) {
     initWindow();
 }
@@ -18,6 +18,6 @@ void VkWindow::initWindow() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    window = glfwCreateWindow(height, width, name.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 }
 } // namespace vke
