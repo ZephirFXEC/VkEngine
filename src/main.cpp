@@ -6,11 +6,11 @@
 #include <stdexcept>
 
 int main(int argc, char **argv) {
-    vke::App app{};
+    vke::App app{}; // create app
 
-    try {
+    try { // try to run app
         app.run();
-    } catch (const std::exception &e) {
+    } catch (const std::exception &e) { // catch exceptions
         std::cerr << e.what() << "\n";
         return EXIT_FAILURE;
     }

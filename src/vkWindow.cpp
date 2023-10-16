@@ -8,15 +8,16 @@ VkWindow::VkWindow(int width, int height, std::string name)
 }
 
 VkWindow::~VkWindow() {
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    glfwDestroyWindow(window); // destroy window
+    glfwTerminate();           // terminate GLFW
 }
 
 void VkWindow::initWindow() {
-    glfwInit();
+    glfwInit(); // initialize GLFW
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_CLIENT_API,
+                   GLFW_NO_API); // do not create an OpenGL context
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // disable window resizing
 
     window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 }

@@ -13,7 +13,7 @@ class App {
     void run();
 
   private:
-    VkWindow vkWindow{WIDTH, HEIGHT, "VkEngine"};
+    VkWindow vkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 };
 
 } // namespace vke
