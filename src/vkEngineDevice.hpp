@@ -39,11 +39,11 @@ class VkEngineDevice {
     VkEngineDevice(VkEngineDevice &&) = delete;
     VkEngineDevice &operator=(VkEngineDevice &&) = delete;
 
-    [[nodiscard]] VkCommandPool getCommandPool() const { return commandPool; }
-    [[nodiscard]] VkDevice device() const { return device_; }
-    [[nodiscard]] VkSurfaceKHR surface() const { return surface_; }
-    [[nodiscard]] VkQueue graphicsQueue() const { return graphicsQueue_; }
-    [[nodiscard]] VkQueue presentQueue() const { return presentQueue_; }
+    const VkCommandPool& getCommandPool() const { return commandPool; }
+    const VkDevice& device() const { return device_; }
+    const VkSurfaceKHR& surface() const { return surface_; }
+    const VkQueue& graphicsQueue() const { return graphicsQueue_; }
+    const VkQueue& presentQueue() const { return presentQueue_; }
 
     SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

@@ -15,7 +15,6 @@ namespace vke {
 struct PipelineConfigInfo {
     VkViewport viewport{};
     VkRect2D scissor{};
-    VkPipelineViewportStateCreateInfo viewportInfo{};
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
     VkPipelineMultisampleStateCreateInfo multisampleInfo{};
@@ -41,7 +40,7 @@ class VkEnginePipeline {
   private:
     static std::vector<char> readFile(const std::string &filename);
     void createGraphicsPipeline(const std::string &vertShader, const std::string &fragShader,
-                                       const PipelineConfigInfo &configInfo);
+                                const PipelineConfigInfo &configInfo);
 
     void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
 

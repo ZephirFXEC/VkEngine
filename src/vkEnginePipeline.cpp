@@ -26,7 +26,7 @@ VkEnginePipeline::~VkEnginePipeline() {
 
 PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height) {
 
-    const PipelineConfigInfo configInfo{
+    const PipelineConfigInfo configInfo {
         .viewport{
             .x = 0.0f,
             .y = 0.0f,
@@ -41,13 +41,6 @@ PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(uint32_t width, u
             .extent = {width, height},
         },
 
-        .viewportInfo{
-            .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-            .viewportCount = 1,
-            .pViewports = &configInfo.viewport,
-            .scissorCount = 1,
-            .pScissors = &configInfo.scissor,
-        },
 
         .inputAssemblyInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -145,7 +138,6 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
     assert(configInfo.renderPass != nullptr &&
            "Cannot create graphics pipeline:: no renderPass provided in configInfo");
 
-
     const auto vertShaderCode = readFile(vertShader);
     const auto fragShaderCode = readFile(fragShader);
 
@@ -178,23 +170,29 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
         .pVertexAttributeDescriptions = nullptr,
     };
 
-    const VkGraphicsPipelineCreateInfo pipelineInfo{
+    VkPipelineViewportStateCreateInfo viewportInfo {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .viewportCount = 1,
+        .pViewports = &configInfo.viewport,
+        .scissorCount = 1,
+        .pScissors = &configInfo.scissor,
+    };
+
+    const VkGraphicsPipelineCreateInfo pipelineInfo {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .stageCount = 2,
         .pStages = shaderStages,
         .pVertexInputState = &vertexInputInfo,
         .pInputAssemblyState = &configInfo.inputAssemblyInfo,
-        .pViewportState = &configInfo.viewportInfo,
+        .pViewportState = &viewportInfo,
         .pRasterizationState = &configInfo.rasterizationInfo,
         .pMultisampleState = &configInfo.multisampleInfo,
         .pDepthStencilState = &configInfo.depthStencilInfo,
         .pColorBlendState = &configInfo.colorBlendInfo,
         .pDynamicState = nullptr,
-
         .layout = configInfo.pipelineLayout,
         .renderPass = configInfo.renderPass,
         .subpass = configInfo.subpass,
-
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = -1,
     };

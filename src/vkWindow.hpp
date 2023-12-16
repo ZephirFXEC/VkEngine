@@ -18,6 +18,7 @@ class VkWindow {
 
     bool shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
     void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) const;
+    VkExtent2D getExtent() const { return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)}; }
 
   private:
     void initWindow(); // initialize GLFW window

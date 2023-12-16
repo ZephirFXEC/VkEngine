@@ -67,21 +67,23 @@ void VkEngineDevice::createInstance() {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
-    VkApplicationInfo appInfo = {};
-    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    appInfo.pApplicationName = "LittleVulkanEngine App";
-    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.pEngineName = "No Engine";
-    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
-
-    VkInstanceCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
+    constexpr VkApplicationInfo appInfo = {
+        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pApplicationName = "VkEngine",
+        .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+        .pEngineName = "No Engine",
+        .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+        .apiVersion = VK_API_VERSION_1_0,
+    };
 
     const auto extensions = getRequiredExtensions();
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
+
+    VkInstanceCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pApplicationInfo = &appInfo,
+        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
+        .ppEnabledExtensionNames = extensions.data(),
+    };
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     if (enableValidationLayers) {
@@ -128,33 +130,36 @@ void VkEngineDevice::pickPhysicalDevice() {
 }
 
 void VkEngineDevice::createLogicalDevice() {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    const QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
+    const std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily, indices.presentFamily};
 
     float queuePriority = 1.0f;
-    for (uint32_t queueFamily : uniqueQueueFamilies) {
-        VkDeviceQueueCreateInfo queueCreateInfo = {};
-        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueCreateInfo.queueFamilyIndex = queueFamily;
-        queueCreateInfo.queueCount = 1;
-        queueCreateInfo.pQueuePriorities = &queuePriority;
+    for (const uint32_t queueFamily : uniqueQueueFamilies) {
+
+        VkDeviceQueueCreateInfo queueCreateInfo{
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = queueFamily,
+            .queueCount = 1,
+            .pQueuePriorities = &queuePriority,
+        };
+
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    VkPhysicalDeviceFeatures deviceFeatures = {};
-    deviceFeatures.samplerAnisotropy = VK_TRUE;
+    const VkPhysicalDeviceFeatures deviceFeatures = {
+        .samplerAnisotropy = VK_TRUE,
+    };
 
-    VkDeviceCreateInfo createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-    createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+    VkDeviceCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size()),
+        .pQueueCreateInfos = queueCreateInfos.data(),
+        .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
+        .ppEnabledExtensionNames = deviceExtensions.data(),
+        .pEnabledFeatures = &deviceFeatures,
+    };
 
     // might not really be necessary anymore because device specific validation
     // layers have been deprecated
@@ -176,11 +181,13 @@ void VkEngineDevice::createLogicalDevice() {
 void VkEngineDevice::createCommandPool() {
     const QueueFamilyIndices queueFamilyIndices = findPhysicalQueueFamilies();
 
-    VkCommandPoolCreateInfo poolInfo = {};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily;
-    poolInfo.flags =
-        VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    const VkCommandPoolCreateInfo poolInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .flags =
+            VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = queueFamilyIndices.graphicsFamily,
+
+    };
 
     if (vkCreateCommandPool(device_, &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
         throw std::runtime_error("failed to create command pool!");
@@ -432,7 +439,7 @@ VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() {
     VkCommandBuffer commandBuffer = nullptr;
     vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
 
-    const VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+    constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
                                              .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
 
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
@@ -453,7 +460,7 @@ void VkEngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
 }
 
 void VkEngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    const VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
     const VkBufferCopy copyRegion{.srcOffset = 0, // Optional
                                   .dstOffset = 0, // Optional
@@ -466,7 +473,7 @@ void VkEngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDevice
 
 void VkEngineDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width,
                                        uint32_t height, uint32_t layerCount) {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    const VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
     const VkBufferImageCopy region{.bufferOffset = 0,
                                    .bufferRowLength = 0,

@@ -15,10 +15,7 @@ file(GLOB_RECURSE HEADERS "src/*.hpp")
 
 include_directories("src/**")
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS}
-        src/vkEnginePipeline.cpp
-        src/vkEnginePipeline.hpp
-        src/vkEngineDevice.cpp)
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE embree Vulkan::Vulkan glfw) 
