@@ -13,16 +13,20 @@ class VkWindow {
     VkWindow(int width, int height, std::string name); // constructor
     ~VkWindow();                                       // destructor
 
-    bool shouldClose() { return glfwWindowShouldClose(window); }
+    VkWindow(const VkWindow &) = delete;            // copy constructor
+    VkWindow &operator=(const VkWindow &) = delete; // copy assignment operator
+
+    bool shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
+    void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) const;
 
   private:
     void initWindow(); // initialize GLFW window
 
-    const int height;
-    const int width;
+    const int mHeight = 0;
+    const int mWidth = 0;
 
-    std::string name;   // window name
-    GLFWwindow *window; // pointer to a GLFWwindow object
+    std::string mName{};   // window name
+    GLFWwindow *pWindow{}; // pointer to a GLFWwindow object
 };
 
 } // namespace vke

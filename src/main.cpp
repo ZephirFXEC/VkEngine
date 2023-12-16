@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 int main(int argc, char **argv) {
-    vke::App app{}; // create app
+    const vke::App app{}; // create app
 
     try { // try to run app
         app.run();
