@@ -23,3 +23,5 @@ Checks: "*,
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle: llvm
+
+# Path: .clang-format
