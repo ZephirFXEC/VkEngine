@@ -1,7 +1,5 @@
 #include "vkWindow.hpp"
-
 #include <stdexcept>
-#include <utility>
 
 namespace vke {
 

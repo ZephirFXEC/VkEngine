@@ -23,8 +23,10 @@ class App {
     VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
 
     VkEnginePipeline mVkPipeline{
-        mVkDevice, "../shaders/simple_shader.vert.spv",
+        mVkDevice, ""
+                   "../shaders/simple_shader.vert.spv",
         "../shaders/simple_shader.frag.spv",
+
         VkEnginePipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)};
 };
 

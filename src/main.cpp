@@ -5,7 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 
-int main(int argc, char **argv) {
+int main() {
     const vke::App app{}; // create app
 
     try { // try to run app

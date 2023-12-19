@@ -1,9 +1,6 @@
-//
-// Created by zphrfx on 16/12/2023.
-//
-
 #include "vkEnginePipeline.hpp"
 
+// std
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -26,7 +23,7 @@ VkEnginePipeline::~VkEnginePipeline() {
 
 PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height) {
 
-    const PipelineConfigInfo configInfo {
+    const PipelineConfigInfo configInfo{
         .viewport{
             .x = 0.0f,
             .y = 0.0f,
@@ -40,7 +37,6 @@ PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(uint32_t width, u
             .offset = {0, 0},
             .extent = {width, height},
         },
-
 
         .inputAssemblyInfo{
             .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -144,23 +140,23 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
     createShaderModule(vertShaderCode, &pVertShaderModule);
     createShaderModule(fragShaderCode, &pFragShaderModule);
 
-    VkPipelineShaderStageCreateInfo shaderStages[2]{
-        {.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-         .pNext = nullptr,
-         .flags = 0,
-         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-         .module = pVertShaderModule,
-         .pName = "main",
-         .pSpecializationInfo = nullptr
+    std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{
+        {{.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+          .pNext = nullptr,
+          .flags = 0,
+          .stage = VK_SHADER_STAGE_VERTEX_BIT,
+          .module = pVertShaderModule,
+          .pName = "main",
+          .pSpecializationInfo = nullptr
 
-        },
-        {.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-         .pNext = nullptr,
-         .flags = 0,
-         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-         .module = pFragShaderModule,
-         .pName = "main",
-         .pSpecializationInfo = nullptr}};
+         },
+         {.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+          .pNext = nullptr,
+          .flags = 0,
+          .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+          .module = pFragShaderModule,
+          .pName = "main",
+          .pSpecializationInfo = nullptr}}};
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -170,7 +166,7 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
         .pVertexAttributeDescriptions = nullptr,
     };
 
-    VkPipelineViewportStateCreateInfo viewportInfo {
+    VkPipelineViewportStateCreateInfo viewportInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .viewportCount = 1,
         .pViewports = &configInfo.viewport,
@@ -178,10 +174,10 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
         .pScissors = &configInfo.scissor,
     };
 
-    const VkGraphicsPipelineCreateInfo pipelineInfo {
+    const VkGraphicsPipelineCreateInfo pipelineInfo{
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .stageCount = 2,
-        .pStages = shaderStages,
+        .pStages = shaderStages.data(),
         .pVertexInputState = &vertexInputInfo,
         .pInputAssemblyState = &configInfo.inputAssemblyInfo,
         .pViewportState = &viewportInfo,
@@ -199,7 +195,7 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
 
     if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
                                   &pGraphicsPipeline) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create graphics pipeline!");
+        throw std::runtime_error("Failed to create graphics pipeline")  ;
     }
 }
 

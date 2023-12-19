@@ -30,13 +30,13 @@ VkEngineSwapChain::~VkEngineSwapChain() {
     swapChain = nullptr;
   }
 
-  for (int i = 0; i < depthImages.size(); i++) {
+  for (size_t i = 0; i < depthImages.size(); i++) {
     vkDestroyImageView(device.device(), depthImageViews[i], nullptr);
     vkDestroyImage(device.device(), depthImages[i], nullptr);
     vkFreeMemory(device.device(), depthImageMemorys[i], nullptr);
   }
 
-  for (auto framebuffer : swapChainFramebuffers) {
+  for (auto *framebuffer : swapChainFramebuffers) {
     vkDestroyFramebuffer(device.device(), framebuffer, nullptr);
   }
 
@@ -214,7 +214,7 @@ void VkEngineSwapChain::createRenderPass() {
   depthAttachmentRef.attachment = 1;
   depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentDescription colorAttachment = {};
+  VkAttachmentDescription colorAttachment{};
   colorAttachment.format = getSwapChainImageFormat();
   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
   colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -224,17 +224,17 @@ void VkEngineSwapChain::createRenderPass() {
   colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-  VkAttachmentReference colorAttachmentRef = {};
+  VkAttachmentReference colorAttachmentRef{};
   colorAttachmentRef.attachment = 0;
   colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  VkSubpassDescription subpass = {};
+  VkSubpassDescription subpass{};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachmentRef;
   subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-  VkSubpassDependency dependency = {};
+  VkSubpassDependency dependency{};
   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
   dependency.srcAccessMask = 0;
   dependency.srcStageMask =
@@ -245,8 +245,8 @@ void VkEngineSwapChain::createRenderPass() {
   dependency.dstAccessMask =
       VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-  std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
-  VkRenderPassCreateInfo renderPassInfo = {};
+  const std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+  VkRenderPassCreateInfo renderPassInfo{};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
   renderPassInfo.pAttachments = attachments.data();
@@ -286,14 +286,14 @@ void VkEngineSwapChain::createFramebuffers() {
 }
 
 void VkEngineSwapChain::createDepthResources() {
-  VkFormat depthFormat = findDepthFormat();
-  VkExtent2D swapChainExtent = getSwapChainExtent();
+  const VkFormat depthFormat = findDepthFormat();
+  const VkExtent2D swapChainExtent = getSwapChainExtent();
 
   depthImages.resize(imageCount());
   depthImageMemorys.resize(imageCount());
   depthImageViews.resize(imageCount());
 
-  for (int i = 0; i < depthImages.size(); i++) {
+  for (size_t i = 0; i < depthImages.size(); i++) {
     VkImageCreateInfo imageInfo{};
     imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
     imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -373,7 +373,7 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(
     const std::vector<VkPresentModeKHR> &availablePresentModes) {
   for (const auto &availablePresentMode : availablePresentModes) {
     if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-      std::cout << "Present mode: Mailbox" << std::endl;
+      std::cout << "Present mode: Mailbox" << '\n';
       return availablePresentMode;
     }
   }
@@ -385,7 +385,7 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(
   //   }
   // }
 
-  std::cout << "Present mode: V-Sync" << std::endl;
+  std::cout << "Present mode: V-Sync" << '\n';
   return VK_PRESENT_MODE_FIFO_KHR;
 }
 
