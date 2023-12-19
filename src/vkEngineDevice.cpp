@@ -73,25 +73,19 @@ void VkEngineDevice::createInstance() {
         .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
         .pEngineName = "No Engine",
         .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = VK_API_VERSION_1_0,
+        .apiVersion = VK_API_VERSION_1_2,
     };
 
     auto extensions = getRequiredExtensions();
-#ifdef __APPLE__
-    extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-    extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-#endif
 
     VkInstanceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
         .pApplicationInfo = &appInfo,
         .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
         .ppEnabledExtensionNames = extensions.data(),
     };
 
-#ifdef __APPLE__
-    createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-#endif
 
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     if (enableValidationLayers) {
@@ -156,7 +150,7 @@ void VkEngineDevice::createLogicalDevice() {
         queueCreateInfos.push_back(queueCreateInfo);
     }
 
-    const VkPhysicalDeviceFeatures deviceFeatures = {
+    constexpr VkPhysicalDeviceFeatures deviceFeatures = {
         .samplerAnisotropy = VK_TRUE,
     };
 
@@ -273,7 +267,7 @@ bool VkEngineDevice::checkValidationLayerSupport() {
     return true;
 }
 
-std::vector<const char *> VkEngineDevice::getRequiredExtensions() {
+std::vector<const char *> VkEngineDevice::getRequiredExtensions() const {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
@@ -282,6 +276,11 @@ std::vector<const char *> VkEngineDevice::getRequiredExtensions() {
     if (enableValidationLayers) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
+
+#if __APPLE__
+    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif
 
     return extensions;
 }
@@ -447,8 +446,9 @@ VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() {
     VkCommandBuffer commandBuffer = nullptr;
     vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
 
-    constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
+    constexpr VkCommandBufferBeginInfo beginInfo{
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
 
     vkBeginCommandBuffer(commandBuffer, &beginInfo);
     return commandBuffer;

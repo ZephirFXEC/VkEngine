@@ -112,7 +112,7 @@ std::vector<char> VkEnginePipeline::readFile(const std::string &filename) {
     std::ifstream file{filename, std::ios::ate | std::ios::binary};
 
     if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!" + filename);
+        throw std::runtime_error("failed to open file : " + filename);
     }
 
     const size_t fileSize = file.tellg();
@@ -124,15 +124,18 @@ std::vector<char> VkEnginePipeline::readFile(const std::string &filename) {
 
     return buffer;
 }
+void VkEnginePipeline::createRenderPass(const PipelineConfigInfo &configInfo) {
+
+}
 
 void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
                                               const std::string &fragShader,
                                               const PipelineConfigInfo &configInfo) {
 
-    assert(configInfo.pipelineLayout != nullptr &&
-           "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
-    assert(configInfo.renderPass != nullptr &&
-           "Cannot create graphics pipeline:: no renderPass provided in configInfo");
+    assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
+           "Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
+    assert(configInfo.renderPass != VK_NULL_HANDLE &&
+           "Cannot create graphics pipeline: no renderPass provided in configInfo");
 
     const auto vertShaderCode = readFile(vertShader);
     const auto fragShaderCode = readFile(fragShader);
@@ -183,24 +186,25 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
         .pViewportState = &viewportInfo,
         .pRasterizationState = &configInfo.rasterizationInfo,
         .pMultisampleState = &configInfo.multisampleInfo,
-        .pDepthStencilState = &configInfo.depthStencilInfo,
         .pColorBlendState = &configInfo.colorBlendInfo,
+        .pDepthStencilState = &configInfo.depthStencilInfo,
         .pDynamicState = nullptr,
         .layout = configInfo.pipelineLayout,
         .renderPass = configInfo.renderPass,
         .subpass = configInfo.subpass,
-        .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = -1,
+        .basePipelineHandle = VK_NULL_HANDLE,
     };
 
-    if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+    if (vkCreateGraphicsPipelines(mDevice.device(),VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
                                   &pGraphicsPipeline) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create graphics pipeline")  ;
+
+        throw std::runtime_error("Failed to create graphics pipeline");
     }
 }
 
 void VkEnginePipeline::createShaderModule(const std::vector<char> &code,
-                                          VkShaderModule *shaderModule) {
+                                          VkShaderModule *shaderModule) const {
     const VkShaderModuleCreateInfo createInfo{.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                                               .codeSize = code.size(),
                                               .pCode =

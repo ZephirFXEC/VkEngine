@@ -6,28 +6,40 @@
 #include "vkEngineSwapChain.hpp"
 #include "vkWindow.hpp"
 
+#include <memory>
+
 namespace vke {
 
 class App {
   public:
+    App();
+    ~App();
+
+    App(const App &) = delete;
+    App &operator=(const App &) = delete;
+
     static constexpr int HEIGHT = 600;
     static constexpr int WIDTH = 800;
 
     void run() const;
 
   private:
+    void createPipelineLayout();
+    void createPipeline();
+    void createCommandBuffers();
+    void drawFrame();
+
     VkWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
     VkEngineDevice mVkDevice{mVkWindow};
 
     VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
 
-    VkEnginePipeline mVkPipeline{
-        mVkDevice, ""
-                   "../shaders/simple_shader.vert.spv",
-        "../shaders/simple_shader.frag.spv",
+    std::unique_ptr<VkEnginePipeline> mVkPipeline{nullptr};
 
-        VkEnginePipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)};
+    VkPipelineLayout mVkPipelineLayout{};
+
+    std::vector<VkCommandBuffer> mVkCommandBuffers{};
 };
 
 } // namespace vke

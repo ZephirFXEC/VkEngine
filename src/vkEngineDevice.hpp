@@ -7,9 +7,9 @@
 namespace vke {
 
 struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
+    VkSurfaceCapabilitiesKHR capabilities{};
+    std::vector<VkSurfaceFormatKHR> formats{};
+    std::vector<VkPresentModeKHR> presentModes{};
 };
 
 struct QueueFamilyIndices {
@@ -39,11 +39,11 @@ class VkEngineDevice {
     VkEngineDevice(VkEngineDevice &&) = delete;
     VkEngineDevice &operator=(VkEngineDevice &&) = delete;
 
-    const VkCommandPool& getCommandPool() const { return commandPool; }
-    const VkDevice& device() const { return device_; }
-    const VkSurfaceKHR& surface() const { return surface_; }
-    const VkQueue& graphicsQueue() const { return graphicsQueue_; }
-    const VkQueue& presentQueue() const { return presentQueue_; }
+    const VkCommandPool &getCommandPool() const { return commandPool; }
+    const VkDevice &device() const { return device_; }
+    const VkSurfaceKHR &surface() const { return surface_; }
+    const VkQueue &graphicsQueue() const { return graphicsQueue_; }
+    const VkQueue &presentQueue() const { return presentQueue_; }
 
     SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -79,7 +79,7 @@ class VkEngineDevice {
 
     // helper functions
     bool isDeviceSuitable(VkPhysicalDevice device);
-    std::vector<const char *> getRequiredExtensions();
+    std::vector<const char *> getRequiredExtensions() const;
     bool checkValidationLayerSupport();
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
@@ -87,22 +87,20 @@ class VkEngineDevice {
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
-    VkInstance instance{};
-    VkDebugUtilsMessengerEXT debugMessenger{};
+    VkInstance instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkWindow &window;
-    VkCommandPool commandPool{};
+    VkCommandPool commandPool = VK_NULL_HANDLE;
 
-    VkDevice device_{};
-    VkSurfaceKHR surface_{};
-    VkQueue graphicsQueue_{};
-    VkQueue presentQueue_{};
+    VkDevice device_ = VK_NULL_HANDLE;
+    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+    VkQueue graphicsQueue_ = VK_NULL_HANDLE;
+    VkQueue presentQueue_ = VK_NULL_HANDLE;
 
     const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-    const std::vector<const char *> deviceExtensions = {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        "VK_KHR_portability_subset"
-        };
+    const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+                                                        "VK_KHR_portability_subset"};
 };
 
 } // namespace vke

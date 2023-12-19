@@ -13,9 +13,6 @@
 namespace vke {
 
 struct PipelineConfigInfo {
-
-    PipelineConfigInfo() = default;
-
     VkViewport viewport{};
     VkRect2D scissor{};
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
@@ -24,8 +21,8 @@ struct PipelineConfigInfo {
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
     VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-    VkPipelineLayout pipelineLayout = nullptr;
-    VkRenderPass renderPass = nullptr;
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     uint32_t subpass = 0;
 };
 
@@ -43,10 +40,11 @@ class VkEnginePipeline {
   private:
     static std::vector<char> readFile(const std::string &filename);
 
+    void createRenderPass(const PipelineConfigInfo &configInfo);
     void createGraphicsPipeline(const std::string &vertShader, const std::string &fragShader,
                                 const PipelineConfigInfo &configInfo);
 
-    void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule);
+    void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule) const;
 
     VkEngineDevice &mDevice;
     VkPipeline pGraphicsPipeline{};
