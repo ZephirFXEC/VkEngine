@@ -5,6 +5,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <vulkan/vulkan_structs.hpp>
 
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice &device, const std::string &vertShader,

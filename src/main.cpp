@@ -3,7 +3,7 @@
 // std
 #include <cstdlib>
 #include <iostream>
-#include <stdexcept>
+
 
 int main() {
     vke::App app{}; // create app

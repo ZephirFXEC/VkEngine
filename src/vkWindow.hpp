@@ -1,7 +1,8 @@
 #ifndef VKWINDOW
 #define VKWINDOW
 
-#define GLFW_INCLUDE_VULKAN
+// vulkan headers
+#include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
 
 #include <string>

@@ -11,11 +11,21 @@ namespace vke {
 // local callback functions
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL
-debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT /*messageSeverity*/,
-              VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
-              const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void * /*pUserData*/) {
-    std::cerr << "validation layer: " << pCallbackData->pMessage << '\n';
-    return VK_FALSE;
+debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+              VkDebugUtilsMessageTypeFlagsEXT   /*messageType*/,
+              const VkDebugUtilsMessengerCallbackDataEXT *callback_data, void * /*pUserData*/) {
+
+	// Log debug message
+	if ((message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) != 0)
+	{
+		std::cerr << "WARNING: " << callback_data->pMessage << "\n";
+
+	}
+	else if ((message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) != 0)
+	{
+		std::cerr << "ERROR: " << callback_data->pMessage << "\n";
+	}
+	return VK_FALSE;
 }
 } // namespace
 
@@ -71,26 +81,24 @@ void VkEngineDevice::createInstance() {
         throw std::runtime_error("validation layers requested, but not available!");
     }
 
-    constexpr VkApplicationInfo appInfo = {
-        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-        .pApplicationName = "VkEngine",
-        .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-        .pEngineName = "No Engine",
-        .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-        .apiVersion = VK_API_VERSION_1_2,
-    };
 
-    auto extensions = getRequiredExtensions();
+	vk::ApplicationInfo appInfo{};
+	appInfo.pApplicationName = "VkEngine";
+	appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.pEngineName = "VkEngine";
+	appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+	appInfo.apiVersion = VK_API_VERSION_1_2;
 
-    VkInstanceCreateInfo createInfo = {
-        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-        .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
-        .pApplicationInfo = &appInfo,
-        .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-        .ppEnabledExtensionNames = extensions.data(),
-    };
 
-    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+    const auto extensions = getRequiredExtensions();
+
+	vk::InstanceCreateInfo createInfo{};
+	createInfo.pApplicationInfo = &appInfo;
+	createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+	createInfo.ppEnabledExtensionNames = extensions.data();
+	createInfo.flags = vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
+
+    vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo;
     if (enableValidationLayers) {
         createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayers.size());
         createInfo.ppEnabledLayerNames = mValidationLayers.data();
@@ -102,9 +110,11 @@ void VkEngineDevice::createInstance() {
         createInfo.pNext = nullptr;
     }
 
-    if (vkCreateInstance(&createInfo, nullptr, &pInstance) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create instance!");
-    }
+	pInstance = vk::createInstance(createInfo);
+
+	if(pInstance == nullptr) {
+		throw std::runtime_error("failed to create instance!");
+	}
 
     hasGflwRequiredInstanceExtensions();
 }
@@ -116,7 +126,7 @@ void VkEngineDevice::pickPhysicalDevice() {
         throw std::runtime_error("failed to find GPUs with Vulkan support!");
     }
     std::cout << "Device count: " << deviceCount << '\n';
-    auto *devices = new VkPhysicalDevice[deviceCount];
+    auto *devices = new vk::PhysicalDevice[deviceCount];
     vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices);
 
     for (uint32_t i = 0; i < deviceCount; ++i) {
@@ -130,7 +140,8 @@ void VkEngineDevice::pickPhysicalDevice() {
         throw std::runtime_error("failed to find a suitable GPU!");
     }
 
-    vkGetPhysicalDeviceProperties(pPhysicalDevice, &mProperties);
+	pPhysicalDevice.getProperties(&mProperties);
+
     std::cout << "physical device: " << mProperties.deviceName << '\n';
     delete[] devices;
 }
@@ -252,7 +263,7 @@ void VkEngineDevice::setupDebugMessenger() {
     populateDebugMessengerCreateInfo(createInfo);
     if (CreateDebugUtilsMessengerEXT(pInstance, &createInfo, nullptr, &pDebugMessenger) !=
         VK_SUCCESS) {
-        throw std::runtime_error("failed to set up debug messenger!");
+        throw std::runtime_error(	"failed to set up debug messenger!");
     }
 }
 

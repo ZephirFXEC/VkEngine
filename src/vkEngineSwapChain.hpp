@@ -22,11 +22,11 @@ class VkEngineSwapChain {
     VkEngineSwapChain(const VkEngineSwapChain &) = delete;
     void operator=(const VkEngineSwapChain &) = delete;
 
-    [[nodiscard]] const VkFramebuffer &getFrameBuffer(const uint32_t index) const { return ppSwapChainFramebuffers[index]; }
-    [[nodiscard]] const VkRenderPass &getRenderPass() const { return pRenderPass; }
-    [[nodiscard]] const VkImageView &getImageView(const uint32_t index) const { return ppSwapChainImageViews[index]; }
-    [[nodiscard]] const VkFormat &getSwapChainImageFormat() const { return mSwapChainImageFormat; }
-    [[nodiscard]] const VkExtent2D &getSwapChainExtent() const { return mSwapChainExtent; }
+    [[nodiscard]] const vk::Framebuffer &getFrameBuffer(const uint32_t index) const { return ppSwapChainFramebuffers[index]; }
+    [[nodiscard]] const vk::RenderPass &getRenderPass() const { return pRenderPass; }
+    [[nodiscard]] const vk::ImageView &getImageView(const uint32_t index) const { return ppSwapChainImageViews[index]; }
+    [[nodiscard]] const vk::Format &getSwapChainImageFormat() const { return mSwapChainImageFormat; }
+    [[nodiscard]] const vk::Extent2D &getSwapChainExtent() const { return mSwapChainExtent; }
 
     [[nodiscard]] uint32_t width() const { return mSwapChainExtent.width; }
     [[nodiscard]] uint32_t height() const { return mSwapChainExtent.height; }
@@ -38,8 +38,8 @@ class VkEngineSwapChain {
     }
 
     [[nodiscard]] VkFormat findDepthFormat() const;
-    VkResult acquireNextImage(uint32_t *imageIndex) const;
-    VkResult submitCommandBuffers(const VkCommandBuffer *buffers, const uint32_t *imageIndex);
+    vk::Result acquireNextImage(uint32_t *imageIndex) const;
+    vk::Result submitCommandBuffers(const vk::CommandBuffer *buffers, const uint32_t *imageIndex);
 
   private:
     void init();
@@ -51,35 +51,35 @@ class VkEngineSwapChain {
     void createSyncObjects();
 
     // Helper functions
-    static VkSurfaceFormatKHR
-    chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
-    static VkPresentModeKHR
-    chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
-    [[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
+    static vk::SurfaceFormatKHR
+    chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &availableFormats);
+    static vk::PresentModeKHR
+    chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &availablePresentModes);
+    [[nodiscard]] vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities) const;
 
-    VkFormat mSwapChainImageFormat{};
-    VkExtent2D mSwapChainExtent{};
+    vk::Format mSwapChainImageFormat{};
+    vk::Extent2D mSwapChainExtent{};
 
-    VkFramebuffer* ppSwapChainFramebuffers = VK_NULL_HANDLE;
-    VkRenderPass pRenderPass = VK_NULL_HANDLE;
+    vk::Framebuffer* ppSwapChainFramebuffers = VK_NULL_HANDLE;
+    vk::RenderPass pRenderPass = VK_NULL_HANDLE;
 
-    std::vector<VkImage> swapChainImages{};
-    std::vector<VkImage> depthImages{};
+    std::vector<vk::Image> swapChainImages{};
+    std::vector<vk::Image> depthImages{};
 
-    VkDeviceMemory* ppDepthImageMemorys = VK_NULL_HANDLE;
-    VkImageView* ppDepthImageViews = VK_NULL_HANDLE;
-    VkImageView* ppSwapChainImageViews = VK_NULL_HANDLE;
+    vk::DeviceMemory* ppDepthImageMemorys = VK_NULL_HANDLE;
+    vk::ImageView* ppDepthImageViews = VK_NULL_HANDLE;
+    vk::ImageView* ppSwapChainImageViews = VK_NULL_HANDLE;
 
     VkEngineDevice &device;
-    VkExtent2D windowExtent{};
+    vk::Extent2D windowExtent{};
 
-    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+    vk::SwapchainKHR swapChain = VK_NULL_HANDLE;
     std::shared_ptr<VkEngineSwapChain> oldSwapChain = nullptr;
 
-    VkSemaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
-    VkSemaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;
-    VkFence* ppInFlightFences = VK_NULL_HANDLE;
-    VkFence* ppImagesInFlight = VK_NULL_HANDLE; // no delete[] idk why but it works
+    vk::Semaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
+    vk::Semaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;
+    vk::Fence* ppInFlightFences = VK_NULL_HANDLE;
+    vk::Fence* ppImagesInFlight = VK_NULL_HANDLE; // no delete[] idk why but it works
 
     size_t currentFrame = 0;
 };
