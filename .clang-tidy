@@ -7,6 +7,7 @@ Checks: "*,
         -google-*,
         -llvm*,
         -modernize-use-trailing-return-type,
+        -modernize-avoid-c-arrays,
         -zircon-*,
         -readability-identifier-length,
         -readability-magic-numbers,
@@ -19,6 +20,13 @@ Checks: "*,
         -cppcoreguidelines-pro-bounds-pointer-arithmetic,
         -misc-non-private-member-variables-in-classes,
         -bugprone-easily-swappable-parameters,
+        -uppercase-literal-suffix,
+        -hicpp-uppercase-literal-suffix,
+        -cppcoreguidelines-owning-memory,
+        -cppcoreguidelines-avoid-c-arrays,
+        -cppcoreguidelines-avoid-magic-numbers,
+        -readability-uppercase-literal-suffix
+        -cppcoreguidelines-pro-type-reinterpret-cast
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

@@ -16,9 +16,10 @@ class VkWindow {
     VkWindow(const VkWindow &) = delete;            // copy constructor
     VkWindow &operator=(const VkWindow &) = delete; // copy assignment operator
 
-    bool shouldClose() const;
+    [[nodiscard]] bool shouldClose() const;
+    [[nodiscard]] VkExtent2D getExtent() const;
+
     void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) const;
-    VkExtent2D getExtent() const;
 
   private:
     void initWindow(); // initialize GLFW window
