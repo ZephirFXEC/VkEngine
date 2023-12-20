@@ -225,7 +225,7 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice device) const {
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
     return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-           supportedFeatures.samplerAnisotropy;
+           (supportedFeatures.samplerAnisotropy != 0u);
 }
 
 void VkEngineDevice::populateDebugMessengerCreateInfo(

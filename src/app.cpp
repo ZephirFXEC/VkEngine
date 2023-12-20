@@ -45,8 +45,9 @@ void App::createPipeline() {
     pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
     pVkPipeline =
-        std::make_unique<VkEnginePipeline>(mVkDevice, "../shaders/simple_shader.vert.spv",
-                                           "../shaders/simple_shader.frag.spv", pipelineConfig);
+        std::make_unique<VkEnginePipeline>(mVkDevice,
+        	"/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
+        	"/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {
@@ -81,7 +82,7 @@ void App::createCommandBuffers() {
         };
 
         std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = {0.1f, 0.1f, 0.1f, 1.0f};
+        clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
         clearValues[1].depthStencil = {1.0f, 0};
 
         renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());

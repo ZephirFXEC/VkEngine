@@ -33,43 +33,53 @@ void VkEngineSwapChain::init() {
 
 
 VkEngineSwapChain::~VkEngineSwapChain() {
-    for (auto *imageView : swapChainImageViews) {
-        vkDestroyImageView(device.device(), imageView, nullptr);
+    for (size_t i = 0; i < imageCount(); ++i) {
+        vkDestroyImageView(device.device(), ppSwapChainImageViews[i], nullptr);
     }
-    swapChainImageViews.clear();
+
+    ppSwapChainImageViews = nullptr;
 
     if (swapChain != nullptr) {
         vkDestroySwapchainKHR(device.device(), swapChain, nullptr);
         swapChain = nullptr;
     }
 
-    for (size_t i = 0; i < depthImages.size(); i++) {
-        vkDestroyImageView(device.device(), depthImageViews[i], nullptr);
+    for (size_t i = 0; i < depthImages.size(); ++i) {
+        vkDestroyImageView(device.device(), ppDepthImageViews[i], nullptr);
         vkDestroyImage(device.device(), depthImages[i], nullptr);
-        vkFreeMemory(device.device(), depthImageMemorys[i], nullptr);
+        vkFreeMemory(device.device(), ppDepthImageMemorys[i], nullptr);
     }
 
-    for (auto *framebuffer : swapChainFramebuffers) {
-        vkDestroyFramebuffer(device.device(), framebuffer, nullptr);
+	delete[] ppDepthImageViews;
+	delete[] ppDepthImageMemorys;
+
+    for (size_t i = 0; i < imageCount(); ++i) {
+        vkDestroyFramebuffer(device.device(), ppSwapChainFramebuffers[i], nullptr);
     }
 
-    vkDestroyRenderPass(device.device(), renderPass, nullptr);
+    delete[] ppSwapChainFramebuffers;
+
+    vkDestroyRenderPass(device.device(), pRenderPass, nullptr);
 
     // cleanup synchronization objects
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(device.device(), renderFinishedSemaphores[i], nullptr);
-        vkDestroySemaphore(device.device(), imageAvailableSemaphores[i], nullptr);
-        vkDestroyFence(device.device(), inFlightFences[i], nullptr);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+        vkDestroySemaphore(device.device(), ppRenderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(device.device(), ppImageAvailableSemaphores[i], nullptr);
+        vkDestroyFence(device.device(), ppInFlightFences[i], nullptr);
     }
+
+    delete[] ppInFlightFences;
+    delete[] ppRenderFinishedSemaphores;
+    delete[] ppImageAvailableSemaphores;
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t *imageIndex) const {
-    vkWaitForFences(device.device(), 1, &inFlightFences[currentFrame], VK_TRUE,
+    vkWaitForFences(device.device(), 1, &ppInFlightFences[currentFrame], VK_TRUE,
                     std::numeric_limits<uint64_t>::max());
 
     const VkResult result = vkAcquireNextImageKHR(
         device.device(), swapChain, std::numeric_limits<uint64_t>::max(),
-        imageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
+        ppImageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
         VK_NULL_HANDLE, imageIndex);
 
     return result;
@@ -77,44 +87,44 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t *imageIndex) const {
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers,
                                                  const uint32_t *imageIndex) {
-    if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
-        vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
+    if (ppImagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+        vkWaitForFences(device.device(), 1, &ppImagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
     }
 
-    imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
+    ppImagesInFlight[*imageIndex] = ppInFlightFences[currentFrame];
 
-    const VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
-    const VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
-    constexpr VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    const std::array waitSemaphores = {ppImageAvailableSemaphores[currentFrame]};
+    const std::array signalSemaphores = {ppRenderFinishedSemaphores[currentFrame]};
+    constexpr std::array<VkPipelineStageFlags, 1> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
     const VkSubmitInfo submitInfo = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = waitSemaphores,
-        .pWaitDstStageMask = waitStages,
+        .pWaitSemaphores = waitSemaphores.data(),
+        .pWaitDstStageMask = waitStages.data(),
 
         .commandBufferCount = 1,
         .pCommandBuffers = buffers,
 
         .signalSemaphoreCount = 1,
-        .pSignalSemaphores = signalSemaphores,
+        .pSignalSemaphores = signalSemaphores.data(),
     };
 
-    vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
+    vkResetFences(device.device(), 1, &ppInFlightFences[currentFrame]);
 
-    if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) !=
+    if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, ppInFlightFences[currentFrame]) !=
         VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
-    const VkSwapchainKHR swapChains[] = {swapChain};
+    const std::array swapChains = {swapChain};
 
     const VkPresentInfoKHR presentInfo{
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = signalSemaphores,
+        .pWaitSemaphores = signalSemaphores.data(),
         .swapchainCount = 1,
-        .pSwapchains = swapChains,
+        .pSwapchains = swapChains.data(),
         .pImageIndices = imageIndex,
     };
 
@@ -140,7 +150,7 @@ void VkEngineSwapChain::createSwapChain() {
     }
 
     const QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
-    const uint32_t queueFamilyIndices[] = {indices.mGraphicsFamily, indices.mPresentFamily};
+    const std::array queueFamilyIndices = {indices.mGraphicsFamily, indices.mPresentFamily};
 
     const VkSwapchainCreateInfoKHR createInfo{
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -154,7 +164,7 @@ void VkEngineSwapChain::createSwapChain() {
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = indices.mGraphicsFamily == indices.mPresentFamily ? 0u : 2,
         .pQueueFamilyIndices =
-            indices.mGraphicsFamily == indices.mPresentFamily ? nullptr : queueFamilyIndices,
+            indices.mGraphicsFamily == indices.mPresentFamily ? nullptr : queueFamilyIndices.data(),
         .preTransform = swapChainSupport.mCapabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = presentMode,
@@ -174,12 +184,12 @@ void VkEngineSwapChain::createSwapChain() {
     swapChainImages.resize(imageCount);
     vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
 
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
+    mSwapChainImageFormat = surfaceFormat.format;
+    mSwapChainExtent = extent;
 }
 
 void VkEngineSwapChain::createImageViews() {
-    swapChainImageViews.resize(swapChainImages.size());
+    ppSwapChainImageViews = new VkImageView[imageCount()];
 
     for (size_t i = 0; i < swapChainImages.size(); i++) {
 
@@ -187,7 +197,7 @@ void VkEngineSwapChain::createImageViews() {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .image = swapChainImages[i],
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = swapChainImageFormat,
+            .format = mSwapChainImageFormat,
             .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .subresourceRange.baseMipLevel = 0,
             .subresourceRange.levelCount = 1,
@@ -195,7 +205,7 @@ void VkEngineSwapChain::createImageViews() {
             .subresourceRange.layerCount = 1,
         };
 
-        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &swapChainImageViews[i]) !=
+        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &ppSwapChainImageViews[i]) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create texture image view!");
         }
@@ -254,7 +264,7 @@ void VkEngineSwapChain::createRenderPass() {
             VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
     };
 
-    const std::array<VkAttachmentDescription, 2> attachments = {colorAttachment, depthAttachment};
+    const std::array attachments = {colorAttachment, depthAttachment};
 
     const VkRenderPassCreateInfo renderPassInfo{
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -266,51 +276,48 @@ void VkEngineSwapChain::createRenderPass() {
         .pDependencies = &dependency,
     };
 
-    if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
+    if (vkCreateRenderPass(device.device(), &renderPassInfo, nullptr, &pRenderPass) != VK_SUCCESS) {
         throw std::runtime_error("failed to create render pass!");
     }
 }
 
 void VkEngineSwapChain::createFramebuffers() {
-    swapChainFramebuffers.resize(imageCount());
+    ppSwapChainFramebuffers = new VkFramebuffer[imageCount()];
     for (size_t i = 0; i < imageCount(); i++) {
-        std::array<VkImageView, 2> attachments = {swapChainImageViews[i], depthImageViews[i]};
 
-        const VkExtent2D swapChainExtent = getSwapChainExtent();
+        std::array attachments = {ppSwapChainImageViews[i], ppDepthImageViews[i]};
 
         VkFramebufferCreateInfo framebufferInfo{
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .renderPass = renderPass,
+            .renderPass = pRenderPass,
             .attachmentCount = static_cast<uint32_t>(attachments.size()),
             .pAttachments = attachments.data(),
-            .width = swapChainExtent.width,
-            .height = swapChainExtent.height,
+            .width = getSwapChainExtent().width,
+            .height = getSwapChainExtent().height,
             .layers = 1,
         };
 
         if (vkCreateFramebuffer(device.device(), &framebufferInfo, nullptr,
-                                &swapChainFramebuffers[i]) != VK_SUCCESS) {
+                                &ppSwapChainFramebuffers[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
 }
 
 void VkEngineSwapChain::createDepthResources() {
-    const VkFormat depthFormat = findDepthFormat();
-    const VkExtent2D swapChainExtent = getSwapChainExtent();
 
     depthImages.resize(imageCount());
-    depthImageMemorys.resize(imageCount());
-    depthImageViews.resize(imageCount());
+    ppDepthImageMemorys = new VkDeviceMemory[imageCount()];
+    ppDepthImageViews = new VkImageView[imageCount()];
 
     for (size_t i = 0; i < depthImages.size(); i++) {
         VkImageCreateInfo imageInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .imageType = VK_IMAGE_TYPE_2D,
-            .format = depthFormat,
+            .format = findDepthFormat(),
             .extent = {
-                .width = swapChainExtent.width,
-                .height = swapChainExtent.height,
+                .width = getSwapChainExtent().width,
+                .height = getSwapChainExtent().height,
                 .depth = 1
             },
             .mipLevels = 1,
@@ -323,13 +330,13 @@ void VkEngineSwapChain::createDepthResources() {
         };
 
         device.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImages[i],
-                                   depthImageMemorys[i]);
+                                   ppDepthImageMemorys[i]);
 
         VkImageViewCreateInfo viewInfo{
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .image = depthImages[i],
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = depthFormat,
+            .format = findDepthFormat(),
             .subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
             .subresourceRange.baseMipLevel = 0,
             .subresourceRange.levelCount = 1,
@@ -337,7 +344,7 @@ void VkEngineSwapChain::createDepthResources() {
             .subresourceRange.layerCount = 1,
         };
 
-        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &depthImageViews[i]) !=
+        if (vkCreateImageView(device.device(), &viewInfo, nullptr, &ppDepthImageViews[i]) !=
             VK_SUCCESS) {
             throw std::runtime_error("failed to create texture image view!");
         }
@@ -345,10 +352,10 @@ void VkEngineSwapChain::createDepthResources() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
+    ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
+    ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
+    ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT];
+    ppImagesInFlight = new VkFence[imageCount()];
 
     constexpr VkSemaphoreCreateInfo semaphoreInfo{
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -361,10 +368,10 @@ void VkEngineSwapChain::createSyncObjects() {
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr,
-                              &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+                              &ppImageAvailableSemaphores[i]) != VK_SUCCESS ||
             vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr,
-                              &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+                              &ppRenderFinishedSemaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(device.device(), &fenceInfo, nullptr, &ppInFlightFences[i]) != VK_SUCCESS) {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
     }
@@ -385,8 +392,8 @@ VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(
 VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(
     const std::vector<VkPresentModeKHR> &availablePresentModes) {
     for (const auto &availablePresentMode : availablePresentModes) {
-        if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            std::cout << "Present mode: Mailbox" << '\n';
+        if (availablePresentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR ) {
+            std::cout << "Present mode: FIFO Relaxed" << '\n';
             return availablePresentMode;
         }
     }
