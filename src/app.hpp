@@ -35,11 +35,10 @@ class App {
 
     VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
 
-    std::unique_ptr<VkEnginePipeline> mVkPipeline{nullptr};
+    std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 
-    VkPipelineLayout mVkPipelineLayout{};
-
-    std::vector<VkCommandBuffer> mVkCommandBuffers{};
+    VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
+    VkCommandBuffer* ppVkCommandBuffers = VK_NULL_HANDLE;
 };
 
 } // namespace vke

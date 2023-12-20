@@ -9,7 +9,7 @@ App::App() {
     createCommandBuffers();
 }
 
-App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), mVkPipelineLayout, nullptr); }
+App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), pVkPipelineLayout, nullptr); }
 
 void App::run() const {
     while (!mVkWindow.shouldClose()) { // while window is open
@@ -26,7 +26,7 @@ void App::createPipelineLayout() {
         .pPushConstantRanges = nullptr};
 
     if (vkCreatePipelineLayout(mVkDevice.device(), &pipelineLayoutInfo, nullptr,
-                               &mVkPipelineLayout) != VK_SUCCESS) {
+                               &pVkPipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
     }
 }
@@ -37,11 +37,12 @@ void App::createPipeline() {
         VkEnginePipeline::defaultPipelineConfigInfo(mVkSwapChain.width(), mVkSwapChain.height());
 
     pipelineConfig.renderPass = mVkSwapChain.getRenderPass();
-    pipelineConfig.pipelineLayout = mVkPipelineLayout;
+    pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
-    mVkPipeline =
-        std::make_unique<VkEnginePipeline>(mVkDevice, "../shaders/simple_shader.vert.spv",
-                                           "../shaders/simple_shader.frag.spv", pipelineConfig);
+    pVkPipeline =
+        std::make_unique<VkEnginePipeline>(mVkDevice,
+            "../shaders/simple_shader.vert.spv",
+            "../shaders/simple_shader.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {}
