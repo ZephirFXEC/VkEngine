@@ -21,7 +21,8 @@ VkEnginePipeline::~VkEnginePipeline() {
     vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
 }
 
-PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(uint32_t width, uint32_t height) {
+PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(const uint32_t width,
+                                                               const uint32_t height) {
 
     const PipelineConfigInfo configInfo{
         .viewport{
@@ -119,13 +120,10 @@ std::vector<char> VkEnginePipeline::readFile(const std::string &filename) {
     std::vector<char> buffer(fileSize);
 
     file.seekg(0);
-    file.read(buffer.data(), fileSize);
+    file.read(buffer.data(), static_cast<long>(fileSize));
     file.close();
 
     return buffer;
-}
-void VkEnginePipeline::createRenderPass(const PipelineConfigInfo &configInfo) {
-
 }
 
 void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
@@ -196,7 +194,7 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
         .basePipelineHandle = VK_NULL_HANDLE,
     };
 
-    if (vkCreateGraphicsPipelines(mDevice.device(),VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
+    if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr,
                                   &pGraphicsPipeline) != VK_SUCCESS) {
 
         throw std::runtime_error("Failed to create graphics pipeline");

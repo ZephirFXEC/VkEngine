@@ -40,7 +40,6 @@ class VkEnginePipeline {
   private:
     static std::vector<char> readFile(const std::string &filename);
 
-    void createRenderPass(const PipelineConfigInfo &configInfo);
     void createGraphicsPipeline(const std::string &vertShader, const std::string &fragShader,
                                 const PipelineConfigInfo &configInfo);
 

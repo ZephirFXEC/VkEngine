@@ -9,10 +9,7 @@ App::App() {
     createCommandBuffers();
 }
 
-App::~App() {
-    vkDestroyPipelineLayout(mVkDevice.device(), mVkPipelineLayout, nullptr);
-}
-
+App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), mVkPipelineLayout, nullptr); }
 
 void App::run() const {
     while (!mVkWindow.shouldClose()) { // while window is open
@@ -42,9 +39,9 @@ void App::createPipeline() {
     pipelineConfig.renderPass = mVkSwapChain.getRenderPass();
     pipelineConfig.pipelineLayout = mVkPipelineLayout;
 
-    mVkPipeline = std::make_unique<VkEnginePipeline>(mVkDevice,
-            "../shaders/simple_shader.vert.spv",
-            "../shaders/simple_shader.frag.spv", pipelineConfig);
+    mVkPipeline =
+        std::make_unique<VkEnginePipeline>(mVkDevice, "../shaders/simple_shader.vert.spv",
+                                           "../shaders/simple_shader.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {}
