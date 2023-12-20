@@ -96,7 +96,7 @@ void VkEngineDevice::createInstance() {
         createInfo.ppEnabledLayerNames = mValidationLayers.data();
 
         populateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+        createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT *>(&debugCreateInfo);
     } else {
         createInfo.enabledLayerCount = 0;
         createInfo.pNext = nullptr;
@@ -356,13 +356,13 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
 
     for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-        if (queueFamilies[i].queueCount > 0 && ((queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u)) {
+        if (queueFamilies[i].queueCount > 0 && (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u) {
             indices.mGraphicsFamily = i;
             indices.mGraphicsFamilyHasValue = true;
         }
         VkBool32 presentSupport = 0u;
         vkGetPhysicalDeviceSurfaceSupportKHR(device, i, pSurface, &presentSupport);
-        if (queueFamilies[i].queueCount > 0 && (presentSupport != 0u)) {
+        if (queueFamilies[i].queueCount > 0 && presentSupport != 0u) {
             indices.mPresentFamily = i;
             indices.mPresentFamilyHasValue = true;
         }
@@ -410,7 +410,9 @@ VkFormat VkEngineDevice::findSupportedFormat(const std::vector<VkFormat> &candid
         if (tiling == VK_IMAGE_TILING_LINEAR &&
             (props.linearTilingFeatures & features) == features) {
             return format;
-        } else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
+        }
+
+        if (tiling == VK_IMAGE_TILING_OPTIMAL &&
                    (props.optimalTilingFeatures & features) == features) {
             return format;
         }
@@ -423,7 +425,7 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter,
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(pPhysicalDevice, &memProperties);
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-        if (((typeFilter & (1 << i)) != 0u) &&
+        if ((typeFilter & 1 << i) != 0u &&
             (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
             return i;
         }
