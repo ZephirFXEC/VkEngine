@@ -13,22 +13,27 @@ VkWindow::~VkWindow() {
     glfwTerminate();            // terminate GLFW
 }
 
-void VkWindow::createWindowSurface(VkInstance instance,
-                                   VkSurfaceKHR *surface) const {
-    if (glfwCreateWindowSurface(instance, pWindow, nullptr, surface) !=
-        VK_SUCCESS) {
+void VkWindow::createWindowSurface(const VkInstance instance, VkSurfaceKHR *surface) const {
+
+    if (glfwCreateWindowSurface(instance, pWindow, nullptr, surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
+
 }
 
 void VkWindow::initWindow() {
     glfwInit(); // initialize GLFW
 
-    glfwWindowHint(GLFW_CLIENT_API,
-                   GLFW_NO_API); // do not create an OpenGL context
+    glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API); // do not create an OpenGL context
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // disable window resizing
 
-    pWindow =
-        glfwCreateWindow(mWidth, mHeight, mName.c_str(), nullptr, nullptr);
+    pWindow = glfwCreateWindow(mWidth, mHeight, mName.c_str(), nullptr, nullptr);
 }
+
+bool VkWindow::shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
+
+VkExtent2D VkWindow::getExtent() const {
+    return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)};
+}
+
 } // namespace vke
