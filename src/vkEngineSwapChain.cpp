@@ -126,19 +126,21 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer *buffers,
 }
 
 void VkEngineSwapChain::createSwapChain() {
-    const SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
-    const VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-    const VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    const VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-    if (swapChainSupport.capabilities.maxImageCount > 0 &&
-        imageCount > swapChainSupport.capabilities.maxImageCount) {
-        imageCount = swapChainSupport.capabilities.maxImageCount;
+    const SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
+
+    const VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.mFormats);
+    const VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.mPresentModes);
+    const VkExtent2D extent = chooseSwapExtent(swapChainSupport.mCapabilities);
+
+    uint32_t imageCount = swapChainSupport.mCapabilities.minImageCount + 1;
+    if (swapChainSupport.mCapabilities.maxImageCount > 0 &&
+        imageCount > swapChainSupport.mCapabilities.maxImageCount) {
+        imageCount = swapChainSupport.mCapabilities.maxImageCount;
     }
 
     const QueueFamilyIndices indices = device.findPhysicalQueueFamilies();
-    const uint32_t queueFamilyIndices[] = {indices.graphicsFamily, indices.presentFamily};
+    const uint32_t queueFamilyIndices[] = {indices.mGraphicsFamily, indices.mPresentFamily};
 
     const VkSwapchainCreateInfoKHR createInfo{
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -150,10 +152,10 @@ void VkEngineSwapChain::createSwapChain() {
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = indices.graphicsFamily == indices.presentFamily ? 0u : 2,
+        .queueFamilyIndexCount = indices.mGraphicsFamily == indices.mPresentFamily ? 0u : 2,
         .pQueueFamilyIndices =
-            indices.graphicsFamily == indices.presentFamily ? nullptr : queueFamilyIndices,
-        .preTransform = swapChainSupport.capabilities.currentTransform,
+            indices.mGraphicsFamily == indices.mPresentFamily ? nullptr : queueFamilyIndices,
+        .preTransform = swapChainSupport.mCapabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = presentMode,
         .clipped = VK_TRUE,
