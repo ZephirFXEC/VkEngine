@@ -21,7 +21,7 @@ class App {
     static constexpr int HEIGHT = 600;
     static constexpr int WIDTH = 800;
 
-    void run() const;
+    void run();
 
   private:
     void createPipelineLayout();
@@ -38,7 +38,7 @@ class App {
     std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 
     VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-    VkCommandBuffer* ppVkCommandBuffers = VK_NULL_HANDLE;
+    std::vector<VkCommandBuffer> ppVkCommandBuffers{};
 };
 
 } // namespace vke

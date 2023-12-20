@@ -21,6 +21,10 @@ VkEnginePipeline::~VkEnginePipeline() {
     vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
 }
 
+void VkEnginePipeline::bind(VkCommandBuffer commandBuffer) const {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
+}
+
 PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(const uint32_t width,
                                                                const uint32_t height) {
 
