@@ -7,6 +7,8 @@
 #include <vulkan/vulkan.hpp>
 
 
+
+
 namespace vke {
 
 class VkEngineSwapChain {
@@ -21,22 +23,26 @@ class VkEngineSwapChain {
     VkEngineSwapChain(const VkEngineSwapChain &) = delete;
     void operator=(const VkEngineSwapChain &) = delete;
 
-    const VkFramebuffer &getFrameBuffer(const size_t index) const { return ppSwapChainFramebuffers[index]; }
-    const VkRenderPass &getRenderPass() const { return pRenderPass; }
-    const VkImageView &getImageView(const size_t index) const { return ppSwapChainImageViews[index]; }
-    const VkFormat &getSwapChainImageFormat() const { return mSwapChainImageFormat; }
-    const VkExtent2D &getSwapChainExtent() const { return mSwapChainExtent; }
+    [[nodiscard]] const VkFramebuffer &getFrameBuffer(const size_t index) const {
+        return ppSwapChainFramebuffers[index];
+    }
+    [[nodiscard]] const VkRenderPass &getRenderPass() const { return pRenderPass; }
+    [[nodiscard]] const VkImageView &getImageView(const size_t index) const {
+        return ppSwapChainImageViews[index];
+    }
+    [[nodiscard]] const VkFormat &getSwapChainImageFormat() const { return mSwapChainImageFormat; }
+    [[nodiscard]] const VkExtent2D &getSwapChainExtent() const { return mSwapChainExtent; }
 
-    uint32_t width() const { return mSwapChainExtent.width; }
-    uint32_t height() const { return mSwapChainExtent.height; }
-    size_t imageCount() const { return sizeof(ppSwapChainImages) / sizeof(VkImage); }
+    [[nodiscard]] uint32_t width() const { return mSwapChainExtent.width; }
+    [[nodiscard]] uint32_t height() const { return mSwapChainExtent.height; }
+    [[nodiscard]] size_t imageCount() const { return sizeof(ppSwapChainImages) / sizeof(VkImage); }
 
-    float extentAspectRatio() const {
+    [[nodiscard]] float extentAspectRatio() const {
         return static_cast<float>(mSwapChainExtent.width) /
                static_cast<float>(mSwapChainExtent.height);
     }
 
-    VkFormat findDepthFormat() const;
+    [[nodiscard]] VkFormat findDepthFormat() const;
     VkResult acquireNextImage(uint32_t *imageIndex) const;
     VkResult submitCommandBuffers(const VkCommandBuffer *buffers, const uint32_t *imageIndex);
 
@@ -54,31 +60,31 @@ class VkEngineSwapChain {
     chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats);
     static VkPresentModeKHR
     chooseSwapPresentMode(const std::vector<VkPresentModeKHR> &availablePresentModes);
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
+    [[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities) const;
 
     VkFormat mSwapChainImageFormat{};
     VkExtent2D mSwapChainExtent{};
 
-    VkFramebuffer* ppSwapChainFramebuffers = VK_NULL_HANDLE;
+    VkFramebuffer *ppSwapChainFramebuffers = VK_NULL_HANDLE;
     VkRenderPass pRenderPass = VK_NULL_HANDLE;
 
-    VkImage* ppDepthImages = VK_NULL_HANDLE;
-    VkDeviceMemory* ppDepthImageMemorys = VK_NULL_HANDLE;
-    VkImageView* ppDepthImageViews = VK_NULL_HANDLE;
-    VkImage* ppSwapChainImages = VK_NULL_HANDLE;
-    VkImageView* ppSwapChainImageViews = VK_NULL_HANDLE;
+    VkImage *ppDepthImages = VK_NULL_HANDLE;
+    VkDeviceMemory *ppDepthImageMemorys = VK_NULL_HANDLE;
+    VkImageView *ppDepthImageViews = VK_NULL_HANDLE;
+    VkImage *ppSwapChainImages = VK_NULL_HANDLE;
+    VkImageView *ppSwapChainImageViews = VK_NULL_HANDLE;
 
-    VkEngineDevice &device;
-    VkExtent2D windowExtent{};
+    VkEngineDevice &mDevice;
+    VkExtent2D mWindowExtent{};
 
-    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-    std::shared_ptr<VkEngineSwapChain> oldSwapChain = nullptr;
+    VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
+    std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
-    VkSemaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
-    VkSemaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;
-    VkFence* ppInFlightFences = VK_NULL_HANDLE;
-    VkFence* ppImagesInFlight = VK_NULL_HANDLE;
-    size_t currentFrame = 0;
+    VkSemaphore *ppImageAvailableSemaphores = VK_NULL_HANDLE;
+    VkSemaphore *ppRenderFinishedSemaphores = VK_NULL_HANDLE;
+    VkFence *ppInFlightFences = VK_NULL_HANDLE;
+    VkFence *ppImagesInFlight = VK_NULL_HANDLE;
+    size_t mCurrentFrame = 0;
 };
 
 } // namespace vke

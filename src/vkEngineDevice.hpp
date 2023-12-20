@@ -2,7 +2,7 @@
 #define VKDEVICE_H
 
 #include "vkWindow.hpp"
-#include <vector>
+
 
 namespace vke {
 
@@ -39,23 +39,22 @@ class VkEngineDevice {
     VkEngineDevice(VkEngineDevice &&) = delete;
     VkEngineDevice &operator=(VkEngineDevice &&) = delete;
 
-    const VkCommandPool &getCommandPool() const { return pCommandPool; }
-    const VkDevice &device() const { return pDevice; }
-    const VkSurfaceKHR &surface() const { return pSurface; }
-    const VkQueue &graphicsQueue() const { return pGraphicsQueue; }
-    const VkQueue &presentQueue() const { return pPresentQueue; }
+    [[nodiscard]] const VkCommandPool &getCommandPool() const { return pCommandPool; }
+    [[nodiscard]] const VkDevice &device() const { return pDevice; }
+    [[nodiscard]] const VkSurfaceKHR &surface() const { return pSurface; }
+    [[nodiscard]] const VkQueue &graphicsQueue() const { return pGraphicsQueue; }
+    [[nodiscard]] const VkQueue &presentQueue() const { return pPresentQueue; }
 
-    SwapChainSupportDetails getSwapChainSupport() const { return querySwapChainSupport(pPhysicalDevice); }
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const ;
-    QueueFamilyIndices findPhysicalQueueFamilies() const { return findQueueFamilies(pPhysicalDevice); }
-    VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
+    [[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const { return querySwapChainSupport(pPhysicalDevice); }
+    [[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const ;
+    [[nodiscard]] QueueFamilyIndices findPhysicalQueueFamilies() const { return findQueueFamilies(pPhysicalDevice); }
+    [[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling,
                                  VkFormatFeatureFlags features) const ;
+    [[nodiscard]] VkCommandBuffer beginSingleTimeCommands() const;
 
     // Buffer Helper Functions
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
                       VkBuffer &buffer, VkDeviceMemory &bufferMemory) const;
-
-    VkCommandBuffer beginSingleTimeCommands() const;
 
     void endSingleTimeCommands(VkCommandBuffer commandBuffer) const;
 
@@ -79,8 +78,8 @@ class VkEngineDevice {
 
     // helper functions
     bool isDeviceSuitable(VkPhysicalDevice device) const;
-    std::vector<const char *> getRequiredExtensions() const;
-    bool checkValidationLayerSupport() const;
+    [[nodiscard]] std::vector<const char *> getRequiredExtensions() const;
+    [[nodiscard]] bool checkValidationLayerSupport() const;
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
     static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
     void hasGflwRequiredInstanceExtensions() const;

@@ -113,14 +113,13 @@ std::vector<char> VkEnginePipeline::readFile(const std::string &filename) {
     std::ifstream file{filename, std::ios::ate | std::ios::binary};
 
     if (!file.is_open()) {
-        throw std::runtime_error("failed to open file : " + filename);
+        throw std::runtime_error("failed to open file: " + filename);
     }
 
-    const size_t fileSize = file.tellg();
-    std::vector<char> buffer(fileSize);
+    std::vector<char> buffer(static_cast<size_t>(file.tellg()));
 
     file.seekg(0);
-    file.read(buffer.data(), static_cast<long>(fileSize));
+    file.read(buffer.data(), static_cast<long>(buffer.size()));
     file.close();
 
     return buffer;
@@ -203,13 +202,14 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
 
 void VkEnginePipeline::createShaderModule(const std::vector<char> &code,
                                           VkShaderModule *shaderModule) const {
-    const VkShaderModuleCreateInfo createInfo{.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-                                              .codeSize = code.size(),
-                                              .pCode =
-                                                  reinterpret_cast<const uint32_t *>(code.data())};
+    const VkShaderModuleCreateInfo createInfo = {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .codeSize = code.size(),
+        .pCode = reinterpret_cast<const uint32_t *>(code.data())};
 
     if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create Shader Module");
     }
 }
+
 } // namespace vke

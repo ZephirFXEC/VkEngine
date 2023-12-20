@@ -43,12 +43,12 @@ class VkEnginePipeline {
     void createGraphicsPipeline(const std::string &vertShader, const std::string &fragShader,
                                 const PipelineConfigInfo &configInfo);
 
-    void createShaderModule(const std::vector<char> &code, VkShaderModule *shaderModule) const;
+    void createShaderModule(const std::vector<char> &code, VkShaderModule* shaderModule) const;
 
     VkEngineDevice &mDevice;
-    VkPipeline pGraphicsPipeline{};
-    VkShaderModule pVertShaderModule{};
-    VkShaderModule pFragShaderModule{};
+    VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
+    VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
+    VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
 };
 } // namespace vke
 
