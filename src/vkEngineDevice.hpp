@@ -25,9 +25,9 @@ struct QueueFamilyIndices {
 class VkEngineDevice {
   public:
 #ifdef NDEBUG
-    const bool enableValidationLayers = true;
+    static constexpr bool enableValidationLayers = true;
 #else
-    const bool enableValidationLayers = true;
+    static constexpr bool enableValidationLayers = true;
 #endif
 
     explicit VkEngineDevice(VkWindow &window);
@@ -78,11 +78,11 @@ class VkEngineDevice {
 
     // helper functions
     bool isDeviceSuitable(VkPhysicalDevice device) const;
-    [[nodiscard]] std::vector<const char *> getRequiredExtensions() const;
+    [[nodiscard]] static std::vector<const char *> getRequiredExtensions() ;
     [[nodiscard]] bool checkValidationLayerSupport() const;
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
     static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &createInfo);
-    void hasGflwRequiredInstanceExtensions() const;
+    static void hasGflwRequiredInstanceExtensions();
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) const;
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 

@@ -76,11 +76,18 @@ class VkEngineSwapChain {
     VkSwapchainKHR swapChain = VK_NULL_HANDLE;
     std::shared_ptr<VkEngineSwapChain> oldSwapChain = nullptr;
 
+
     VkSemaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
     VkSemaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;
     VkFence* ppInFlightFences = VK_NULL_HANDLE;
     VkFence* ppImagesInFlight = VK_NULL_HANDLE; // no delete[] idk why but it works
 
+	/*
+	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppImageAvailableSemaphores{};
+	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppRenderFinishedSemaphores{};
+	std::array<VkFence, MAX_FRAMES_IN_FLIGHT> ppInFlightFences{};
+	std::array<VkFence, MAX_FRAMES_IN_FLIGHT> ppImagesInFlight{};
+	*/
     size_t currentFrame = 0;
 };
 

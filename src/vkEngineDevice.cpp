@@ -5,17 +5,62 @@
 #include <iostream>
 #include <set>
 #include <unordered_set>
+#include <sstream>
 
 namespace vke {
 
 // local callback functions
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL
-debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT /*messageSeverity*/,
-              VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
+debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+              const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
               const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void * /*pUserData*/) {
-    std::cerr << "validation layer: " << pCallbackData->pMessage << '\n';
-    return VK_FALSE;
+
+	std::ostringstream message;
+	message << std::to_string(messageSeverity) << ": "
+			<< std::to_string(messageTypes) << ":\n";
+
+	message << std::string( "\t" ) << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+	message << std::string( "\t" ) << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+	message << std::string( "\t" ) << "message         = <" << pCallbackData->pMessage << ">\n";
+	if ( 0 < pCallbackData->queueLabelCount )
+	{
+		message << std::string( "\t" ) << "Queue Labels:\n";
+		for ( uint32_t i = 0; i < pCallbackData->queueLabelCount; i++ )
+		{
+			message << std::string( "\t\t" ) << "labelName = <" << pCallbackData->pQueueLabels[i].pLabelName << ">\n";
+		}
+	}
+	if ( 0 < pCallbackData->cmdBufLabelCount )
+	{
+		message << std::string( "\t" ) << "CommandBuffer Labels:\n";
+		for ( uint32_t i = 0; i < pCallbackData->cmdBufLabelCount; i++ )
+		{
+			message << std::string( "\t\t" ) << "labelName = <" << pCallbackData->pCmdBufLabels[i].pLabelName << ">\n";
+		}
+	}
+	if ( 0 < pCallbackData->objectCount )
+	{
+		message << std::string( "\t" ) << "Objects:\n";
+		for ( uint32_t i = 0; i < pCallbackData->objectCount; i++ )
+		{
+			message << std::string( "\t\t" ) << "Object " << i << "\n";
+			message << std::string( "\t\t\t" ) << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType ) << "\n";
+			message << std::string( "\t\t\t" ) << "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
+			if ( pCallbackData->pObjects[i].pObjectName != nullptr )
+			{
+				message << std::string( "\t\t\t" ) << "objectName   = <" << pCallbackData->pObjects[i].pObjectName << ">\n";
+			}
+		}
+	}
+
+#ifdef _WIN32
+	MessageBox( NULL, message.str().c_str(), "Alert", MB_OK );
+#else
+	std::cout << message.str() << '\n';
+#endif
+
+	return 0u;
 }
 } // namespace
 
@@ -244,7 +289,7 @@ void VkEngineDevice::populateDebugMessengerCreateInfo(
 
 void VkEngineDevice::setupDebugMessenger() {
 
-    if (!enableValidationLayers) {
+    if constexpr (!enableValidationLayers) {
         return;
     }
 
@@ -259,6 +304,10 @@ void VkEngineDevice::setupDebugMessenger() {
 bool VkEngineDevice::checkValidationLayerSupport() const {
     uint32_t layerCount = 0;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+	if( layerCount == 0 ) {
+		throw std::runtime_error( "No layers found" );
+	}
 
     auto* availableLayers = new VkLayerProperties[layerCount];
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
@@ -284,7 +333,7 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 }
 
 // TODO: remove vextor and use pointer arithmetic
-std::vector<const char *> VkEngineDevice::getRequiredExtensions() const {
+std::vector<const char *> VkEngineDevice::getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
@@ -303,7 +352,7 @@ std::vector<const char *> VkEngineDevice::getRequiredExtensions() const {
     return extensions;
 }
 
-void VkEngineDevice::hasGflwRequiredInstanceExtensions() const {
+void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
     uint32_t extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
     auto* extensions = new VkExtensionProperties[extensionCount];
