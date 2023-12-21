@@ -9,47 +9,57 @@
 #include <vector>
 
 #include "vkEngineDevice.hpp"
+#include "vkEngineModel.hpp"
 
-namespace vke {
+namespace vke
+{
 
-struct PipelineConfigInfo {
-    VkViewport viewport{};
-    VkRect2D scissor{};
-    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
-    VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
-    VkPipelineMultisampleStateCreateInfo multisampleInfo{};
-    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-    VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
-    VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-    VkRenderPass renderPass = VK_NULL_HANDLE;
-    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-    uint32_t subpass = 0;
+struct PipelineConfigInfo
+{
+	VkViewport viewport{};
+	VkRect2D scissor{};
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
+	VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
+	VkPipelineMultisampleStateCreateInfo multisampleInfo{};
+	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+	VkRenderPass renderPass = VK_NULL_HANDLE;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+	uint32_t subpass = 0;
 };
 
-class VkEnginePipeline {
-  public:
-    VkEnginePipeline(VkEngineDevice &device, const std::string &vertShader,
-                     const std::string &fragShader, const PipelineConfigInfo &configInfo);
-    ~VkEnginePipeline();
+class VkEnginePipeline
+{
+public:
+	VkEnginePipeline(VkEngineDevice& device,
+	                 const std::string& vertShader,
+	                 const std::string& fragShader,
+	                 const PipelineConfigInfo& configInfo);
 
-    VkEnginePipeline(const VkEnginePipeline &) = delete;
-    void operator=(const VkEnginePipeline &) = delete;
+	~VkEnginePipeline();
 
-    static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
-    void bind(VkCommandBuffer commandBuffer) const;
+	VkEnginePipeline(const VkEnginePipeline&) = delete;
 
-  private:
-    static std::vector<char> readFile(const std::string &filename);
+	void operator=(const VkEnginePipeline&) = delete;
 
-    void createGraphicsPipeline(const std::string &vertShader, const std::string &fragShader,
-                                const PipelineConfigInfo &configInfo);
+	static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
 
-    void createShaderModule(const std::vector<char> &code, VkShaderModule* shaderModule) const;
+	void bind(VkCommandBuffer commandBuffer) const;
 
-    VkEngineDevice &mDevice;
-    VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
-    VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
-    VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
+private:
+	static std::vector <char> readFile(const std::string& filename);
+
+	void createGraphicsPipeline(const std::string& vertShader,
+	                            const std::string& fragShader,
+	                            const PipelineConfigInfo& configInfo);
+
+	void createShaderModule(const std::vector <char>& code, VkShaderModule* shaderModule) const;
+
+	VkEngineDevice& mDevice;
+	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
+	VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
+	VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
 };
 } // namespace vke
 

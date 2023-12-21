@@ -104,8 +104,8 @@ PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(const uint32_t wi
             .stencilTestEnable = VK_FALSE,
             .front = {},            // Optional
             .back = {},             // Optional
-            .minDepthBounds = 0.0f, // Optional
-            .maxDepthBounds = 1.0f, // Optional
+            .minDepthBounds = 0.0f,   // Optional
+            .maxDepthBounds = 1.0f,   // Optional
         },
     };
 
@@ -162,13 +162,17 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string &vertShader,
           .pName = "main",
           .pSpecializationInfo = nullptr}}};
 
+
+	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
+	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        .vertexBindingDescriptionCount = 0,
-        .pVertexBindingDescriptions = nullptr,
-        .vertexAttributeDescriptionCount = 0,
-        .pVertexAttributeDescriptions = nullptr,
-    };
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size()),
+		.pVertexBindingDescriptions = bindingDescriptions.data(),
+		.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
+		.pVertexAttributeDescriptions = attributeDescriptions.data(),
+	};
 
     VkPipelineViewportStateCreateInfo viewportInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,

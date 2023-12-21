@@ -12,17 +12,17 @@ namespace vke
 
 VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
 	: device{deviceRef}
-	, windowExtent{windowExtent}
+	  , windowExtent{windowExtent}
 {
 	init();
 }
 
 VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef,
-									 const VkExtent2D windowExtent,
-									 std::shared_ptr<VkEngineSwapChain> previous)
+                                     const VkExtent2D windowExtent,
+                                     std::shared_ptr <VkEngineSwapChain> previous)
 	: device{deviceRef}
-	, windowExtent{windowExtent}
-	, oldSwapChain{std::move(std::move(previous))}
+	  , windowExtent{windowExtent}
+	  , oldSwapChain{std::move(std::move(previous))}
 {
 	init();
 	oldSwapChain = nullptr;
@@ -88,16 +88,17 @@ VkEngineSwapChain::~VkEngineSwapChain()
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 {
 	vkWaitForFences(device.device(),
-					1,
-					&ppInFlightFences[currentFrame],
-					VK_TRUE,
-					std::numeric_limits<uint64_t>::max());
+	                1,
+	                &ppInFlightFences[currentFrame],
+	                VK_TRUE,
+	                std::numeric_limits <uint64_t>::max());
 
 	const VkResult result = vkAcquireNextImageKHR(
 		device.device(),
 		swapChain,
-		std::numeric_limits<uint64_t>::max(),
-		ppImageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
+		std::numeric_limits <uint64_t>::max(),
+		ppImageAvailableSemaphores[currentFrame],
+		// must be a not signaled semaphore
 		VK_NULL_HANDLE,
 		imageIndex);
 
@@ -105,7 +106,7 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 }
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
-												 const uint32_t* imageIndex)
+                                                 const uint32_t* imageIndex)
 {
 	if(ppImagesInFlight[*imageIndex] != VK_NULL_HANDLE)
 	{
@@ -116,7 +117,7 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	const std::array waitSemaphores = {ppImageAvailableSemaphores[currentFrame]};
 	const std::array signalSemaphores = {ppRenderFinishedSemaphores[currentFrame]};
-	constexpr std::array<VkPipelineStageFlags, 1> waitStages = {
+	constexpr std::array <VkPipelineStageFlags, 1> waitStages = {
 		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
 	const VkSubmitInfo submitInfo = {
@@ -173,7 +174,7 @@ void VkEngineSwapChain::createSwapChain()
 	}
 
 	const std::array queueFamilyIndices = {device.findPhysicalQueueFamilies().mGraphicsFamily,
-										   device.findPhysicalQueueFamilies().mPresentFamily};
+	                                       device.findPhysicalQueueFamilies().mPresentFamily};
 
 	const VkSwapchainCreateInfoKHR createInfo{
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -181,19 +182,19 @@ void VkEngineSwapChain::createSwapChain()
 		.minImageCount = imageCount,
 		.imageFormat = chooseSwapSurfaceFormat(device.getSwapChainSupport().mFormats).format,
 		.imageColorSpace =
-			chooseSwapSurfaceFormat(device.getSwapChainSupport().mFormats).colorSpace,
+		chooseSwapSurfaceFormat(device.getSwapChainSupport().mFormats).colorSpace,
 		.imageExtent = extent,
 		.imageArrayLayers = 1,
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.queueFamilyIndexCount = device.findPhysicalQueueFamilies().mGraphicsFamily ==
-										 device.findPhysicalQueueFamilies().mPresentFamily
-									 ? 0u
-									 : 2,
+		                         device.findPhysicalQueueFamilies().mPresentFamily
+			                         ? 0u
+			                         : 2,
 		.pQueueFamilyIndices = device.findPhysicalQueueFamilies().mGraphicsFamily ==
-									   device.findPhysicalQueueFamilies().mPresentFamily
-								   ? nullptr
-								   : queueFamilyIndices.data(),
+		                       device.findPhysicalQueueFamilies().mPresentFamily
+			                       ? nullptr
+			                       : queueFamilyIndices.data(),
 		.preTransform = device.getSwapChainSupport().mCapabilities.currentTransform,
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = presentMode,
@@ -290,19 +291,19 @@ void VkEngineSwapChain::createRenderPass()
 		.srcSubpass = VK_SUBPASS_EXTERNAL,
 		.srcAccessMask = 0,
 		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-						VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+		                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
 		.dstSubpass = 0,
 		.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-						VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+		                VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
 		.dstAccessMask =
-			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 	};
 
 	const std::array attachments = {colorAttachment, depthAttachment};
 
 	const VkRenderPassCreateInfo renderPassInfo{
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-		.attachmentCount = static_cast<uint32_t>(attachments.size()),
+		.attachmentCount = static_cast <uint32_t>(attachments.size()),
 		.pAttachments = attachments.data(),
 		.subpassCount = 1,
 		.dependencyCount = 1,
@@ -327,7 +328,7 @@ void VkEngineSwapChain::createFramebuffers()
 		VkFramebufferCreateInfo framebufferInfo{
 			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 			.renderPass = pRenderPass,
-			.attachmentCount = static_cast<uint32_t>(attachments.size()),
+			.attachmentCount = static_cast <uint32_t>(attachments.size()),
 			.pAttachments = attachments.data(),
 			.width = getSwapChainExtent().width,
 			.height = getSwapChainExtent().height,
@@ -335,7 +336,10 @@ void VkEngineSwapChain::createFramebuffers()
 		};
 
 		if(vkCreateFramebuffer(
-			   device.device(), &framebufferInfo, nullptr, &ppSwapChainFramebuffers[i]) !=
+			   device.device(),
+			   &framebufferInfo,
+			   nullptr,
+			   &ppSwapChainFramebuffers[i]) !=
 		   VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create framebuffer!");
@@ -357,8 +361,8 @@ void VkEngineSwapChain::createDepthResources()
 			.imageType = VK_IMAGE_TYPE_2D,
 			.format = findDepthFormat(),
 			.extent = {.width = getSwapChainExtent().width,
-					   .height = getSwapChainExtent().height,
-					   .depth = 1},
+			           .height = getSwapChainExtent().height,
+			           .depth = 1},
 			.mipLevels = 1,
 			.arrayLayers = 1,
 			.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -369,7 +373,10 @@ void VkEngineSwapChain::createDepthResources()
 		};
 
 		device.createImageWithInfo(
-			imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImages[i], ppDepthImageMemorys[i]);
+			imageInfo,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			depthImages[i],
+			ppDepthImageMemorys[i]);
 
 		VkImageViewCreateInfo viewInfo{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -411,11 +418,17 @@ void VkEngineSwapChain::createSyncObjects()
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
 	{
 		if(vkCreateSemaphore(
-			   device.device(), &semaphoreInfo, nullptr, &ppImageAvailableSemaphores[i]) !=
-			   VK_SUCCESS ||
+			   device.device(),
+			   &semaphoreInfo,
+			   nullptr,
+			   &ppImageAvailableSemaphores[i]) !=
+		   VK_SUCCESS ||
 		   vkCreateSemaphore(
-			   device.device(), &semaphoreInfo, nullptr, &ppRenderFinishedSemaphores[i]) !=
-			   VK_SUCCESS ||
+			   device.device(),
+			   &semaphoreInfo,
+			   nullptr,
+			   &ppRenderFinishedSemaphores[i]) !=
+		   VK_SUCCESS ||
 		   vkCreateFence(device.device(), &fenceInfo, nullptr, &ppInFlightFences[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
@@ -424,7 +437,7 @@ void VkEngineSwapChain::createSyncObjects()
 }
 
 VkSurfaceFormatKHR
-VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector <VkSurfaceFormatKHR>& availableFormats)
 {
 	for(const auto& availableFormat : availableFormats)
 	{
@@ -439,7 +452,8 @@ VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
 }
 
 VkPresentModeKHR
-VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
+VkEngineSwapChain::chooseSwapPresentMode(
+	const std::vector <VkPresentModeKHR>& availablePresentModes)
 {
 	for(const auto& availablePresentMode : availablePresentModes)
 	{
@@ -463,17 +477,17 @@ VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& av
 
 VkExtent2D VkEngineSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const
 {
-	if(capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+	if(capabilities.currentExtent.width != std::numeric_limits <uint32_t>::max())
 	{
 		return capabilities.currentExtent;
 	}
 
 	VkExtent2D actualExtent = windowExtent;
 	actualExtent.width = std::max(capabilities.minImageExtent.width,
-								  std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	                              std::min(capabilities.maxImageExtent.width, actualExtent.width));
 	actualExtent.height =
 		std::max(capabilities.minImageExtent.height,
-				 std::min(capabilities.maxImageExtent.height, actualExtent.height));
+		         std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
 	return actualExtent;
 }
