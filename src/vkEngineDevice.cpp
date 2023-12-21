@@ -1,11 +1,12 @@
+#define VMA_IMPLEMENTATION
 #include "vkEngineDevice.hpp"
 
 // std headers
 #include <cstring>
 #include <iostream>
 #include <set>
-#include <unordered_set>
 #include <sstream>
+#include <unordered_set>
 
 namespace vke
 {
@@ -15,14 +16,13 @@ namespace
 {
 VKAPI_ATTR VkBool32 VKAPI_CALL
 debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-              const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-              void* /*pUserData*/)
+			  const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+			  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+			  void* /*pUserData*/)
 {
 
 	std::ostringstream message;
-	message << std::to_string(messageSeverity) << ": "
-		<< std::to_string(messageTypes) << ":\n";
+	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
 	message << std::string("\t") << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
 	message << std::string("\t") << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
@@ -32,8 +32,8 @@ debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		message << std::string("\t") << "Queue Labels:\n";
 		for(uint32_t i = 0; i < pCallbackData->queueLabelCount; i++)
 		{
-			message << std::string("\t\t") << "labelName = <" << pCallbackData->pQueueLabels[i].
-				pLabelName << ">\n";
+			message << std::string("\t\t") << "labelName = <"
+					<< pCallbackData->pQueueLabels[i].pLabelName << ">\n";
 		}
 	}
 	if(0 < pCallbackData->cmdBufLabelCount)
@@ -41,8 +41,8 @@ debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		message << std::string("\t") << "CommandBuffer Labels:\n";
 		for(uint32_t i = 0; i < pCallbackData->cmdBufLabelCount; i++)
 		{
-			message << std::string("\t\t") << "labelName = <" << pCallbackData->pCmdBufLabels[i].
-				pLabelName << ">\n";
+			message << std::string("\t\t") << "labelName = <"
+					<< pCallbackData->pCmdBufLabels[i].pLabelName << ">\n";
 		}
 	}
 	if(0 < pCallbackData->objectCount)
@@ -51,22 +51,23 @@ debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		for(uint32_t i = 0; i < pCallbackData->objectCount; i++)
 		{
 			message << std::string("\t\t") << "Object " << i << "\n";
-			message << std::string("\t\t\t") << "objectType   = " << std::to_string(
-				pCallbackData->pObjects[i].objectType) << "\n";
-			message << std::string("\t\t\t") << "objectHandle = " << pCallbackData->pObjects[i].
-				objectHandle << "\n";
+			message << std::string("\t\t\t")
+					<< "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType)
+					<< "\n";
+			message << std::string("\t\t\t")
+					<< "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
 			if(pCallbackData->pObjects[i].pObjectName != nullptr)
 			{
-				message << std::string("\t\t\t") << "objectName   = <" << pCallbackData->pObjects[i]
-					.pObjectName << ">\n";
+				message << std::string("\t\t\t") << "objectName   = <"
+						<< pCallbackData->pObjects[i].pObjectName << ">\n";
 			}
 		}
 	}
 
 #ifdef _WIN32
-	MessageBox( NULL, message.str().c_str(), "Alert", MB_OK );
+	MessageBox(NULL, message.str().c_str(), "Alert", MB_OK);
 #else
-	std::cout << message.str() << '\n';
+	std::cerr << message.str() << '\n';
 #endif
 
 	return 0u;
@@ -74,14 +75,14 @@ debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 } // namespace
 
 VkResult CreateDebugUtilsMessengerEXT(const VkInstance instance,
-                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                      const VkAllocationCallbacks* pAllocator,
-                                      VkDebugUtilsMessengerEXT* pDebugMessenger)
+									  const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+									  const VkAllocationCallbacks* pAllocator,
+									  VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 
-	if(const auto func = reinterpret_cast <PFN_vkCreateDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
-		func != nullptr)
+	if(const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+		   vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+	   func != nullptr)
 	{
 		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
@@ -90,13 +91,13 @@ VkResult CreateDebugUtilsMessengerEXT(const VkInstance instance,
 }
 
 void DestroyDebugUtilsMessengerEXT(const VkInstance instance,
-                                   const VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks* pAllocator)
+								   const VkDebugUtilsMessengerEXT debugMessenger,
+								   const VkAllocationCallbacks* pAllocator)
 {
 
-	if(const auto func = reinterpret_cast <PFN_vkDestroyDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
-		func != nullptr)
+	if(const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+		   vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+	   func != nullptr)
 	{
 		func(instance, debugMessenger, pAllocator);
 	}
@@ -112,6 +113,7 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window)
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createCommandPool();
+	createVMAllocator();
 }
 
 VkEngineDevice::~VkEngineDevice()
@@ -126,6 +128,7 @@ VkEngineDevice::~VkEngineDevice()
 
 	vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
 	vkDestroyInstance(pInstance, nullptr);
+	vmaDestroyAllocator(pVmaAllocator);
 }
 
 void VkEngineDevice::createInstance()
@@ -150,18 +153,18 @@ void VkEngineDevice::createInstance()
 		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 		.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
 		.pApplicationInfo = &appInfo,
-		.enabledExtensionCount = static_cast <uint32_t>(extensions.size()),
+		.enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
 		.ppEnabledExtensionNames = extensions.data(),
 	};
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 	if(enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast <uint32_t>(mValidationLayers.size());
+		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayers.size());
 		createInfo.ppEnabledLayerNames = mValidationLayers.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = reinterpret_cast <VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
+		createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
 	}
 	else
 	{
@@ -211,10 +214,8 @@ void VkEngineDevice::pickPhysicalDevice()
 void VkEngineDevice::createLogicalDevice()
 {
 
-	const std::set uniqueQueueFamilies = {
-		findQueueFamilies(pPhysicalDevice).mGraphicsFamily,
-		findQueueFamilies(pPhysicalDevice).mPresentFamily
-	};
+	const std::set uniqueQueueFamilies = {findQueueFamilies(pPhysicalDevice).mGraphicsFamily,
+										  findQueueFamilies(pPhysicalDevice).mPresentFamily};
 
 	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()];
 
@@ -238,9 +239,9 @@ void VkEngineDevice::createLogicalDevice()
 
 	VkDeviceCreateInfo createInfo = {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-		.queueCreateInfoCount = static_cast <uint32_t>(uniqueQueueFamilies.size()),
+		.queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
 		.pQueueCreateInfos = queueCreateInfos,
-		.enabledExtensionCount = static_cast <uint32_t>(mDeviceExtensions.size()),
+		.enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
 		.ppEnabledExtensionNames = mDeviceExtensions.data(),
 		.pEnabledFeatures = &deviceFeatures,
 	};
@@ -249,7 +250,7 @@ void VkEngineDevice::createLogicalDevice()
 	// layers have been deprecated
 	if(enableValidationLayers)
 	{
-		createInfo.enabledLayerCount = static_cast <uint32_t>(mValidationLayers.size());
+		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayers.size());
 		createInfo.ppEnabledLayerNames = mValidationLayers.data();
 	}
 	else
@@ -262,10 +263,8 @@ void VkEngineDevice::createLogicalDevice()
 		throw std::runtime_error("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(pDevice,
-	                 findQueueFamilies(pPhysicalDevice).mGraphicsFamily,
-	                 0,
-	                 &pGraphicsQueue);
+	vkGetDeviceQueue(
+		pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily, 0, &pGraphicsQueue);
 	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily, 0, &pPresentQueue);
 
 	delete[] queueCreateInfos;
@@ -277,7 +276,7 @@ void VkEngineDevice::createCommandPool()
 	const VkCommandPoolCreateInfo poolInfo = {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 		.flags =
-		VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		.queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily,
 
 	};
@@ -286,6 +285,24 @@ void VkEngineDevice::createCommandPool()
 	{
 		throw std::runtime_error("failed to create command pool!");
 	}
+}
+
+void VkEngineDevice::createVMAllocator()
+{
+	constexpr VmaVulkanFunctions vkFunctions{
+		.vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
+		.vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
+	};
+
+	const VmaAllocatorCreateInfo allocatorInfo{
+		.vulkanApiVersion = VK_API_VERSION_1_2,
+		.physicalDevice = pPhysicalDevice,
+		.device = pDevice,
+		.instance = pInstance,
+		.pVulkanFunctions = &vkFunctions,
+	};
+
+	vmaCreateAllocator(&allocatorInfo, &pVmaAllocator);
 }
 
 void VkEngineDevice::createSurface()
@@ -311,7 +328,7 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice device) const
 	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
 	return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-	       (supportedFeatures.samplerAnisotropy != 0u);
+		   (supportedFeatures.samplerAnisotropy != 0u);
 }
 
 void VkEngineDevice::populateDebugMessengerCreateInfo(
@@ -320,10 +337,10 @@ void VkEngineDevice::populateDebugMessengerCreateInfo(
 	createInfo = {
 		.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
 		.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-		                   VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+						   VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
 		.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-		               VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-		               VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+					   VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+					   VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
 		.pfnUserCallback = debugCallback,
 		.pUserData = nullptr // Optional
 	};
@@ -384,7 +401,7 @@ bool VkEngineDevice::checkValidationLayerSupport() const
 }
 
 // TODO: remove vextor and use pointer arithmetic
-std::vector <const char*> VkEngineDevice::getRequiredExtensions()
+std::vector<const char*> VkEngineDevice::getRequiredExtensions()
 {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -412,7 +429,7 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions()
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions);
 
 	std::cout << "available extensions:" << '\n';
-	std::unordered_set <std::string> available;
+	std::unordered_set<std::string> available;
 	for(uint32_t i = 0; i < extensionCount; ++i)
 	{
 		std::cout << "\t" << extensions[i].extensionName << '\n';
@@ -440,7 +457,7 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 	auto* availableExtensions = new VkExtensionProperties[extensionCount];
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions);
 
-	std::set <std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
+	std::set<std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
 
 	for(uint32_t i = 0; i < extensionCount; ++i)
 	{
@@ -465,8 +482,8 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
 
 	for(uint32_t i = 0; i < queueFamilyCount; ++i)
 	{
-		if(queueFamilies[i].queueCount > 0 && (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-		   != 0u)
+		if(queueFamilies[i].queueCount > 0 &&
+		   (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u)
 		{
 			indices.mGraphicsFamily = i;
 			indices.mGraphicsFamilyHasValue = true;
@@ -482,7 +499,6 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
 		{
 			break;
 		}
-
 	}
 
 	delete[] queueFamilies;
@@ -500,10 +516,8 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 	if(formatCount != 0)
 	{
 		details.mFormats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device,
-		                                     pSurface,
-		                                     &formatCount,
-		                                     details.mFormats.data());
+		vkGetPhysicalDeviceSurfaceFormatsKHR(
+			device, pSurface, &formatCount, details.mFormats.data());
 	}
 
 	uint32_t presentModeCount = 0;
@@ -512,25 +526,22 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 	if(presentModeCount != 0)
 	{
 		details.mPresentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device,
-		                                          pSurface,
-		                                          &presentModeCount,
-		                                          details.mPresentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(
+			device, pSurface, &presentModeCount, details.mPresentModes.data());
 	}
 	return details;
 }
 
-VkFormat VkEngineDevice::findSupportedFormat(const std::vector <VkFormat>& candidates,
-                                             const VkImageTiling tiling,
-                                             const VkFormatFeatureFlags features) const
+VkFormat VkEngineDevice::findSupportedFormat(const std::vector<VkFormat>& candidates,
+											 const VkImageTiling tiling,
+											 const VkFormatFeatureFlags features) const
 {
 	for(const VkFormat format : candidates)
 	{
 		VkFormatProperties props;
 		vkGetPhysicalDeviceFormatProperties(pPhysicalDevice, format, &props);
 
-		if(tiling == VK_IMAGE_TILING_LINEAR &&
-		   (props.linearTilingFeatures & features) == features)
+		if(tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
 		{
 			return format;
 		}
@@ -545,7 +556,7 @@ VkFormat VkEngineDevice::findSupportedFormat(const std::vector <VkFormat>& candi
 }
 
 uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter,
-                                        const VkMemoryPropertyFlags properties) const
+										const VkMemoryPropertyFlags properties) const
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(pPhysicalDevice, &memProperties);
@@ -562,16 +573,16 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter,
 }
 
 void VkEngineDevice::createBuffer(const VkDeviceSize size,
-                                  const VkBufferUsageFlags usage,
-                                  const VkMemoryPropertyFlags properties,
-                                  VkBuffer& buffer,
-                                  VkDeviceMemory& bufferMemory) const
+								  const VkBufferUsageFlags usage,
+								  const VkMemoryPropertyFlags properties,
+								  VkBuffer& buffer,
+								  VkDeviceMemory& bufferMemory) const
 {
-
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+
 	if(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create vertex buffer!");
@@ -596,10 +607,10 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size,
 VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() const
 {
 	const VkCommandBufferAllocateInfo allocInfo{.sType =
-	                                            VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	                                            .commandPool = pCommandPool,
-	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	                                            .commandBufferCount = 1};
+													VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+												.commandPool = pCommandPool,
+												.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+												.commandBufferCount = 1};
 
 	VkCommandBuffer commandBuffer = nullptr;
 	vkAllocateCommandBuffers(pDevice, &allocInfo, &commandBuffer);
@@ -617,8 +628,8 @@ void VkEngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) const
 	vkEndCommandBuffer(commandBuffer);
 
 	const VkSubmitInfo submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	                              .commandBufferCount = 1,
-	                              .pCommandBuffers = &commandBuffer};
+								  .commandBufferCount = 1,
+								  .pCommandBuffers = &commandBuffer};
 
 	vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(pGraphicsQueue);
@@ -627,14 +638,14 @@ void VkEngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) const
 }
 
 void VkEngineDevice::copyBuffer(const VkBuffer srcBuffer,
-                                const VkBuffer dstBuffer,
-                                const VkDeviceSize size) const
+								const VkBuffer dstBuffer,
+								const VkDeviceSize size) const
 {
 	const VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	const VkBufferCopy copyRegion{.srcOffset = 0, // Optional
-	                              .dstOffset = 0, // Optional
-	                              .size = size};
+								  .dstOffset = 0, // Optional
+								  .size = size};
 
 	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
@@ -642,38 +653,34 @@ void VkEngineDevice::copyBuffer(const VkBuffer srcBuffer,
 }
 
 void VkEngineDevice::copyBufferToImage(const VkBuffer buffer,
-                                       const VkImage image,
-                                       const uint32_t width,
-                                       const uint32_t height,
-                                       const uint32_t layerCount) const
+									   const VkImage image,
+									   const uint32_t width,
+									   const uint32_t height,
+									   const uint32_t layerCount) const
 {
 	const VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	const VkBufferImageCopy region{.bufferOffset = 0,
-	                               .bufferRowLength = 0,
-	                               .bufferImageHeight = 0,
+								   .bufferRowLength = 0,
+								   .bufferImageHeight = 0,
 
-	                               .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-	                                                    .mipLevel = 0,
-	                                                    .baseArrayLayer = 0,
-	                                                    .layerCount = layerCount},
+								   .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+														.mipLevel = 0,
+														.baseArrayLayer = 0,
+														.layerCount = layerCount},
 
-	                               .imageOffset = {0, 0, 0},
-	                               .imageExtent = {width, height, 1}};
+								   .imageOffset = {0, 0, 0},
+								   .imageExtent = {width, height, 1}};
 
-	vkCmdCopyBufferToImage(commandBuffer,
-	                       buffer,
-	                       image,
-	                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-	                       1,
-	                       &region);
+	vkCmdCopyBufferToImage(
+		commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	endSingleTimeCommands(commandBuffer);
 }
 
 void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo,
-                                         const VkMemoryPropertyFlags properties,
-                                         VkImage& image,
-                                         VkDeviceMemory& imageMemory) const
+										 const VkMemoryPropertyFlags properties,
+										 VkImage& image,
+										 VkDeviceMemory& imageMemory) const
 {
 	if(vkCreateImage(pDevice, &imageInfo, nullptr, &image) != VK_SUCCESS)
 	{
