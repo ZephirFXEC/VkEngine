@@ -4,6 +4,7 @@
 
 namespace vke {
 App::App() {
+	loadModels();
     createPipelineLayout();
     createPipeline();
     createCommandBuffers();
@@ -20,6 +21,17 @@ void App::run() {
     }
 
     vkDeviceWaitIdle(mVkDevice.device());
+}
+
+void App::loadModels()
+{
+	std::vector<VkEngineModel::Vertex> vertices{
+		{{0.0f, -0.5f}},
+		{{0.5f, 0.5f}},
+		{{-0.5f, 0.5f}}
+	};
+
+	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices);
 }
 
 void App::createPipelineLayout() {
@@ -91,7 +103,8 @@ void App::createCommandBuffers() {
         vkCmdBeginRenderPass(ppVkCommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
         pVkPipeline->bind(ppVkCommandBuffers[i]);
-        vkCmdDraw(ppVkCommandBuffers[i], 3, 1, 0, 0);
+        pVkModel->bind(ppVkCommandBuffers[i]);
+    	pVkModel->draw(ppVkCommandBuffers[i]);
 
         vkCmdEndRenderPass(ppVkCommandBuffers[i]);
         if (vkEndCommandBuffer(ppVkCommandBuffers[i]) != VK_SUCCESS) {

@@ -5,40 +5,51 @@
 #include "vkEnginePipeline.hpp"
 #include "vkEngineSwapChain.hpp"
 #include "vkEngineWindow.hpp"
+#include "vkEngineModel.hpp"
 
 #include <memory>
 
-namespace vke {
+namespace vke
+{
 
-class App {
-  public:
-    App();
-    ~App();
+class App
+{
+public:
+	App();
 
-    App(const App &) = delete;
-    App &operator=(const App &) = delete;
+	~App();
 
-    static constexpr int HEIGHT = 600;
-    static constexpr int WIDTH = 800;
+	App(const App&) = delete;
 
-    void run();
+	App& operator=(const App&) = delete;
 
-  private:
-    void createPipelineLayout();
-    void createPipeline();
-    void createCommandBuffers();
-    void drawFrame();
+	static constexpr int HEIGHT = 600;
+	static constexpr int WIDTH = 800;
 
-    VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
+	void run();
 
-    VkEngineDevice mVkDevice{mVkWindow};
+private:
+	void loadModels();
 
-    VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
+	void createPipelineLayout();
 
-    std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+	void createPipeline();
 
-    VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-    std::vector<VkCommandBuffer> ppVkCommandBuffers{};
+	void createCommandBuffers();
+
+	void drawFrame();
+
+	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
+
+	VkEngineDevice mVkDevice{mVkWindow};
+
+	VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
+
+	std::unique_ptr <VkEnginePipeline> pVkPipeline = nullptr;
+	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
+
+	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
+	std::vector <VkCommandBuffer> ppVkCommandBuffers{};
 };
 
 } // namespace vke
