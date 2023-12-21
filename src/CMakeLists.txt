@@ -2,8 +2,8 @@ file(GLOB_RECURSE SOURCES "*.cpp")
 file(GLOB_RECURSE HEADERS "*.hpp")
 
 add_executable(engine
-    ${SOURCES}
-    ${HEADERS}
+        ${SOURCES}
+        ${HEADERS}
 )
 
 set_property(TARGET engine PROPERTY CXX_STANDARD 20)

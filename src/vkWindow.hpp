@@ -3,6 +3,8 @@
 
 // vulkan headers
 #include <vulkan/vulkan.hpp>
+
+#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <string>
@@ -20,7 +22,7 @@ class VkWindow {
     [[nodiscard]] bool shouldClose() const;
     [[nodiscard]] VkExtent2D getExtent() const;
 
-    void createWindowSurface(VkInstance instance, VkSurfaceKHR *surface) const;
+    void createWindowSurface(vk::Instance instance, vk::SurfaceKHR *surface) const;
 
   private:
     void initWindow(); // initialize GLFW window

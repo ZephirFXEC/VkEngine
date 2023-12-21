@@ -8,37 +8,40 @@
 
 #include <memory>
 
-namespace vke {
+namespace vke
+{
 
-class App {
-  public:
-    App();
-    ~App();
+class App
+{
+public:
+	App();
+	~App();
 
-    App(const App &) = delete;
-    App &operator=(const App &) = delete;
+	App(const App&) = delete;
+	App& operator=(const App&) = delete;
 
-    static constexpr int HEIGHT = 600;
-    static constexpr int WIDTH = 800;
+	static constexpr int HEIGHT = 600;
+	static constexpr int WIDTH = 800;
 
-    void run();
+	void run();
 
-  private:
-    void createPipelineLayout();
-    void createPipeline();
-    void createCommandBuffers();
-    void drawFrame();
+private:
+	void createPipelineLayout();
+	void createPipeline();
+	void createCommandBuffers();
+	void drawFrame();
 
-    VkWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
+	VkWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
-    VkEngineDevice mVkDevice{mVkWindow};
+	VkEngineDevice mVkDevice{mVkWindow};
 
-    VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
+	VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
 
-    std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 
-    VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-    std::vector<VkCommandBuffer> ppVkCommandBuffers{};
+	vk::PipelineLayout pVkPipelineLayout{};
+
+	std::vector<vk::CommandBuffer> ppVkCommandBuffers{};
 };
 
 } // namespace vke
