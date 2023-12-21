@@ -26,8 +26,7 @@ public:
 	~VkEngineSwapChain();
 
 	VkEngineSwapChain(const VkEngineSwapChain&) = delete;
-
-	void operator=(const VkEngineSwapChain&) = delete;
+	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
 	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const uint32_t index) const
 	{

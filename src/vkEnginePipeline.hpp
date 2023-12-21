@@ -40,8 +40,7 @@ public:
 	~VkEnginePipeline();
 
 	VkEnginePipeline(const VkEnginePipeline&) = delete;
-
-	void operator=(const VkEnginePipeline&) = delete;
+	VkEnginePipeline& operator=(const VkEnginePipeline&) = delete;
 
 	static PipelineConfigInfo defaultPipelineConfigInfo(uint32_t width, uint32_t height);
 

@@ -43,11 +43,8 @@ public:
 
 	// Not copyable or movable
 	VkEngineDevice(const VkEngineDevice&) = delete;
-
-	void operator=(const VkEngineDevice&) = delete;
-
+	VkEngineDevice& operator=(const VkEngineDevice&) = delete;
 	VkEngineDevice(VkEngineDevice&&) = delete;
-
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
 	[[nodiscard]] const VkCommandPool& getCommandPool() const
