@@ -5,11 +5,11 @@
 #ifndef VKPIPELINE_HPP
 #define VKPIPELINE_HPP
 
-#include <string>
-#include <vector>
 
 #include "vkEngineDevice.hpp"
 #include "vkEngineModel.hpp"
+
+#include <vector>
 
 namespace vke
 {
