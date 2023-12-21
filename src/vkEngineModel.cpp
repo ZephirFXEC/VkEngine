@@ -30,7 +30,9 @@ std::vector<VkVertexInputBindingDescription> VkEngineModel::Vertex::getBindingDe
 std::vector<VkVertexInputAttributeDescription> VkEngineModel::Vertex::getAttributeDescriptions()
 {
 	std::vector<VkVertexInputAttributeDescription> attributeDescriptions{
-		{0, 0, VK_FORMAT_R32G32_SFLOAT, 0}};
+		{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition)},
+		{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor)}}
+	;
 
 	return attributeDescriptions;
 }
