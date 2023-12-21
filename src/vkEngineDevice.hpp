@@ -1,7 +1,7 @@
-#ifndef VKDEVICE_H
-#define VKDEVICE_H
+#ifndef VKDEVICE_HPP
+#define VKDEVICE_HPP
 
-#include "vkWindow.hpp"
+#include "vkEngineWindow.hpp"
 
 
 namespace vke {
@@ -30,7 +30,7 @@ class VkEngineDevice {
     static constexpr bool enableValidationLayers = true;
 #endif
 
-    explicit VkEngineDevice(VkWindow &window);
+    explicit VkEngineDevice(VkEngineWindow &window);
     ~VkEngineDevice();
 
     // Not copyable or movable
@@ -89,7 +89,7 @@ class VkEngineDevice {
     VkInstance pInstance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
     VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
-    VkWindow &mWindow;
+    VkEngineWindow &mWindow;
     VkCommandPool pCommandPool = VK_NULL_HANDLE;
 
     VkDevice pDevice = VK_NULL_HANDLE;

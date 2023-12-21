@@ -2,8 +2,8 @@
 // Created by zphrfx on 16/12/2023.
 //
 
-#ifndef VKPIPELINE_H
-#define VKPIPELINE_H
+#ifndef VKPIPELINE_HPP
+#define VKPIPELINE_HPP
 
 #include <string>
 #include <vector>

@@ -90,7 +90,7 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance instance,
 }
 
 // class member functions
-VkEngineDevice::VkEngineDevice(VkWindow &window) : mWindow{window} {
+VkEngineDevice::VkEngineDevice(VkEngineWindow &window) : mWindow{window} {
     createInstance();
     setupDebugMessenger();
     createSurface();

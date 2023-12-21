@@ -1,10 +1,10 @@
-#ifndef APP
-#define APP
+#ifndef APP_HPP
+#define APP_HPP
 
 #include "vkEngineDevice.hpp"
 #include "vkEnginePipeline.hpp"
 #include "vkEngineSwapChain.hpp"
-#include "vkWindow.hpp"
+#include "vkEngineWindow.hpp"
 
 #include <memory>
 
@@ -29,7 +29,7 @@ class App {
     void createCommandBuffers();
     void drawFrame();
 
-    VkWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
+    VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
     VkEngineDevice mVkDevice{mVkWindow};
 

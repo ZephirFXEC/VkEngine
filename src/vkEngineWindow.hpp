@@ -1,5 +1,5 @@
-#ifndef VKWINDOW
-#define VKWINDOW
+#ifndef VK_ENGINE_WINDOW_HPP
+#define VK_ENGINE_WINDOW_HPP
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -8,13 +8,13 @@
 
 namespace vke {
 
-class VkWindow {
+class VkEngineWindow {
   public:
-    VkWindow(int width, int height, std::string name); // constructor
-    ~VkWindow();                                       // destructor
+    VkEngineWindow(int width, int height, std::string name); // constructor
+    ~VkEngineWindow();                                       // destructor
 
-    VkWindow(const VkWindow &) = delete;            // copy constructor
-    VkWindow &operator=(const VkWindow &) = delete; // copy assignment operator
+    VkEngineWindow(const VkEngineWindow &) = delete;            // copy constructor
+    VkEngineWindow &operator=(const VkEngineWindow &) = delete; // copy assignment operator
 
     [[nodiscard]] bool shouldClose() const;
     [[nodiscard]] VkExtent2D getExtent() const;

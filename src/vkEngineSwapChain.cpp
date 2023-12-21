@@ -222,7 +222,7 @@ void VkEngineSwapChain::createImageViews()
 {
 	ppSwapChainImageViews = new VkImageView[imageCount()];
 
-	for(size_t i = 0; i < swapChainImages.size(); i++)
+	for(size_t i = 0; i < imageCount(); i++)
 	{
 
 		VkImageViewCreateInfo viewInfo{

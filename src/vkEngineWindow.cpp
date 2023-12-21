@@ -1,26 +1,26 @@
-#include "vkWindow.hpp"
+#include "vkEngineWindow.hpp"
 #include <stdexcept>
 
 namespace vke {
 
-VkWindow::VkWindow(const int width, const int height, std::string name)
+VkEngineWindow::VkEngineWindow(const int width, const int height, std::string name)
     : mHeight(height), mWidth(width), mName(std::move(name)) {
     initWindow();
 }
 
-VkWindow::~VkWindow() {
+VkEngineWindow::~VkEngineWindow() {
     glfwDestroyWindow(pWindow); // destroy window
     glfwTerminate();            // terminate GLFW
 }
 
-void VkWindow::createWindowSurface(const VkInstance instance, VkSurfaceKHR *surface) const {
+void VkEngineWindow::createWindowSurface(const VkInstance instance, VkSurfaceKHR *surface) const {
 
     if (glfwCreateWindowSurface(instance, pWindow, nullptr, surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
 }
 
-void VkWindow::initWindow() {
+void VkEngineWindow::initWindow() {
     glfwInit(); // initialize GLFW
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // do not create an OpenGL context
@@ -29,9 +29,9 @@ void VkWindow::initWindow() {
     pWindow = glfwCreateWindow(mWidth, mHeight, mName.c_str(), nullptr, nullptr);
 }
 
-bool VkWindow::shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
+bool VkEngineWindow::shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
 
-VkExtent2D VkWindow::getExtent() const {
+VkExtent2D VkEngineWindow::getExtent() const {
     return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)};
 }
 
