@@ -21,15 +21,12 @@ VkWindow::~VkWindow()
 void VkWindow::createWindowSurface(const vk::Instance instance, vk::SurfaceKHR* surface) const
 {
 
-
-	auto *surf = VkSurfaceKHR(*surface);
-
-	if(glfwCreateWindowSurface(instance, pWindow, nullptr, &surf) != VK_SUCCESS)
+	if(const auto result = glfwCreateWindowSurface(instance, pWindow, nullptr, reinterpret_cast<VkSurfaceKHR*>(surface));
+	   result != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create window surface!");
 	}
 
-	*surface = vk::SurfaceKHR(surf);
 }
 
 void VkWindow::initWindow()

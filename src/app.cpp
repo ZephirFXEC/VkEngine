@@ -21,10 +21,10 @@ void App::run()
 	while(!mVkWindow.shouldClose())
 	{ // while window is open
 		glfwPollEvents(); // poll for events
-		//drawFrame(); // draw frame
+		drawFrame(); // draw frame
 	}
 
-    vkDeviceWaitIdle(mVkDevice.device());
+	//vkDeviceWaitIdle(mVkDevice.device());
 }
 
 void App::createPipelineLayout()
@@ -32,7 +32,7 @@ void App::createPipelineLayout()
 
 	constexpr vk::PipelineLayoutCreateInfo pipelineLayoutInfo({}, 0, nullptr, 0, nullptr);
 
-	if(const vk::Result result = mVkDevice.device().createPipelineLayout(
+	if(const auto result = mVkDevice.device().createPipelineLayout(
 		   &pipelineLayoutInfo, nullptr, &pVkPipelineLayout);
 	   result != vk::Result::eSuccess)
 	{
@@ -62,9 +62,9 @@ void App::createCommandBuffers()
 
 	const vk::CommandBufferAllocateInfo allocInfo(mVkDevice.getCommandPool(),
 												  vk::CommandBufferLevel::ePrimary,
-												  static_cast<uint32_t>(ppVkCommandBuffers.size()));
+												  static_cast<uint32_t>(mVkSwapChain.imageCount()));
 
-	if(const vk::Result result =
+	if(const auto result =
 		   mVkDevice.device().allocateCommandBuffers(&allocInfo, ppVkCommandBuffers.data());
 	   result != vk::Result::eSuccess)
 	{
@@ -73,9 +73,9 @@ void App::createCommandBuffers()
 
 	for(uint32_t i = 0; i < mVkSwapChain.imageCount(); ++i)
 	{
-		vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+		vk::CommandBufferBeginInfo beginInfo{};
 
-		if(const vk::Result result = ppVkCommandBuffers[i].begin(&beginInfo);
+		if(const auto result = ppVkCommandBuffers[i].begin(&beginInfo);
 		   result != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to begin recording command buffer!");
@@ -111,15 +111,15 @@ void App::drawFrame()
 {
 	uint32_t imageIndex = 0;
 
-	if(const vk::Result result = mVkSwapChain.acquireNextImage(&imageIndex);
-	   result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+	if(const auto r = mVkSwapChain.acquireNextImage(&imageIndex);
+	   r != vk::Result::eSuccess && r != vk::Result::eSuboptimalKHR)
 	{
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	if(const vk::Result result =
+	if(const auto r =
 		   mVkSwapChain.submitCommandBuffers(&ppVkCommandBuffers[imageIndex], &imageIndex);
-	   result != vk::Result::eSuccess)
+	   r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to present swap chain image!");
 	}

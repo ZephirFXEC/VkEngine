@@ -79,21 +79,23 @@ VkEngineSwapChain::~VkEngineSwapChain()
 vk::Result VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 {
 
-	if(const vk::Result r = device.device().waitForFences(
-		   1, &ppInFlightFences[currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
-	   r != vk::Result::eSuccess)
+	auto r = device.device().waitForFences(1, &ppInFlightFences[currentFrame], VK_TRUE,
+								  std::numeric_limits<uint64_t>::max());
+
+	if(r != vk::Result::eSuccess) { throw std::runtime_error("failed to wait for fences!"); }
+
+	r = device.device().acquireNextImageKHR(swapChain,
+													   std::numeric_limits<uint64_t>::max(),
+													   ppImageAvailableSemaphores[currentFrame],
+													   VK_NULL_HANDLE,
+													   imageIndex);
+
+	if(r != vk::Result::eSuccess && r != vk::Result::eSuboptimalKHR)
 	{
-		throw std::runtime_error("failed to wait for fences!");
+		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 
-	const vk::Result result =
-		device.device().acquireNextImageKHR(swapChain,
-											std::numeric_limits<uint64_t>::max(),
-											ppImageAvailableSemaphores[currentFrame],
-											VK_NULL_HANDLE,
-											imageIndex);
-
-	return result;
+	return r;
 }
 
 vk::Result VkEngineSwapChain::submitCommandBuffers(const vk::CommandBuffer* buffers,
