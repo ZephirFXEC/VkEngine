@@ -167,10 +167,8 @@ void VkEngineSwapChain::createSwapChain()
 		indices = device.findPhysicalQueueFamilies();
 	}
 
-	const std::array queueFamilyIndices = {
-		indices.mGraphicsFamily.value(),
-		indices.mPresentFamily.value()
-	};
+	const std::array queueFamilyIndices = {indices.mGraphicsFamily.value(),
+										   indices.mPresentFamily.value()};
 
 	const VkSwapchainCreateInfoKHR createInfo{
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -183,14 +181,12 @@ void VkEngineSwapChain::createSwapChain()
 		.imageArrayLayers = 1,
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.queueFamilyIndexCount = indices.mGraphicsFamily.value() ==
-		                         indices.mPresentFamily.value()
-			                         ? 0u
+		.queueFamilyIndexCount =
+			indices.mGraphicsFamily.value() == indices.mPresentFamily.value() ? 0u
 			                         : 2,
-		.pQueueFamilyIndices = indices.mGraphicsFamily.value() ==
-		                       indices.mPresentFamily.value()
-			                       ? nullptr
-			                       : queueFamilyIndices.data(),
+		.pQueueFamilyIndices = indices.mGraphicsFamily.value() == indices.mPresentFamily.value()
+								   ? nullptr
+								   : queueFamilyIndices.data(),
 		.preTransform = device.getSwapChainSupport().mCapabilities.currentTransform,
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = presentMode,

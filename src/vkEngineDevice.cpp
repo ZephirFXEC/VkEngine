@@ -268,7 +268,6 @@ void VkEngineDevice::createLogicalDevice()
 		pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
 	vkGetDeviceQueue(
 		pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
-
 }
 
 void VkEngineDevice::createCommandPool()
@@ -452,7 +451,8 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
 	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+	vkEnumerateDeviceExtensionProperties(
+		device, nullptr, &extensionCount, availableExtensions.data());
 
 	std::set<std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
 
