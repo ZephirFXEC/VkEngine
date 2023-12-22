@@ -37,9 +37,13 @@ public:
 	void bind(VkCommandBuffer commandBuffer) const;
 	void draw(VkCommandBuffer commandBuffer) const;
 
+	[[nodiscard]] const VkBuffer& getVertexBuffer() const { return pVertexBuffer; }
+
 private:
 
 	void createVertexBuffers(const std::vector<Vertex> &vertices);
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory) const;
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
 	VkEngineDevice& mDevice;
 	VkBuffer pVertexBuffer = VK_NULL_HANDLE;
