@@ -189,8 +189,9 @@ void VkEngineDevice::pickPhysicalDevice()
 		throw std::runtime_error("failed to find GPUs with Vulkan support!");
 	}
 	std::cout << "Device count: " << deviceCount << '\n';
-	auto* devices = new VkPhysicalDevice[deviceCount];
-	vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices);
+
+	std::vector<VkPhysicalDevice> devices(deviceCount);
+	vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices.data());
 
 	for(uint32_t i = 0; i < deviceCount; ++i)
 	{
@@ -208,19 +209,19 @@ void VkEngineDevice::pickPhysicalDevice()
 
 	vkGetPhysicalDeviceProperties(pPhysicalDevice, &mProperties);
 	std::cout << "physical device: " << mProperties.deviceName << '\n';
-	delete[] devices;
 }
 
 void VkEngineDevice::createLogicalDevice()
 {
 
-	const std::set uniqueQueueFamilies = {findQueueFamilies(pPhysicalDevice).mGraphicsFamily,
-										  findQueueFamilies(pPhysicalDevice).mPresentFamily};
+	const std::set uniqueQueueFamilies = {
+		findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(),
+		findQueueFamilies(pPhysicalDevice).mPresentFamily.value()};
 
-	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()];
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos(uniqueQueueFamilies.size());
 
 	float queuePriority = 1.0f;
-	for(const uint32_t queueFamily : uniqueQueueFamilies)
+	for(const auto queueFamily : uniqueQueueFamilies)
 	{
 
 		const VkDeviceQueueCreateInfo queueCreateInfo{
@@ -240,7 +241,7 @@ void VkEngineDevice::createLogicalDevice()
 	VkDeviceCreateInfo createInfo = {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
-		.pQueueCreateInfos = queueCreateInfos,
+		.pQueueCreateInfos = queueCreateInfos.data(),
 		.enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
 		.ppEnabledExtensionNames = mDeviceExtensions.data(),
 		.pEnabledFeatures = &deviceFeatures,
@@ -264,10 +265,10 @@ void VkEngineDevice::createLogicalDevice()
 	}
 
 	vkGetDeviceQueue(
-		pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily, 0, &pGraphicsQueue);
-	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily, 0, &pPresentQueue);
+		pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
+	vkGetDeviceQueue(
+		pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
 
-	delete[] queueCreateInfos;
 }
 
 void VkEngineDevice::createCommandPool()
@@ -275,9 +276,8 @@ void VkEngineDevice::createCommandPool()
 
 	const VkCommandPoolCreateInfo poolInfo = {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags =
-			VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		.queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily,
+		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};
 
@@ -373,8 +373,8 @@ bool VkEngineDevice::checkValidationLayerSupport() const
 		throw std::runtime_error("No layers found");
 	}
 
-	auto* availableLayers = new VkLayerProperties[layerCount];
-	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
 	for(const char* layerName : mValidationLayers)
 	{
@@ -394,8 +394,6 @@ bool VkEngineDevice::checkValidationLayerSupport() const
 			return false;
 		}
 	}
-
-	delete[] availableLayers;
 
 	return true;
 }
@@ -425,18 +423,17 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions()
 {
 	uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-	auto* extensions = new VkExtensionProperties[extensionCount];
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions);
+
+	std::vector<VkExtensionProperties> extensions(extensionCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
 
 	std::cout << "available extensions:" << '\n';
-	std::unordered_set<std::string> available;
+	std::unordered_set<std::string> available{};
 	for(uint32_t i = 0; i < extensionCount; ++i)
 	{
 		std::cout << "\t" << extensions[i].extensionName << '\n';
 		available.insert(extensions[i].extensionName);
 	}
-
-	delete[] extensions;
 
 	std::cout << "required extensions:" << '\n';
 	for(const auto& required : getRequiredExtensions())
@@ -454,8 +451,8 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 	uint32_t extensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
-	auto* availableExtensions = new VkExtensionProperties[extensionCount];
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions);
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
 	std::set<std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
 
@@ -464,21 +461,19 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 		requiredExtensions.erase(availableExtensions[i].extensionName);
 	}
 
-	delete[] availableExtensions;
-
 	return requiredExtensions.empty();
 }
 
 QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice device) const
 {
 
-	QueueFamilyIndices indices;
+	QueueFamilyIndices indices{};
 
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-	auto* queueFamilies = new VkQueueFamilyProperties[queueFamilyCount];
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
+	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 	for(uint32_t i = 0; i < queueFamilyCount; ++i)
 	{
@@ -486,14 +481,12 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
 		   (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u)
 		{
 			indices.mGraphicsFamily = i;
-			indices.mGraphicsFamilyHasValue = true;
 		}
 		VkBool32 presentSupport = 0u;
 		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, pSurface, &presentSupport);
 		if(queueFamilies[i].queueCount > 0 && presentSupport != 0u)
 		{
 			indices.mPresentFamily = i;
-			indices.mPresentFamilyHasValue = true;
 		}
 		if(indices.isComplete())
 		{
@@ -501,13 +494,12 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
 		}
 	}
 
-	delete[] queueFamilies;
 	return indices;
 }
 
 SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDevice device) const
 {
-	SwapChainSupportDetails details;
+	SwapChainSupportDetails details{};
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, pSurface, &details.mCapabilities);
 
 	uint32_t formatCount = 0;
@@ -560,6 +552,7 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter,
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(pPhysicalDevice, &memProperties);
+
 	for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
 	{
 		if((typeFilter & 1 << i) != 0u &&
@@ -579,9 +572,9 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size,
 								  VkDeviceMemory& bufferMemory) const
 {
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = size,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+										.size = size,
+										.usage = usage,
+										.sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
 	if(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
 	{

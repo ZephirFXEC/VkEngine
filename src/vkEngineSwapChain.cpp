@@ -154,14 +154,23 @@ void VkEngineSwapChain::createSwapChain()
 	const VkExtent2D extent = chooseSwapExtent(device.getSwapChainSupport().mCapabilities);
 
 	uint32_t imageCount = device.getSwapChainSupport().mCapabilities.minImageCount + 1;
+
 	if(device.getSwapChainSupport().mCapabilities.maxImageCount > 0 &&
 	   imageCount > device.getSwapChainSupport().mCapabilities.maxImageCount)
 	{
 		imageCount = device.getSwapChainSupport().mCapabilities.maxImageCount;
 	}
 
-	const std::array queueFamilyIndices = {device.findPhysicalQueueFamilies().mGraphicsFamily,
-	                                       device.findPhysicalQueueFamilies().mPresentFamily};
+	QueueFamilyIndices indices{};
+	if(device.findPhysicalQueueFamilies().isComplete())
+	{
+		indices = device.findPhysicalQueueFamilies();
+	}
+
+	const std::array queueFamilyIndices = {
+		indices.mGraphicsFamily.value(),
+		indices.mPresentFamily.value()
+	};
 
 	const VkSwapchainCreateInfoKHR createInfo{
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -174,12 +183,12 @@ void VkEngineSwapChain::createSwapChain()
 		.imageArrayLayers = 1,
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.queueFamilyIndexCount = device.findPhysicalQueueFamilies().mGraphicsFamily ==
-		                         device.findPhysicalQueueFamilies().mPresentFamily
+		.queueFamilyIndexCount = indices.mGraphicsFamily.value() ==
+		                         indices.mPresentFamily.value()
 			                         ? 0u
 			                         : 2,
-		.pQueueFamilyIndices = device.findPhysicalQueueFamilies().mGraphicsFamily ==
-		                       device.findPhysicalQueueFamilies().mPresentFamily
+		.pQueueFamilyIndices = indices.mGraphicsFamily.value() ==
+		                       indices.mPresentFamily.value()
 			                       ? nullptr
 			                       : queueFamilyIndices.data(),
 		.preTransform = device.getSwapChainSupport().mCapabilities.currentTransform,

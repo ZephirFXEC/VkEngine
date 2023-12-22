@@ -17,14 +17,12 @@ struct SwapChainSupportDetails
 
 struct QueueFamilyIndices
 {
-	uint32_t mGraphicsFamily{};
-	uint32_t mPresentFamily{};
-	bool mGraphicsFamilyHasValue = false;
-	bool mPresentFamilyHasValue = false;
+	std::optional<uint32_t> mGraphicsFamily;
+	std::optional<uint32_t> mPresentFamily;
 
 	[[nodiscard]] bool isComplete() const
 	{
-		return mGraphicsFamilyHasValue && mPresentFamilyHasValue;
+		return mGraphicsFamily.has_value() && mPresentFamily.has_value();
 	}
 };
 
@@ -134,7 +132,7 @@ private:
 	void createVMAllocator();
 
 	// helper functions
-	bool isDeviceSuitable(VkPhysicalDevice device) const;
+	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device) const;
 
 	[[nodiscard]] static std::vector<const char*> getRequiredExtensions();
 

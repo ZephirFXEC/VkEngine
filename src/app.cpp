@@ -26,15 +26,20 @@ void App::run() {
 void App::loadModels()
 {
 	std::vector<VkEngineModel::Vertex> vertices{
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	   {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+		{{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+	};
+
+	std::vector<uint16_t> indices{
+		0, 1, 2, 2, 3, 0
 	};
 
 	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices);
 }
 
-void App::createPipelineLayout() {
+void App::createPipelineLayout() {;
     constexpr VkPipelineLayoutCreateInfo pipelineLayoutInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .setLayoutCount = 0,
@@ -50,8 +55,8 @@ void App::createPipelineLayout() {
 
 void App::createPipeline() {
 
-    auto pipelineConfig =
-        VkEnginePipeline::defaultPipelineConfigInfo(mVkSwapChain->width(), mVkSwapChain->height());
+	PipelineConfigInfo pipelineConfig{};
+	VkEnginePipeline::defaultPipelineConfigInfo(pipelineConfig);
 
     pipelineConfig.renderPass = mVkSwapChain->getRenderPass();
     pipelineConfig.pipelineLayout = pVkPipelineLayout;
@@ -85,7 +90,8 @@ void App::recordCommandsBuffers(const size_t imageIndex) const
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	};
 
-	if (vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
+	if(vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 
@@ -93,7 +99,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 		.renderPass = mVkSwapChain->getRenderPass(),
 		.framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
-		.renderArea = {.offset = {0, 0},.extent = mVkSwapChain->getSwapChainExtent()},
+		.renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
 	};
 
 	std::array<VkClearValue, 2> clearValues{};
@@ -103,16 +109,42 @@ void App::recordCommandsBuffers(const size_t imageIndex) const
 	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	renderPassInfo.pClearValues = clearValues.data();
 
+	const VkViewport viewport{
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = static_cast<float>(mVkSwapChain->getSwapChainExtent().width),
+		.height = static_cast<float>(mVkSwapChain->getSwapChainExtent().height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
+	};
+
+	const VkRect2D scissor{
+		.offset = {0, 0},
+		.extent = mVkSwapChain->getSwapChainExtent(),
+	};
+
+
 	vkCmdBeginRenderPass(ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdSetViewport(ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
+	vkCmdSetScissor(ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
 	pVkPipeline->bind(ppVkCommandBuffers[imageIndex]);
 	pVkModel->bind(ppVkCommandBuffers[imageIndex]);
 	pVkModel->draw(ppVkCommandBuffers[imageIndex]);
 
 	vkCmdEndRenderPass(ppVkCommandBuffers[imageIndex]);
-	if (vkEndCommandBuffer(ppVkCommandBuffers[imageIndex]) != VK_SUCCESS) {
+	if(vkEndCommandBuffer(ppVkCommandBuffers[imageIndex]) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to record command buffer!");
 	}
+}
+void App::freeCommandBuffers()
+{
+	vkFreeCommandBuffers(mVkDevice.device(), mVkDevice.getCommandPool(),
+	                     static_cast<uint32_t>(ppVkCommandBuffers.size()),
+	                     ppVkCommandBuffers.data());
+
+	ppVkCommandBuffers.clear();
 }
 
 void App::recreateSwapChain()
@@ -124,8 +156,22 @@ void App::recreateSwapChain()
 	}
 
 	vkDeviceWaitIdle(mVkDevice.device());
-	mVkSwapChain = nullptr;
-	mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
+
+	if(mVkSwapChain == nullptr)
+	{
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
+	}
+	else
+	{
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
+
+		if(mVkSwapChain->imageCount() != ppVkCommandBuffers.size())
+		{
+			freeCommandBuffers();
+			createCommandBuffers();
+		}
+	}
+
 	createPipeline();
 }
 

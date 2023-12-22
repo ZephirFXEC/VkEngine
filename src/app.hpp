@@ -40,6 +40,8 @@ private:
 
 	void recordCommandsBuffers(size_t imageIndex) const;
 
+	void freeCommandBuffers();
+
 	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
 	VkEngineDevice mVkDevice{mVkWindow};
