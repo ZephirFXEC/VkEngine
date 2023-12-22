@@ -21,24 +21,22 @@ VkEngineModel::~VkEngineModel()
 
 std::vector<VkVertexInputBindingDescription> VkEngineModel::Vertex::getBindingDescriptions()
 {
-	std::vector<VkVertexInputBindingDescription> bindingDescriptions{
-		{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}};
-
-	return bindingDescriptions;
+	return {
+			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
+	};
 }
 
 std::vector<VkVertexInputAttributeDescription> VkEngineModel::Vertex::getAttributeDescriptions()
 {
-	std::vector<VkVertexInputAttributeDescription> attributeDescriptions{
-		{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition)},
-		{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor)}};
-
-	return attributeDescriptions;
+	return {
+			{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition)},
+			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor)}
+	};
 }
 
 void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const
 {
-	const std::array<VkBuffer, 1> buffers{pVertexBuffer};
+	const std::array buffers{pVertexBuffer};
 	constexpr std::array<VkDeviceSize, 1> offsets{0};
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers.data(), offsets.data());
@@ -85,11 +83,12 @@ void VkEngineModel::createBuffer(const VkDeviceSize size,
 								 VkBuffer& buffer,
 								 VkDeviceMemory& bufferMemory) const
 {
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	const VkBufferCreateInfo bufferInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = size,
+		.usage = usage,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
 
 	if(vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
 	{
@@ -99,10 +98,11 @@ void VkEngineModel::createBuffer(const VkDeviceSize size,
 	VkMemoryRequirements memRequirements;
 	vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
 
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties);
+	const VkMemoryAllocateInfo allocInfo{
+		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		.allocationSize = memRequirements.size,
+		.memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)
+	};
 
 	if(vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
 	{
@@ -115,31 +115,34 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer,
 							   const VkBuffer dstBuffer,
 							   const VkDeviceSize size) const
 {
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = mDevice.getCommandPool();
-	allocInfo.commandBufferCount = 1;
+
+	const VkCommandBufferAllocateInfo allocInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandPool = mDevice.getCommandPool(),
+		.commandBufferCount = 1,
+	};
 
 	VkCommandBuffer commandBuffer = nullptr;
 	vkAllocateCommandBuffers(mDevice.device(), &allocInfo, &commandBuffer);
 
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	constexpr VkCommandBufferBeginInfo beginInfo{
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+	};
 
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
-	VkBufferCopy copyRegion{};
-	copyRegion.size = size;
+	const VkBufferCopy copyRegion{ .size = size };
 	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
 	vkEndCommandBuffer(commandBuffer);
 
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
+	const VkSubmitInfo submitInfo{
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &commandBuffer,
+	};
 
 	vkQueueSubmit(mDevice.graphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(mDevice.graphicsQueue());
