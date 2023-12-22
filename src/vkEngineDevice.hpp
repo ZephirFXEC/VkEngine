@@ -37,6 +37,7 @@ public:
 	static constexpr bool enableValidationLayers = true;
 #endif
 
+	explicit VkEngineDevice() = delete;
 	explicit VkEngineDevice(VkEngineWindow& window);
 
 	~VkEngineDevice();

@@ -30,10 +30,21 @@ void VkEngineWindow::initWindow()
 	glfwInit(); // initialize GLFW
 
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); // do not create an OpenGL context
-	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // disable window resizing
+	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); // disable window resizing
 
 	pWindow = glfwCreateWindow(mWidth, mHeight, mName.c_str(), nullptr, nullptr);
+	glfwSetWindowUserPointer(pWindow, this);
+	glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
 }
+
+void VkEngineWindow::framebufferResizeCallback(GLFWwindow* window, const int width, const int height)
+{
+	auto *app = static_cast<VkEngineWindow*>(glfwGetWindowUserPointer(window));
+	app->framebufferResized = true;
+	app->mWidth = width;
+	app->mHeight = height;
+}
+
 
 bool VkEngineWindow::shouldClose() const
 {

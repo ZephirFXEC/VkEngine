@@ -16,11 +16,8 @@ class App
 {
 public:
 	App();
-
 	~App();
-
 	App(const App&) = delete;
-
 	App& operator=(const App&) = delete;
 
 	static constexpr int HEIGHT = 600;
@@ -39,12 +36,15 @@ private:
 
 	void drawFrame();
 
+	void recreateSwapChain();
+
+	void recordCommandsBuffers(size_t imageIndex) const;
+
 	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
 	VkEngineDevice mVkDevice{mVkWindow};
 
-	VkEngineSwapChain mVkSwapChain{mVkDevice, mVkWindow.getExtent()};
-
+	std::unique_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
 	std::unique_ptr <VkEnginePipeline> pVkPipeline = nullptr;
 	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 

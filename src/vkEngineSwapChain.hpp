@@ -17,16 +17,12 @@ class VkEngineSwapChain
 public:
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
+	explicit VkEngineSwapChain() = delete;
 	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent);
-
-	VkEngineSwapChain(VkEngineDevice& deviceRef,
-	                  VkExtent2D windowExtent,
-	                  std::shared_ptr <VkEngineSwapChain> previous);
-
 	~VkEngineSwapChain();
 
 	VkEngineSwapChain(const VkEngineSwapChain&) = delete;
-	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
+	VkEngineSwapChain& operator=(const VkEngineSwapChain &) = delete;
 
 	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const uint32_t index) const
 	{
@@ -121,8 +117,6 @@ private:
 	VkExtent2D windowExtent{};
 
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-	std::shared_ptr <VkEngineSwapChain> oldSwapChain = nullptr;
-
 
 	VkSemaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
 	VkSemaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;

@@ -32,6 +32,9 @@ struct PipelineConfigInfo
 class VkEnginePipeline
 {
 public:
+
+	explicit VkEnginePipeline() = delete;
+
 	VkEnginePipeline(VkEngineDevice& device,
 	                 const std::string& vertShader,
 	                 const std::string& fragShader,

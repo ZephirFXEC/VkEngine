@@ -17,17 +17,6 @@ VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D
 	init();
 }
 
-VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef,
-                                     const VkExtent2D windowExtent,
-                                     std::shared_ptr <VkEngineSwapChain> previous)
-	: device{deviceRef}
-	  , windowExtent{windowExtent}
-	  , oldSwapChain{std::move(std::move(previous))}
-{
-	init();
-	oldSwapChain = nullptr;
-}
-
 void VkEngineSwapChain::init()
 {
 	createSwapChain();
@@ -199,7 +188,7 @@ void VkEngineSwapChain::createSwapChain()
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = presentMode,
 		.clipped = VK_TRUE,
-		.oldSwapchain = oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain,
+		.oldSwapchain = VK_NULL_HANDLE,
 	};
 
 	if(vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS)
