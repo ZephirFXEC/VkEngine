@@ -3,8 +3,6 @@
 
 #include "vkEngineDevice.hpp"
 
-// vulkan headers
-#include <vulkan/vulkan.hpp>
 
 // std lib headers
 #include <vector>
@@ -19,6 +17,7 @@ public:
 
 	explicit VkEngineSwapChain() = delete;
 	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent);
+	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent, const std::shared_ptr<VkEngineSwapChain>& previous);
 	~VkEngineSwapChain();
 
 	VkEngineSwapChain(const VkEngineSwapChain&) = delete;
@@ -103,25 +102,26 @@ private:
 	VkFormat mSwapChainImageFormat{};
 	VkExtent2D mSwapChainExtent{};
 
-	VkFramebuffer* ppSwapChainFramebuffers = VK_NULL_HANDLE;
+	std::vector<VkFramebuffer> ppSwapChainFramebuffers{};
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 
-	std::vector <VkImage> swapChainImages{};
+	std::vector<VkImage> swapChainImages{};
 	std::vector <VkImage> depthImages{};
 
-	VkDeviceMemory* ppDepthImageMemorys = VK_NULL_HANDLE;
-	VkImageView* ppDepthImageViews = VK_NULL_HANDLE;
-	VkImageView* ppSwapChainImageViews = VK_NULL_HANDLE;
+	std::vector<VkDeviceMemory> ppDepthImageMemorys{};
+	std::vector<VkImageView> ppDepthImageViews{};
+	std::vector<VkImageView> ppSwapChainImageViews{};
 
 	VkEngineDevice& device;
 	VkExtent2D windowExtent{};
 
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
-	VkSemaphore* ppImageAvailableSemaphores = VK_NULL_HANDLE;
-	VkSemaphore* ppRenderFinishedSemaphores = VK_NULL_HANDLE;
-	VkFence* ppInFlightFences = VK_NULL_HANDLE;
-	VkFence* ppImagesInFlight = VK_NULL_HANDLE; // no delete[] idk why but it works
+	std::vector<VkSemaphore> ppImageAvailableSemaphores{};
+	std::vector<VkSemaphore> ppRenderFinishedSemaphores{};
+	std::vector<VkFence> ppInFlightFences{};
+	std::vector<VkFence> ppImagesInFlight{};
 
 	/*
 	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppImageAvailableSemaphores{};

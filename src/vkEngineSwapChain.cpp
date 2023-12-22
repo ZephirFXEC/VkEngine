@@ -17,6 +17,13 @@ VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D
 	init();
 }
 
+VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D windowExtent, const std::shared_ptr <VkEngineSwapChain>& previous)
+	: device{deviceRef}, windowExtent{windowExtent}, pOldSwapChain{std::move(previous)}
+{
+	init();
+	pOldSwapChain = nullptr;
+}
+
 void VkEngineSwapChain::init()
 {
 	createSwapChain();
@@ -34,7 +41,7 @@ VkEngineSwapChain::~VkEngineSwapChain()
 		vkDestroyImageView(device.device(), ppSwapChainImageViews[i], nullptr);
 	}
 
-	ppSwapChainImageViews = nullptr;
+	ppSwapChainImageViews.clear();
 
 	if(swapChain != nullptr)
 	{
@@ -49,15 +56,10 @@ VkEngineSwapChain::~VkEngineSwapChain()
 		vkFreeMemory(device.device(), ppDepthImageMemorys[i], nullptr);
 	}
 
-	delete[] ppDepthImageViews;
-	delete[] ppDepthImageMemorys;
-
 	for(size_t i = 0; i < imageCount(); ++i)
 	{
 		vkDestroyFramebuffer(device.device(), ppSwapChainFramebuffers[i], nullptr);
 	}
-
-	delete[] ppSwapChainFramebuffers;
 
 	vkDestroyRenderPass(device.device(), pRenderPass, nullptr);
 
@@ -69,9 +71,6 @@ VkEngineSwapChain::~VkEngineSwapChain()
 		vkDestroyFence(device.device(), ppInFlightFences[i], nullptr);
 	}
 
-	delete[] ppImageAvailableSemaphores;
-	delete[] ppRenderFinishedSemaphores;
-	delete[] ppInFlightFences;
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
@@ -80,14 +79,13 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 	                1,
 	                &ppInFlightFences[currentFrame],
 	                VK_TRUE,
-	                std::numeric_limits <uint64_t>::max());
+	                UINT64_MAX);
 
 	const VkResult result = vkAcquireNextImageKHR(
 		device.device(),
 		swapChain,
-		std::numeric_limits <uint64_t>::max(),
-		ppImageAvailableSemaphores[currentFrame],
-		// must be a not signaled semaphore
+		UINT64_MAX,
+		ppImageAvailableSemaphores[currentFrame], // must be a not signaled semaphore
 		VK_NULL_HANDLE,
 		imageIndex);
 
@@ -188,7 +186,7 @@ void VkEngineSwapChain::createSwapChain()
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 		.presentMode = presentMode,
 		.clipped = VK_TRUE,
-		.oldSwapchain = VK_NULL_HANDLE,
+		.oldSwapchain = pOldSwapChain == nullptr ? VK_NULL_HANDLE : pOldSwapChain->swapChain,
 	};
 
 	if(vkCreateSwapchainKHR(device.device(), &createInfo, nullptr, &swapChain) != VK_SUCCESS)
@@ -210,7 +208,7 @@ void VkEngineSwapChain::createSwapChain()
 
 void VkEngineSwapChain::createImageViews()
 {
-	ppSwapChainImageViews = new VkImageView[imageCount()];
+	ppSwapChainImageViews.resize(imageCount());
 
 	for(size_t i = 0; i < imageCount(); i++)
 	{
@@ -308,7 +306,7 @@ void VkEngineSwapChain::createRenderPass()
 
 void VkEngineSwapChain::createFramebuffers()
 {
-	ppSwapChainFramebuffers = new VkFramebuffer[imageCount()];
+	ppSwapChainFramebuffers.resize(imageCount());
 	for(size_t i = 0; i < imageCount(); i++)
 	{
 
@@ -340,8 +338,8 @@ void VkEngineSwapChain::createDepthResources()
 {
 
 	depthImages.resize(imageCount());
-	ppDepthImageMemorys = new VkDeviceMemory[imageCount()];
-	ppDepthImageViews = new VkImageView[imageCount()];
+	ppDepthImageMemorys.resize(imageCount());
+	ppDepthImageViews.resize(imageCount());
 
 	for(size_t i = 0; i < depthImages.size(); i++)
 	{
@@ -390,10 +388,10 @@ void VkEngineSwapChain::createDepthResources()
 void VkEngineSwapChain::createSyncObjects()
 {
 
-	ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
-	ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
-	ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT];
-	ppImagesInFlight = new VkFence[imageCount()];
+	ppImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	ppRenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+	ppInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+	ppImagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
