@@ -39,6 +39,9 @@ class VkEngineModel
 
 	private:
 
+	template <typename T>
+	void createVkBuffer(const std::vector<T>& data, VkBufferUsageFlags usage, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+
 	void createVertexBuffers(const std::vector<Vertex>& vertices);
 	void createIndexBuffers(const std::vector<uint32_t>& indices);
 
@@ -63,6 +66,6 @@ class VkEngineModel
 
 	VkEngineDevice& mDevice;
 };
-} // vke
+}    // namespace vke
 
-#endif //VKENGINEMODEL_HPP
+#endif    //VKENGINEMODEL_HPP
