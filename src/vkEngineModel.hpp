@@ -17,41 +17,52 @@
 
 namespace vke {
 
-class VkEngineModel {
-public:
-
+class VkEngineModel
+{
+	public:
 	struct Vertex
 	{
-		glm::vec2 mPosition{};
-		glm::vec3 mColor{};
-		static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
+		glm::vec2                                             mPosition{};
+		glm::vec3                                             mColor{};
+		static std::vector<VkVertexInputBindingDescription>   getBindingDescriptions();
 		static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 	};
 
-	VkEngineModel(VkEngineDevice &device, const std::vector<Vertex> &vertices);
+	 VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	~VkEngineModel();
 
-	VkEngineModel(const VkEngineModel &) = delete;
-	VkEngineModel &operator=(const VkEngineModel &) = delete;
+				   VkEngineModel(const VkEngineModel&) = delete;
+	VkEngineModel& operator=(const VkEngineModel&) = delete;
 
 	void bind(VkCommandBuffer commandBuffer) const;
 	void draw(VkCommandBuffer commandBuffer) const;
 
-	[[nodiscard]] const VkBuffer& getVertexBuffer() const { return pVertexBuffer; }
+	private:
 
-private:
+	void createVertexBuffers(const std::vector<Vertex>& vertices);
+	void createIndexBuffers(const std::vector<uint32_t>& indices);
 
-	void createVertexBuffers(const std::vector<Vertex> &vertices);
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory) const;
+	void createBuffer(
+		VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+		VkDeviceMemory& bufferMemory) const;
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
+	struct VertexBuffer
+	{
+		VkBuffer       pVertexBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory pVertexBufferMemory = VK_NULL_HANDLE;
+	} mVertexBuffer{};
+
+	struct IndexBuffer
+	{
+		VkBuffer       pIndexBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory pIndexBufferMemory = VK_NULL_HANDLE;
+	} mIndexBuffer{};
+
+	uint32_t mIndexCount = 0;
+
 	VkEngineDevice& mDevice;
-	VkBuffer pVertexBuffer = VK_NULL_HANDLE;
-	VkDeviceMemory pVertexBufferMemory = VK_NULL_HANDLE;
-	uint32_t mVertexCount = 0;
-
 };
-
 } // vke
 
 #endif //VKENGINEMODEL_HPP

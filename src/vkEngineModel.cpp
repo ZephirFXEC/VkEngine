@@ -5,117 +5,124 @@
 #include "vkEngineModel.hpp"
 #include <cassert>
 
-namespace vke
+namespace vke {
+VkEngineModel::VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices):
+	mIndexCount{ static_cast<uint32_t>(indices.size()) }, mDevice{ device }
 {
-VkEngineModel::VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices)
-	: mDevice{device}
-{
+	createIndexBuffers(indices);
 	createVertexBuffers(vertices);
 }
 
 VkEngineModel::~VkEngineModel()
 {
-	vkDestroyBuffer(mDevice.device(), pVertexBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), pVertexBufferMemory, nullptr);
+	vkDestroyBuffer(mDevice.device(), mVertexBuffer.pVertexBuffer, nullptr);
+	vkFreeMemory(mDevice.device(), mVertexBuffer.pVertexBufferMemory, nullptr);
+
+	vkDestroyBuffer(mDevice.device(), mIndexBuffer.pIndexBuffer, nullptr);
+	vkFreeMemory(mDevice.device(), mIndexBuffer.pIndexBufferMemory, nullptr);
 }
 
 std::vector<VkVertexInputBindingDescription> VkEngineModel::Vertex::getBindingDescriptions()
 {
-	return {
-			{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}
-	};
+	return { { 0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX } };
 }
 
 std::vector<VkVertexInputAttributeDescription> VkEngineModel::Vertex::getAttributeDescriptions()
 {
-	return {
-			{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition)},
-			{1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor)}
-	};
+	return { { 0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition) },
+			 { 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor) } };
 }
 
 void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const
 {
-	const std::array buffers{pVertexBuffer};
-	constexpr std::array<VkDeviceSize, 1> offsets{0};
+	const std::array                      buffers{ mVertexBuffer.pVertexBuffer };
+	constexpr std::array<VkDeviceSize, 1> offsets{ 0 };
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers.data(), offsets.data());
+	vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.pIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
-void VkEngineModel::draw(const VkCommandBuffer commandBuffer) const
-{
-	vkCmdDraw(commandBuffer, mVertexCount, 1, 0, 0);
-}
+void VkEngineModel::draw(const VkCommandBuffer commandBuffer) const { vkCmdDrawIndexed(commandBuffer, mIndexCount, 1, 0, 0, 0); }
 
 void VkEngineModel::createVertexBuffers(const std::vector<Vertex>& vertices)
 {
-	mVertexCount = static_cast<uint32_t>(vertices.size());
-
 	const VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-	VkBuffer stagingBuffer = nullptr;
+	VkBuffer       stagingBuffer = nullptr;
 	VkDeviceMemory stagingBufferMemory = nullptr;
-	createBuffer(bufferSize,
-				 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-				 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				 stagingBuffer,
-				 stagingBufferMemory);
+	createBuffer(
+		bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		stagingBuffer, stagingBufferMemory);
 
 	void* data = nullptr;
 	vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
 	memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
 	vkUnmapMemory(mDevice.device(), stagingBufferMemory);
 
-	createBuffer(bufferSize,
-				 VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-				 VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-				 pVertexBuffer,
-				 pVertexBufferMemory);
+	createBuffer(
+		bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		mVertexBuffer.pVertexBuffer, mVertexBuffer.pVertexBufferMemory);
 
-	copyBuffer(stagingBuffer, pVertexBuffer, bufferSize);
+	copyBuffer(stagingBuffer, mVertexBuffer.pVertexBuffer, bufferSize);
 
 	vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
 	vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
 }
-void VkEngineModel::createBuffer(const VkDeviceSize size,
-								 const VkBufferUsageFlags usage,
-								 const VkMemoryPropertyFlags properties,
-								 VkBuffer& buffer,
-								 VkDeviceMemory& bufferMemory) const
+
+void VkEngineModel::createIndexBuffers(const std::vector<uint32_t>& indices)
+{
+	const VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+
+	VkBuffer       stagingBuffer = nullptr;
+	VkDeviceMemory stagingBufferMemory = nullptr;
+	createBuffer(
+		bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		stagingBuffer, stagingBufferMemory);
+
+	void* data = nullptr;
+	vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &data);
+	memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+	vkUnmapMemory(mDevice.device(), stagingBufferMemory);
+
+	createBuffer(
+		bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		mIndexBuffer.pIndexBuffer, mIndexBuffer.pIndexBufferMemory);
+
+	copyBuffer(stagingBuffer, mIndexBuffer.pIndexBuffer, bufferSize);
+
+	vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
+	vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
+}
+
+void VkEngineModel::createBuffer(
+	const VkDeviceSize size, const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties, VkBuffer& buffer,
+	VkDeviceMemory& bufferMemory) const
 {
 	const VkBufferCreateInfo bufferInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = size,
-		.usage = usage,
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = size, .usage = usage, .sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
 
-	if(vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+	if (vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create buffer!");
 	}
 
-	VkMemoryRequirements memRequirements;
+	VkMemoryRequirements memRequirements{};
 	vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
 
-	const VkMemoryAllocateInfo allocInfo{
-		.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-		.allocationSize = memRequirements.size,
-		.memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)
-	};
+	const VkMemoryAllocateInfo allocInfo{ .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+										  .allocationSize = memRequirements.size,
+										  .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties) };
 
-	if(vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+	if (vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to allocate buffer memory!");
 	}
 
 	vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
 }
-void VkEngineModel::copyBuffer(const VkBuffer srcBuffer,
-							   const VkBuffer dstBuffer,
-							   const VkDeviceSize size) const
+void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const
 {
-
 	const VkCommandBufferAllocateInfo allocInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
@@ -126,10 +133,8 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer,
 	VkCommandBuffer commandBuffer = nullptr;
 	vkAllocateCommandBuffers(mDevice.device(), &allocInfo, &commandBuffer);
 
-	constexpr VkCommandBufferBeginInfo beginInfo{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-	};
+	constexpr VkCommandBufferBeginInfo beginInfo{ .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+												  .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT };
 
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
@@ -149,4 +154,4 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer,
 
 	vkFreeCommandBuffers(mDevice.device(), mDevice.getCommandPool(), 1, &commandBuffer);
 }
-} // namespace vke
+}    // namespace vke
