@@ -16,6 +16,8 @@ App::~App()
 	mVkDevice.getDeletionQueue().push_function([device = mVkDevice.device(), pipelineLayout = pVkPipelineLayout]() {
 		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 	});
+
+	mVkDevice.getDeletionQueue().flush();
 }
 
 void App::run()

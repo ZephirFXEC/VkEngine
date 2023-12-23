@@ -120,7 +120,7 @@ VkEngineDevice::~VkEngineDevice()
 
 	mDeletionQueue.flush();
 
-	mDeletionQueue.push_function([=]() {
+	mDeletionQueue.push_function([this]() {
 		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
 	});
 

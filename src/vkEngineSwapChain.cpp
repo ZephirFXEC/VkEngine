@@ -37,18 +37,14 @@ VkEngineSwapChain::~VkEngineSwapChain()
 {
 	for (size_t i = 0; i < imageCount(); ++i)
 	{
-		device.getDeletionQueue().push_function([this, i]() {
-			vkDestroyImageView(device.device(), ppSwapChainImageViews[i], nullptr);
-		});
+		device.getDeletionQueue().push_function([this, i]() { vkDestroyImageView(device.device(), ppSwapChainImageViews[i], nullptr); });
 	}
 
 	ppSwapChainImageViews.clear();
 
 	if (swapChain != nullptr)
 	{
-		device.getDeletionQueue().push_function([this]() {
-			vkDestroySwapchainKHR(device.device(), swapChain, nullptr);
-		});
+		device.getDeletionQueue().push_function([this]() { vkDestroySwapchainKHR(device.device(), swapChain, nullptr); });
 
 		swapChain = nullptr;
 	}
@@ -65,9 +61,7 @@ VkEngineSwapChain::~VkEngineSwapChain()
 
 	for (size_t i = 0; i < imageCount(); ++i) { vkDestroyFramebuffer(device.device(), ppSwapChainFramebuffers[i], nullptr); }
 
-	device.getDeletionQueue().push_function([this]() {
-		vkDestroyRenderPass(device.device(), pRenderPass, nullptr);
-	});
+	device.getDeletionQueue().push_function([this]() { vkDestroyRenderPass(device.device(), pRenderPass, nullptr); });
 
 	// cleanup synchronization objects
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
@@ -78,6 +72,8 @@ VkEngineSwapChain::~VkEngineSwapChain()
 			vkDestroyFence(device.device(), ppInFlightFences[i], nullptr);
 		});
 	}
+
+	device.getDeletionQueue().flush();
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const

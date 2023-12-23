@@ -24,6 +24,8 @@ VkEnginePipeline::~VkEnginePipeline()
 
 	mDevice.getDeletionQueue().push_function(
 		[mDevice = mDevice.device(), pGraphicsPipeline = pGraphicsPipeline]() { vkDestroyPipeline(mDevice, pGraphicsPipeline, nullptr); });
+
+	mDevice.getDeletionQueue().flush();
 }
 
 void VkEnginePipeline::bind(const VkCommandBuffer commandBuffer) const
