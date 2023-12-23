@@ -1,12 +1,38 @@
 #ifndef VKDEVICE_HPP
 #define VKDEVICE_HPP
 
+#include <functional>
+#include <deque>
+#include <ranges>
+
 #include "vkEngineWindow.hpp"
 
 #include <vk_mem_alloc.h>
 
+
 namespace vke
 {
+
+struct DeletionQueue
+{
+	std::deque<std::function<void()>> mDeletionQueue{};
+
+	void push_function(std::function<void()>&& function)
+	{
+		mDeletionQueue.push_back(std::move(function));
+	}
+
+	void flush()
+	{
+		// reverse iterate the deletion queue to execute all the functions
+		for(auto & it : std::ranges::reverse_view(mDeletionQueue))
+		{
+			it(); // call functors
+		}
+
+		mDeletionQueue.clear();
+	}
+};
 
 struct SwapChainSupportDetails
 {
@@ -30,7 +56,7 @@ class VkEngineDevice
 {
 public:
 #ifdef NDEBUG
-	static constexpr bool enableValidationLayers = true;
+	static constexpr bool enableValidationLayers = false;
 #else
 	static constexpr bool enableValidationLayers = true;
 #endif
@@ -84,9 +110,9 @@ public:
 		return findQueueFamilies(pPhysicalDevice);
 	}
 
-	[[nodiscard]] const VmaAllocator& getAllocator() const
+	[[nodiscard]] DeletionQueue& getDeletionQueue()
 	{
-		return pVmaAllocator;
+		return mDeletionQueue;
 	}
 
 	[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates,
@@ -129,7 +155,7 @@ private:
 
 	void createCommandPool();
 
-	void createVMAllocator();
+
 
 	// helper functions
 	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device) const;
@@ -148,7 +174,8 @@ private:
 
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 
-	VmaAllocator pVmaAllocator = VK_NULL_HANDLE;
+	DeletionQueue mDeletionQueue{};
+	VkDevice pDevice = VK_NULL_HANDLE;
 
 	VkInstance pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
@@ -156,7 +183,6 @@ private:
 	VkEngineWindow& mWindow;
 	VkCommandPool pCommandPool = VK_NULL_HANDLE;
 
-	VkDevice pDevice = VK_NULL_HANDLE;
 	VkSurfaceKHR pSurface = VK_NULL_HANDLE;
 	VkQueue pGraphicsQueue = VK_NULL_HANDLE;
 	VkQueue pPresentQueue = VK_NULL_HANDLE;
@@ -168,4 +194,4 @@ private:
 
 } // namespace vke
 
-#endif // VKDEVICE_H
+#endif // VKDEVICE_HPP

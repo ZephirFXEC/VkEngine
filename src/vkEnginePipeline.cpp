@@ -3,7 +3,6 @@
 // std
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 
 namespace vke
@@ -22,7 +21,9 @@ VkEnginePipeline::~VkEnginePipeline()
 {
 	vkDestroyShaderModule(mDevice.device(), pVertShaderModule, nullptr);
 	vkDestroyShaderModule(mDevice.device(), pFragShaderModule, nullptr);
-	vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
+
+	mDevice.getDeletionQueue().push_function(
+		[mDevice = mDevice.device(), pGraphicsPipeline = pGraphicsPipeline]() { vkDestroyPipeline(mDevice, pGraphicsPipeline, nullptr); });
 }
 
 void VkEnginePipeline::bind(const VkCommandBuffer commandBuffer) const

@@ -113,12 +113,17 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window)
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createCommandPool();
-	createVMAllocator();
 }
 
 VkEngineDevice::~VkEngineDevice()
 {
-	vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
+
+	mDeletionQueue.flush();
+
+	mDeletionQueue.push_function([=]() {
+		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
+	});
+
 	vkDestroyDevice(pDevice, nullptr);
 
 	if(enableValidationLayers)
@@ -128,7 +133,6 @@ VkEngineDevice::~VkEngineDevice()
 
 	vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
 	vkDestroyInstance(pInstance, nullptr);
-	vmaDestroyAllocator(pVmaAllocator);
 }
 
 void VkEngineDevice::createInstance()
@@ -284,24 +288,7 @@ void VkEngineDevice::createCommandPool()
 	{
 		throw std::runtime_error("failed to create command pool!");
 	}
-}
 
-void VkEngineDevice::createVMAllocator()
-{
-	constexpr VmaVulkanFunctions vkFunctions{
-		.vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
-		.vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
-	};
-
-	const VmaAllocatorCreateInfo allocatorInfo{
-		.vulkanApiVersion = VK_API_VERSION_1_2,
-		.physicalDevice = pPhysicalDevice,
-		.device = pDevice,
-		.instance = pInstance,
-		.pVulkanFunctions = &vkFunctions,
-	};
-
-	vmaCreateAllocator(&allocatorInfo, &pVmaAllocator);
 }
 
 void VkEngineDevice::createSurface()

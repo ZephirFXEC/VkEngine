@@ -11,7 +11,12 @@ App::App()
 	createCommandBuffers();
 }
 
-App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), pVkPipelineLayout, nullptr); }
+App::~App()
+{
+	mVkDevice.getDeletionQueue().push_function([device = mVkDevice.device(), pipelineLayout = pVkPipelineLayout]() {
+		vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+	});
+}
 
 void App::run()
 {
