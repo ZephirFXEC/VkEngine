@@ -45,33 +45,45 @@ void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const
 
 void VkEngineModel::draw(const VkCommandBuffer commandBuffer) const { vkCmdDrawIndexed(commandBuffer, mIndexCount, 1, 0, 0, 0); }
 
-template <typename T>
+template <typename T, typename MemAlloc>
 void VkEngineModel::createVkBuffer(const std::vector <T>&   data,
                                    const VkBufferUsageFlags usage,
                                    VkBuffer&                buffer,
-                                   VkDeviceMemory&          bufferMemory) const
+                                   MemAlloc&                bufferMemory) const
 {
 	const VkDeviceSize bufferSize = sizeof(data[0]) * data.size();
 
 	VkBuffer       stagingBuffer = nullptr;
-	VkDeviceMemory stagingBufferMemory = nullptr;
+	MemAlloc stagingBufferMemory = nullptr;
+
 	createBuffer(bufferSize,
 	             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
 	             stagingBuffer,
 	             stagingBufferMemory);
 
-	void* stagingBufferData = nullptr;
-	vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &stagingBufferData);
-	memcpy(stagingBufferData, data.data(), static_cast <size_t>(bufferSize));
-	vkUnmapMemory(mDevice.device(), stagingBufferMemory);
+	void* mappedData = nullptr;
+	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+			vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
+	} else {
+			vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
+	}
+	memcpy(mappedData, data.data(), static_cast<size_t>(bufferSize));
+	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+			vkUnmapMemory(mDevice.device(), stagingBufferMemory);
+	} else {
+			vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
+	}
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, bufferMemory);
-
+	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,buffer, bufferMemory);
 	copyBuffer(stagingBuffer, buffer, bufferSize);
 
-	vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
+	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+			vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
+			vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
+	} else {
+			vmaDestroyBuffer(mDevice.getAllocator(), stagingBuffer, stagingBufferMemory);
+	}
 }
 
 void VkEngineModel::createVertexBuffers(const std::vector <Vertex>& vertices)
@@ -84,34 +96,45 @@ void VkEngineModel::createIndexBuffers(const std::vector <uint32_t>& indices)
 	createVkBuffer(indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pIndexBuffer, mIndexBuffer.pIndexBufferMemory);
 }
 
+template <typename MemAlloc>
 void VkEngineModel::createBuffer(const VkDeviceSize          size,
                                  const VkBufferUsageFlags    usage,
                                  const VkMemoryPropertyFlags properties,
                                  VkBuffer&                   buffer,
-                                 VkDeviceMemory&             bufferMemory) const
+                                 MemAlloc&             bufferMemory) const
 {
 	const VkBufferCreateInfo bufferInfo{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, .size = size, .usage = usage, .sharingMode = VK_SHARING_MODE_EXCLUSIVE
 	};
 
-	if (vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create buffer!");
-	}
+	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value)
+		{
+			if (vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+				{
+					throw std::runtime_error("failed to create buffer!");
+				}
 
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
+			VkMemoryRequirements memRequirements{};
+			vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
 
-	const VkMemoryAllocateInfo allocInfo{ .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                      .allocationSize = memRequirements.size,
-	                                      .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties) };
+			const VkMemoryAllocateInfo allocInfo{ .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+												  .allocationSize = memRequirements.size,
+												  .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties) };
 
-	if (vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate buffer memory!");
-	}
+			if (vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+				{
+					throw std::runtime_error("failed to allocate buffer memory!");
+				}
 
-	vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
+			vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
+		} else
+		{
+			constexpr VmaAllocationCreateInfo allocInfo{
+				.usage = VMA_MEMORY_USAGE_GPU_ONLY,
+			};
+
+			vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr);
+		}
 }
 
 void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const

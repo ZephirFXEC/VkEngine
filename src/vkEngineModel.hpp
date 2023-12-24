@@ -42,20 +42,28 @@ class VkEngineModel
 	void draw(VkCommandBuffer commandBuffer) const;
 
 	private:
-	template <typename T>
-	void createVkBuffer(const std::vector <T>& data, VkBufferUsageFlags usage, VkBuffer& buffer, VkDeviceMemory& bufferMemory) const;
+	template <typename T, typename MemAlloc>
+	void createVkBuffer(const std::vector <T>& data, VkBufferUsageFlags usage, VkBuffer& buffer, MemAlloc& bufferMemory) const;
+
+	template <typename MemAlloc>
+	void createBuffer(VkDeviceSize          size,
+	                  VkBufferUsageFlags    usage,
+	                  VkMemoryPropertyFlags properties,
+	                  VkBuffer&             buffer,
+	                  MemAlloc&             bufferMemory) const;
 
 	void createVertexBuffers(const std::vector <Vertex>& vertices);
 
 	void createIndexBuffers(const std::vector <uint32_t>& indices);
 
-	void createBuffer(VkDeviceSize          size,
-	                  VkBufferUsageFlags    usage,
-	                  VkMemoryPropertyFlags properties,
-	                  VkBuffer&             buffer,
-	                  VkDeviceMemory&       bufferMemory) const;
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+
+	struct VertexBufferVMA
+	{
+		VmaAllocation pVertexBufferMemory = VK_NULL_HANDLE;
+		VkBuffer      pVertexBuffer = VK_NULL_HANDLE;
+	}                 mVertexBufferVMA{};
 
 	struct VertexBuffer
 	{
