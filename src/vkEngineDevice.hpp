@@ -15,14 +15,14 @@ struct DeletionQueue
 {
 	std::deque <std::function <void()>> mDeletionQueue{};
 
-	void push_function(std::function <void()>&& function) { mDeletionQueue.push_back(function); }
+	void push_function(std::function <void()>&& function) { mDeletionQueue.push_back(std::move(function)); }
 
 	void flush()
 	{
 		// reverse iterate the deletion queue to execute all the functions
 		for (auto& it : std::ranges::reverse_view(mDeletionQueue))
 		{
-			it(); // call functors
+			it(); // call functions
 		}
 
 		mDeletionQueue.clear();
@@ -34,6 +34,13 @@ struct SwapChainSupportDetails
 	VkSurfaceCapabilitiesKHR         mCapabilities{};
 	std::vector <VkSurfaceFormatKHR> mFormats{};
 	std::vector <VkPresentModeKHR>   mPresentModes{};
+};
+
+
+struct FrameData
+{
+	VkCommandPool   pCommandPool = VK_NULL_HANDLE;
+	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
 };
 
 struct QueueFamilyIndices
@@ -71,6 +78,8 @@ class VkEngineDevice
 	[[nodiscard]] const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
 
 	[[nodiscard]] const VkDevice& device() const { return pDevice; }
+
+	[[nodiscard]] VmaAllocator getAllocator() const { return pAllocator; }
 
 	[[nodiscard]] const VkSurfaceKHR& surface() const { return pSurface; }
 
@@ -130,6 +139,8 @@ class VkEngineDevice
 
 	void createCommandPool();
 
+	void createAllocator();
+
 
 	// helper functions
 	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device) const;
@@ -149,18 +160,14 @@ class VkEngineDevice
 	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
 
 	VkDevice pDevice = VK_NULL_HANDLE;
+	VmaAllocator pAllocator = VK_NULL_HANDLE;
 
 	VkInstance               pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice         pPhysicalDevice = VK_NULL_HANDLE;
 	VkEngineWindow&          mWindow;
 
-	struct FrameData
-	{
-		VkCommandPool   pCommandPool = VK_NULL_HANDLE;
-		VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
-	}                   mFrameData;
-
+	FrameData mFrameData{};
 
 	VkSurfaceKHR pSurface = VK_NULL_HANDLE;
 	VkQueue      pGraphicsQueue = VK_NULL_HANDLE;

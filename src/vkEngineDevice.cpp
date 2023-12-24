@@ -3,7 +3,6 @@
 
 // std headers
 #include <cstring>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <unordered_set>
@@ -20,9 +19,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL
 	std::ostringstream message;
 	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
-	message << std::string("\t") << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
-	message << std::string("\t") << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
-	message << std::string("\t") << "message         = <" << pCallbackData->pMessage << ">\n";
+	message << "\t" << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+	message << "\t" << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+	message << "\t" << "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount)
 	{
 		message << std::string("\t") << "Queue Labels:\n";
@@ -101,6 +100,7 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) :
 	pickPhysicalDevice();
 	createLogicalDevice();
 	createCommandPool();
+	createAllocator();
 }
 
 VkEngineDevice::~VkEngineDevice()
@@ -141,7 +141,7 @@ void VkEngineDevice::createInstance()
 		.ppEnabledExtensionNames = extensions.data(),
 	};
 
-	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (enableValidationLayers)
 	{
 		createInfo.enabledLayerCount = static_cast <uint32_t>(mValidationLayers.size());
@@ -190,7 +190,8 @@ void VkEngineDevice::createLogicalDevice()
 {
 	const std::set uniqueQueueFamilies = {
 		findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(),
-		findQueueFamilies(pPhysicalDevice).mPresentFamily.value() };
+		findQueueFamilies(pPhysicalDevice).mPresentFamily.value()
+	};
 
 	std::vector <VkDeviceQueueCreateInfo> queueCreateInfos(uniqueQueueFamilies.size());
 
@@ -259,6 +260,25 @@ void VkEngineDevice::createCommandPool()
 	{
 		throw std::runtime_error("failed to create command pool!");
 	}
+}
+
+void VkEngineDevice::createAllocator()
+{
+
+	VmaVulkanFunctions vulkanFunctions{
+		.vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
+		.vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
+	};
+
+	const VmaAllocatorCreateInfo allocatorInfo{
+		.vulkanApiVersion = VK_API_VERSION_1_3,
+		.physicalDevice = pPhysicalDevice,
+		.device = pDevice,
+		.instance = pInstance,
+		.pVulkanFunctions = &vulkanFunctions,
+	};
+
+	vmaCreateAllocator(&allocatorInfo, &pAllocator);
 }
 
 void VkEngineDevice::createSurface() { mWindow.createWindowSurface(pInstance, &pSurface); }
@@ -533,7 +553,6 @@ void VkEngineDevice::beginSingleTimeCommands()
 		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT };
 
 	vkBeginCommandBuffer(mFrameData.pCommandBuffer, &beginInfo);
-
 }
 
 void VkEngineDevice::endSingleTimeCommands() const
@@ -542,7 +561,7 @@ void VkEngineDevice::endSingleTimeCommands() const
 
 	const VkSubmitInfo submitInfo{ .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 	                               .commandBufferCount = 1,
-	                               .pCommandBuffers = &mFrameData.pCommandBuffer};
+	                               .pCommandBuffers = &mFrameData.pCommandBuffer };
 
 	vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(pGraphicsQueue);
