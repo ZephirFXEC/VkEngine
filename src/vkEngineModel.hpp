@@ -11,9 +11,6 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-// std
-#include <vector>
-
 constexpr static bool USE_VMA = true;
 using Alloc = std::conditional_t<USE_VMA, VmaAllocation, VkDeviceMemory>;
 
@@ -28,7 +25,8 @@ class VkEngineModel {
 		static VkVertexInputAttributeDescription* getAttributeDescriptions();
 	};
 
-	VkEngineModel(VkEngineDevice& device, const Vertex* vertices, uint32_t vCount, const uint32_t* indices, uint32_t iCount);
+	VkEngineModel(VkEngineDevice& device, const Vertex* vertices, uint32_t vCount, const uint32_t* indices,
+	              uint32_t iCount);
 
 	~VkEngineModel();
 
