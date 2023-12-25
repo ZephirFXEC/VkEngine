@@ -192,6 +192,9 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline");
 	}
+
+	delete[] bindingDescriptions;
+	delete[] attributeDescriptions;
 }
 
 void VkEnginePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) const {
