@@ -83,6 +83,7 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtils
 
 // class member functions
 VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
+	initExtensions();
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -114,6 +115,14 @@ VkEngineDevice::~VkEngineDevice() {
 	vkDestroyInstance(pInstance, nullptr);
 }
 
+void VkEngineDevice::initExtensions() const {
+
+	mValidationLayer.mExtensions[0] = "VK_LAYER_KHRONOS_validation";
+
+	mDeviceExtensions.mExtensions[0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	mDeviceExtensions.mExtensions[1] = "VK_KHR_portability_subset";
+}
+
 void VkEngineDevice::createInstance() {
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -128,20 +137,22 @@ void VkEngineDevice::createInstance() {
 	    .apiVersion = VK_API_VERSION_1_3,
 	};
 
-	auto extensions = getRequiredExtensions();
+	uint32_t extensionCount = 0;
+	auto *const extensions = getRequiredExtensions(&extensionCount);
 
 	VkInstanceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 	    .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
 	    .pApplicationInfo = &appInfo,
-	    .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-	    .ppEnabledExtensionNames = extensions.data(),
+	    .enabledExtensionCount = extensionCount,
+	    .ppEnabledExtensionNames = extensions,
 	};
+
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayers.size());
-		createInfo.ppEnabledLayerNames = mValidationLayers.data();
+		createInfo.enabledLayerCount = mValidationLayer.mSize;
+		createInfo.ppEnabledLayerNames = mValidationLayer.mExtensions;
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
 		createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
@@ -155,6 +166,7 @@ void VkEngineDevice::createInstance() {
 	}
 
 	hasGflwRequiredInstanceExtensions();
+	delete[] extensions;
 }
 
 void VkEngineDevice::pickPhysicalDevice() {
@@ -165,8 +177,8 @@ void VkEngineDevice::pickPhysicalDevice() {
 	}
 	std::cout << "Device count: " << deviceCount << '\n';
 
-	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices.data());
+	auto* devices = new VkPhysicalDevice[deviceCount];
+	vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices);
 
 	for (uint32_t i = 0; i < deviceCount; ++i) {
 		if (isDeviceSuitable(devices[i])) {
@@ -174,6 +186,8 @@ void VkEngineDevice::pickPhysicalDevice() {
 			break;
 		}
 	}
+
+	delete[] devices;
 
 	if (pPhysicalDevice == VK_NULL_HANDLE) {
 		throw std::runtime_error("failed to find a suitable GPU!");
@@ -187,7 +201,7 @@ void VkEngineDevice::createLogicalDevice() {
 	const std::set uniqueQueueFamilies = {findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(),
 	                                      findQueueFamilies(pPhysicalDevice).mPresentFamily.value()};
 
-	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos(uniqueQueueFamilies.size());
+	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()];
 
 	float queuePriority = 1.0f;
 	for (const auto queueFamily : uniqueQueueFamilies) {
@@ -209,17 +223,17 @@ void VkEngineDevice::createLogicalDevice() {
 	VkDeviceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 	    .queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
-	    .pQueueCreateInfos = queueCreateInfos.data(),
-	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
-	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
+	    .pQueueCreateInfos = queueCreateInfos,
+	    .enabledExtensionCount = mDeviceExtensions.mSize,
+	    .ppEnabledExtensionNames = mDeviceExtensions.mExtensions,
 	    .pEnabledFeatures = &deviceFeatures,
 	};
 
 	// might not really be necessary anymore because device specific validation
 	// layers have been deprecated
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayers.size());
-		createInfo.ppEnabledLayerNames = mValidationLayers.data();
+		createInfo.enabledLayerCount = mValidationLayer.mSize,
+		createInfo.ppEnabledLayerNames = mValidationLayer.mExtensions;
 	} else {
 		createInfo.enabledLayerCount = 0;
 	}
@@ -230,6 +244,8 @@ void VkEngineDevice::createLogicalDevice() {
 
 	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
 	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
+
+	delete[] queueCreateInfos;
 }
 
 void VkEngineDevice::createCommandPool() {
@@ -313,41 +329,56 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 		throw std::runtime_error("No layers found");
 	}
 
-	std::vector<VkLayerProperties> availableLayers(layerCount);
-	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	auto* availableLayers = new VkLayerProperties[layerCount];
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
-	for (const char* layerName : mValidationLayers) {
+	for (size_t i = 0; i < mValidationLayer.mSize; ++i) {
 		bool layerFound = false;
 
-		for (uint32_t j = 0; j < layerCount; ++j) {
-			if (strcmp(layerName, availableLayers[j].layerName) == 0) {
+		for (size_t j = 0; j < layerCount; ++j) {
+			if (strcmp(mValidationLayer.mExtensions[i], availableLayers[j].layerName) == 0) {
 				layerFound = true;
 				break;
 			}
 		}
 
 		if (!layerFound) {
+			delete[] availableLayers;
 			return false;
 		}
 	}
 
+	delete[] availableLayers;
 	return true;
 }
 
 // TODO: remove vextor and use pointer arithmetic
-std::vector<const char*> VkEngineDevice::getRequiredExtensions() {
+const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 	uint32_t glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-	std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+	uint32_t additionalExtensionCount = 0;
 	if (enableValidationLayers) {
-		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		additionalExtensionCount++;
 	}
 
 #if __APPLE__
-	extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-	extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+	additionalExtensionCount += 2;  // For the two additional extensions on Apple platforms.
+#endif
+
+	*extensionCount = glfwExtensionCount + additionalExtensionCount;
+
+	const char** extensions = new const char*[*extensionCount];
+	memcpy(extensions, glfwExtensions, glfwExtensionCount * sizeof(const char*));
+
+	uint32_t index = glfwExtensionCount;
+	if (enableValidationLayers) {
+		extensions[index++] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
+	}
+
+#if __APPLE__
+	extensions[index++] = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
+	extensions[index++] = VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME;
 #endif
 
 	return extensions;
@@ -357,38 +388,45 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 	uint32_t extensionCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
-	std::vector<VkExtensionProperties> extensions(extensionCount);
-	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+	auto* extensions = new VkExtensionProperties[extensionCount];
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions);
 
 	std::cout << "available extensions:" << '\n';
 	std::unordered_set<std::string> available{};
-	for (const auto& extension : extensions) {
-		std::cout << "\t" << extension.extensionName << '\n';
-		available.insert(extension.extensionName);
+	for (uint32_t i = 0; i < extensionCount; ++i) {
+		std::cout << "\t" << extensions[i].extensionName << '\n';
+		available.insert(extensions[i].extensionName);
 	}
 
 	std::cout << "required extensions:" << '\n';
-	for (const auto& required : getRequiredExtensions()) {
-		std::cout << "\t" << required << '\n';
-		if (!available.contains(required)) {
-			throw std::runtime_error("Missing required glfw extension");
+
+	uint32_t requiredExtensionCount = 0;
+	const char** requiredExtensions = getRequiredExtensions(&requiredExtensionCount);
+	for (uint32_t i = 0; i < requiredExtensionCount; ++i) {
+		std::cout << "\t" << requiredExtensions[i] << '\n';
+		if (!available.contains(requiredExtensions[i])) {
+			throw std::runtime_error("missing required extension");
 		}
 	}
+
+	delete[] extensions;
+	delete[] requiredExtensions;
 }
 
 bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) const {
 	uint32_t extensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
-	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+	auto* availableExtensions = new VkExtensionProperties[extensionCount];
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions);
 
-	std::set<std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
+	std::set<std::string> requiredExtensions(mDeviceExtensions.mExtensions, mDeviceExtensions.mExtensions + mDeviceExtensions.mSize);
 
-	for (const auto& extension : availableExtensions) {
-		requiredExtensions.erase(extension.extensionName);
+	for (uint32_t i = 0; i < extensionCount; ++i) {
+		requiredExtensions.erase(availableExtensions[i].extensionName);
 	}
 
+	delete[] availableExtensions;
 	return requiredExtensions.empty();
 }
 

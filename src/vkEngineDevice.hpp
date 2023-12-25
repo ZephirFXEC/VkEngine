@@ -104,6 +104,8 @@ class VkEngineDevice {
 	VkPhysicalDeviceProperties mProperties{};
 
    private:
+	void initExtensions() const;
+
 	void createInstance();
 
 	void setupDebugMessenger();
@@ -121,7 +123,7 @@ class VkEngineDevice {
 	// helper functions
 	[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device) const;
 
-	[[nodiscard]] static std::vector<const char*> getRequiredExtensions();
+	[[nodiscard]] static const char** getRequiredExtensions(uint32_t* extensionCount);
 
 	[[nodiscard]] bool checkValidationLayerSupport() const;
 
@@ -149,8 +151,18 @@ class VkEngineDevice {
 	VkQueue pGraphicsQueue = VK_NULL_HANDLE;
 	VkQueue pPresentQueue = VK_NULL_HANDLE;
 
-	const std::vector<const char*> mValidationLayers = {"VK_LAYER_KHRONOS_validation"};
-	const std::vector<const char*> mDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-	"VK_KHR_portability_subset"};
+	template<uint32_t T>
+	struct Extensions {
+		static constexpr uint32_t mSize = T;
+		const char** mExtensions = new const char*[mSize]{};
+
+		Extensions() : mExtensions(new const char*[T]) {}
+		~Extensions() { delete[] mExtensions; }
+
+	};
+
+	Extensions<1> mValidationLayer{};
+	Extensions<2> mDeviceExtensions{};
+
 };
 }  // namespace vke
