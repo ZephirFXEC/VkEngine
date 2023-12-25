@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-
 #include "vkEngineDevice.hpp"
 #include "vkEngineModel.hpp"
 #include "vkEnginePipeline.hpp"
 #include "vkEngineSwapChain.hpp"
 #include "vkEngineWindow.hpp"
+
+#include "../utils/vector.hpp"
 
 namespace vke {
 class App {
@@ -39,7 +39,7 @@ class App {
 
 	void recordCommandsBuffers(size_t imageIndex) const;
 
-	void freeCommandBuffers();
+	void freeCommandBuffers() const;
 
 	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
 
@@ -50,6 +50,6 @@ class App {
 	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer> ppVkCommandBuffers{};
+	VkCommandBuffer* ppVkCommandBuffers = nullptr;
 };
 }  // namespace vke

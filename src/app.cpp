@@ -59,7 +59,7 @@ void App::createPipeline() {
 }
 
 void App::createCommandBuffers() {
-	ppVkCommandBuffers.resize(mVkSwapChain->imageCount());
+	ppVkCommandBuffers = new VkCommandBuffer[mVkSwapChain->imageCount()];
 
 	const VkCommandBufferAllocateInfo allocInfo{
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -67,7 +67,7 @@ void App::createCommandBuffers() {
 	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	    .commandBufferCount = static_cast<uint32_t>(mVkSwapChain->imageCount())};
 
-	if (vkAllocateCommandBuffers(mVkDevice.device(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
+	if (vkAllocateCommandBuffers(mVkDevice.device(), &allocInfo, ppVkCommandBuffers) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command buffers!");
 	}
 }
@@ -123,11 +123,11 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	}
 }
 
-void App::freeCommandBuffers() {
+void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.device(), mVkDevice.getCommandPool(),
-	                     static_cast<uint32_t>(ppVkCommandBuffers.size()), ppVkCommandBuffers.data());
+	                     sizeof(ppVkCommandBuffers) / sizeof(VkCommandBuffer), ppVkCommandBuffers);
 
-	ppVkCommandBuffers.clear();
+	delete[] ppVkCommandBuffers;
 }
 
 void App::recreateSwapChain() {
@@ -144,7 +144,7 @@ void App::recreateSwapChain() {
 	} else {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
 
-		if (mVkSwapChain->imageCount() != ppVkCommandBuffers.size()) {
+		if (mVkSwapChain->imageCount() != sizeof(ppVkCommandBuffers) / sizeof(VkCommandBuffer)) {
 			freeCommandBuffers();
 			createCommandBuffers();
 		}
