@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../utils/vector.hpp"
 #include "vkEngineDevice.hpp"
 #include "vkEngineModel.hpp"
 #include "vkEnginePipeline.hpp"
