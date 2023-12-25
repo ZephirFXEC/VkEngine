@@ -15,6 +15,9 @@
 // std
 #include <vector>
 
+constexpr static bool USE_VMA = true;
+using Alloc = std::conditional_t<USE_VMA, VmaAllocation, VkDeviceMemory>;
+
 namespace vke {
 class VkEngineModel {
    public:
@@ -64,8 +67,8 @@ class VkEngineModel {
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
-	DataBuffer<VmaAllocation> mVertexBuffer{};
-	DataBuffer<VmaAllocation> mIndexBuffer{};
+	DataBuffer<Alloc> mVertexBuffer{};
+	DataBuffer<Alloc> mIndexBuffer{};
 
 	uint32_t mIndexCount = 0;
 

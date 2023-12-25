@@ -19,18 +19,11 @@ VkEngineModel::~VkEngineModel() {
 
 template <typename MemAlloc>
 void VkEngineModel::destroyBuffer(const DataBuffer<MemAlloc>& buffer) const {
-	if constexpr (std::is_same<VkDeviceMemory, MemAlloc>::value) {
-		vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
-		vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
-
+	if constexpr (!USE_VMA) {
 		vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
 		vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
 	} else {
 		vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
-		vmaFreeMemory(mDevice.getAllocator(), buffer.pDataBufferMemory);
-
-		vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
-		vmaFreeMemory(mDevice.getAllocator(), buffer.pDataBufferMemory);
 	}
 }
 
@@ -69,7 +62,7 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 
 	void* mappedData = nullptr;
 
-	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+	if constexpr (!USE_VMA) {
 		vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
 	} else {
 		vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
@@ -77,7 +70,7 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 
 	memcpy(mappedData, data.data(), static_cast<size_t>(bufferSize));
 
-	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+	if constexpr (!USE_VMA) {
 		vkUnmapMemory(mDevice.device(), stagingBufferMemory);
 	} else {
 		vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
@@ -88,7 +81,7 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 
 	copyBuffer(stagingBuffer, buffer, bufferSize);
 
-	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+	if constexpr (!USE_VMA) {
 		vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
 		vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
 	} else {
@@ -115,7 +108,7 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
-	if constexpr (std::is_same<MemAlloc, VkDeviceMemory>::value) {
+	if constexpr (!USE_VMA) {
 		if (vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create buffer!");
 		}
@@ -135,8 +128,7 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
 	} else {
 		constexpr VmaAllocationCreateInfo allocInfo{
-		    .flags =
-		        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+		    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
 		    .usage = VMA_MEMORY_USAGE_AUTO,
 		};
 

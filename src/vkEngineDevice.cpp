@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 namespace vke {
+
 // local callback functions
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -92,15 +93,24 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 }
 
 VkEngineDevice::~VkEngineDevice() {
+	// 1. Destroy the command pool
 	vkDestroyCommandPool(pDevice, mFrameData.pCommandPool, nullptr);
 
+	// 2. Destroy the allocator
+	vmaDestroyAllocator(pAllocator);
+
+	// 3. Destroy the Vulkan device
 	vkDestroyDevice(pDevice, nullptr);
 
+	// 4. Optionally destroy the debug messenger if validation layers are enabled
 	if (enableValidationLayers) {
 		DestroyDebugUtilsMessengerEXT(pInstance, pDebugMessenger, nullptr);
 	}
 
+	// 5. Destroy the surface
 	vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
+
+	// 6. Destroy the Vulkan instance
 	vkDestroyInstance(pInstance, nullptr);
 }
 
@@ -115,7 +125,7 @@ void VkEngineDevice::createInstance() {
 	    .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
 	    .pEngineName = "No Engine",
 	    .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-	    .apiVersion = VK_API_VERSION_1_2,
+	    .apiVersion = VK_API_VERSION_1_3,
 	};
 
 	auto extensions = getRequiredExtensions();
@@ -242,11 +252,11 @@ void VkEngineDevice::createAllocator() {
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
-	    .vulkanApiVersion = VK_API_VERSION_1_3,
 	    .physicalDevice = pPhysicalDevice,
 	    .device = pDevice,
-	    .instance = pInstance,
 	    .pVulkanFunctions = &vulkanFunctions,
+	    .instance = pInstance,
+	    .vulkanApiVersion = VK_API_VERSION_1_3,
 	};
 
 	vmaCreateAllocator(&allocatorInfo, &pAllocator);
@@ -352,9 +362,9 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 
 	std::cout << "available extensions:" << '\n';
 	std::unordered_set<std::string> available{};
-	for (uint32_t i = 0; i < extensionCount; ++i) {
-		std::cout << "\t" << extensions[i].extensionName << '\n';
-		available.insert(extensions[i].extensionName);
+	for (const auto& extension : extensions) {
+		std::cout << "\t" << extension.extensionName << '\n';
+		available.insert(extension.extensionName);
 	}
 
 	std::cout << "required extensions:" << '\n';
@@ -375,8 +385,8 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 
 	std::set<std::string> requiredExtensions(mDeviceExtensions.begin(), mDeviceExtensions.end());
 
-	for (uint32_t i = 0; i < extensionCount; ++i) {
-		requiredExtensions.erase(availableExtensions[i].extensionName);
+	for (const auto& extension : availableExtensions) {
+		requiredExtensions.erase(extension.extensionName);
 	}
 
 	return requiredExtensions.empty();
