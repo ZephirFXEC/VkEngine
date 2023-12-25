@@ -195,9 +195,6 @@ void VkEngineDevice::createLogicalDevice() {
 	    .samplerAnisotropy = VK_TRUE,
 	};
 
-#ifdef __APPLE__
-	mDeviceExtensions.push_back("VK_KHR_portability_subset");
-#endif
 
 	VkDeviceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,

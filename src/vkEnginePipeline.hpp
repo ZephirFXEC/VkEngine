@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "vkEngineDevice.hpp"
+#include "vkEngineModel.hpp"
 
 namespace vke {
 struct PipelineConfigInfo {
