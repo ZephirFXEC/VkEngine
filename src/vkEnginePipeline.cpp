@@ -4,6 +4,7 @@
 #include <cassert>
 #include <fstream>
 #include <stdexcept>
+
 #include "vkEngineModel.hpp"
 
 namespace vke {
@@ -96,7 +97,7 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 	};
 
 	constexpr uint32_t dynamicStateCount = 2;
-	configInfo.pDynamicStateEnables = new VkDynamicState[dynamicStateCount] {
+	configInfo.pDynamicStateEnables = new VkDynamicState[dynamicStateCount]{
 	    VK_DYNAMIC_STATE_VIEWPORT,
 	    VK_DYNAMIC_STATE_SCISSOR,
 	};
@@ -117,7 +118,7 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 	}
 
 	bufferSize = static_cast<size_t>(file.tellg());
-	auto *const buffer = new char[bufferSize];
+	auto* const buffer = new char[bufferSize];
 
 	file.seekg(0);
 	file.read(buffer, static_cast<uint32_t>(bufferSize));
@@ -125,7 +126,6 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 
 	return buffer;
 }
-
 
 void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
                                               const PipelineConfigInfo& configInfo) {
@@ -139,8 +139,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	size_t vertShaderSize = 0;
 	size_t fragShaderSize = 0;
 
-	const auto *const vertShaderCode = readFile(vertShader, vertShaderSize);
-	const auto *const fragShaderCode = readFile(fragShader, fragShaderSize);
+	const auto* const vertShaderCode = readFile(vertShader, vertShaderSize);
+	const auto* const fragShaderCode = readFile(fragShader, fragShaderSize);
 
 	createShaderModule(vertShaderCode, vertShaderSize, &mShaders.pVertShaderModule);
 	createShaderModule(fragShaderCode, fragShaderSize, &mShaders.pFragShaderModule);
@@ -209,11 +209,9 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 }
 
 void VkEnginePipeline::createShaderModule(const char* code, const size_t codeSize, VkShaderModule* shaderModule) const {
-	const VkShaderModuleCreateInfo createInfo = {
-		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-		.codeSize = codeSize,
-		.pCode = reinterpret_cast<const uint32_t*>(code)
-	};
+	const VkShaderModuleCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+	                                             .codeSize = codeSize,
+	                                             .pCode = reinterpret_cast<const uint32_t*>(code)};
 
 	if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module");

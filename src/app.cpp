@@ -23,14 +23,17 @@ void App::run() {
 }
 
 void App::loadModels() {
-	const VkEngineModel::Vertex* vertices = new VkEngineModel::Vertex[4]{{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	                                                                     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	                                                                     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	                                                                     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+	constexpr uint32_t iCount = 6;
+	constexpr uint32_t vCount = 4;
 
-	const uint32_t* indices = new uint32_t[6]{0, 1, 2, 2, 3, 0};
+	const VkEngineModel::Vertex* vertices = new VkEngineModel::Vertex[vCount]{{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	                                                                          {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	                                                                          {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	                                                                          {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
 
-	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices, 4, indices, 6);
+	const uint32_t* indices = new uint32_t[iCount]{0, 1, 2, 2, 3, 0};
+
+	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices, vCount, indices, iCount);
 
 	delete[] vertices;
 	delete[] indices;
