@@ -156,15 +156,17 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr}}};
 
-	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
-	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+	auto *const bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
+	auto *const attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+	constexpr uint32_t bindingDescriptionCount = 1;
+	constexpr uint32_t attributeDescriptionCount = 2;
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-	    .vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size()),
-	    .pVertexBindingDescriptions = bindingDescriptions.data(),
-	    .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
-	    .pVertexAttributeDescriptions = attributeDescriptions.data(),
+	    .vertexBindingDescriptionCount = bindingDescriptionCount,
+	    .pVertexBindingDescriptions = bindingDescriptions,
+	    .vertexAttributeDescriptionCount = attributeDescriptionCount,
+	    .pVertexAttributeDescriptions = attributeDescriptions,
 	};
 
 	const VkGraphicsPipelineCreateInfo pipelineInfo{

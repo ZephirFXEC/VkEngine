@@ -27,13 +27,15 @@ void VkEngineModel::destroyBuffer(const DataBuffer<MemAlloc>& buffer) const {
 	}
 }
 
-std::vector<VkVertexInputBindingDescription> VkEngineModel::Vertex::getBindingDescriptions() {
-	return {{0, sizeof(Vertex), VK_VERTEX_INPUT_RATE_VERTEX}};
+VkVertexInputBindingDescription* VkEngineModel::Vertex::getBindingDescriptions() {
+	return new VkVertexInputBindingDescription[1]{
+	    {.binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
 }
 
-std::vector<VkVertexInputAttributeDescription> VkEngineModel::Vertex::getAttributeDescriptions() {
-	return {{0, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, mPosition)},
-	        {1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, mColor)}};
+VkVertexInputAttributeDescription* VkEngineModel::Vertex::getAttributeDescriptions() {
+	return new VkVertexInputAttributeDescription[2]{
+	    {.binding = 0, .location = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
+	    {.binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
 }
 
 void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const {
@@ -102,7 +104,6 @@ template <typename MemAlloc>
 void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer,
                                  MemAlloc& bufferMemory) const {
-
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,

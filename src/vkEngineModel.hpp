@@ -24,9 +24,8 @@ class VkEngineModel {
 		glm::vec2 mPosition{};
 		glm::vec3 mColor{};
 
-		static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
-
-		static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+		static VkVertexInputBindingDescription* getBindingDescriptions();
+		static VkVertexInputAttributeDescription* getAttributeDescriptions();
 	};
 
 	VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
