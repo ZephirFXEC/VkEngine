@@ -9,13 +9,12 @@
 namespace vke {
 class VkEngineWindow {
    public:
-	explicit VkEngineWindow() = default;  // default constructor
+	explicit VkEngineWindow() = default;                      // default constructor
 	VkEngineWindow(int width, int height, std::string name);  // constructor
 	~VkEngineWindow();                                        // destructor
 
-	VkEngineWindow(const VkEngineWindow&) = delete;  // copy constructor
-	VkEngineWindow& operator=(const VkEngineWindow&) =
-	    delete;  // copy assignment operator
+	VkEngineWindow(const VkEngineWindow&) = delete;             // copy constructor
+	VkEngineWindow& operator=(const VkEngineWindow&) = delete;  // copy assignment operator
 
 	[[nodiscard]] bool shouldClose() const;
 
@@ -29,8 +28,7 @@ class VkEngineWindow {
 
    private:
 	void initWindow();  // initialize GLFW window
-	static void framebufferResizeCallback(GLFWwindow* window, int width,
-	                                      int height);
+	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	int mHeight = 0;
 	int mWidth = 0;

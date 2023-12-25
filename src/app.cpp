@@ -10,9 +10,7 @@ App::App() {
 	createCommandBuffers();
 }
 
-App::~App() {
-	vkDestroyPipelineLayout(mVkDevice.device(), pVkPipelineLayout, nullptr);
-}
+App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), pVkPipelineLayout, nullptr); }
 
 void App::run() {
 	while (!mVkWindow.shouldClose()) {
@@ -25,11 +23,10 @@ void App::run() {
 }
 
 void App::loadModels() {
-	const std::vector<VkEngineModel::Vertex> vertices = {
-	    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+	const std::vector<VkEngineModel::Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+	                                                     {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+	                                                     {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+	                                                     {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
 
 	const std::vector<uint32_t> indices = {0, 1, 2, 2, 3, 0};
 
@@ -38,15 +35,13 @@ void App::loadModels() {
 
 void App::createPipelineLayout() {
 	;
-	constexpr VkPipelineLayoutCreateInfo pipelineLayoutInfo{
-	    .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-	    .setLayoutCount = 0,
-	    .pSetLayouts = nullptr,
-	    .pushConstantRangeCount = 0,
-	    .pPushConstantRanges = nullptr};
+	constexpr VkPipelineLayoutCreateInfo pipelineLayoutInfo{.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+	                                                        .setLayoutCount = 0,
+	                                                        .pSetLayouts = nullptr,
+	                                                        .pushConstantRangeCount = 0,
+	                                                        .pPushConstantRanges = nullptr};
 
-	if (vkCreatePipelineLayout(mVkDevice.device(), &pipelineLayoutInfo, nullptr,
-	                           &pVkPipelineLayout) != VK_SUCCESS) {
+	if (vkCreatePipelineLayout(mVkDevice.device(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
 }
@@ -58,10 +53,9 @@ void App::createPipeline() {
 	pipelineConfig.renderPass = mVkSwapChain->getRenderPass();
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
-	pVkPipeline = std::make_unique<VkEnginePipeline>(
-	    mVkDevice, "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
-	    "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv",
-	    pipelineConfig);
+	pVkPipeline =
+	    std::make_unique<VkEnginePipeline>(mVkDevice, "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
+	                                       "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {
@@ -71,11 +65,9 @@ void App::createCommandBuffers() {
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	    .commandPool = mVkDevice.getCommandPool(),
 	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	    .commandBufferCount =
-	        static_cast<uint32_t>(mVkSwapChain->imageCount())};
+	    .commandBufferCount = static_cast<uint32_t>(mVkSwapChain->imageCount())};
 
-	if (vkAllocateCommandBuffers(mVkDevice.device(), &allocInfo,
-	                             ppVkCommandBuffers.data()) != VK_SUCCESS) {
+	if (vkAllocateCommandBuffers(mVkDevice.device(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command buffers!");
 	}
 }
@@ -85,18 +77,15 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	};
 
-	if (vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) !=
-	    VK_SUCCESS) {
+	if (vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 
 	VkRenderPassBeginInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer =
-	        mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
-	    .renderArea = {.offset = {0, 0},
-	                   .extent = mVkSwapChain->getSwapChainExtent()},
+	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
+	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
 	};
 
 	std::array<VkClearValue, 2> clearValues{};
@@ -120,8 +109,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .extent = mVkSwapChain->getSwapChainExtent(),
 	};
 
-	vkCmdBeginRenderPass(ppVkCommandBuffers[imageIndex], &renderPassInfo,
-	                     VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdSetViewport(ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
 	vkCmdSetScissor(ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
@@ -137,8 +125,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 
 void App::freeCommandBuffers() {
 	vkFreeCommandBuffers(mVkDevice.device(), mVkDevice.getCommandPool(),
-	                     static_cast<uint32_t>(ppVkCommandBuffers.size()),
-	                     ppVkCommandBuffers.data());
+	                     static_cast<uint32_t>(ppVkCommandBuffers.size()), ppVkCommandBuffers.data());
 
 	ppVkCommandBuffers.clear();
 }
@@ -155,8 +142,7 @@ void App::recreateSwapChain() {
 	if (mVkSwapChain == nullptr) {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
 	} else {
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(
-		    mVkDevice, extent, std::move(mVkSwapChain));
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
 
 		if (mVkSwapChain->imageCount() != ppVkCommandBuffers.size()) {
 			freeCommandBuffers();
@@ -180,11 +166,9 @@ void App::drawFrame() {
 	}
 
 	recordCommandsBuffers(imageIndex);
-	result = mVkSwapChain->submitCommandBuffers(&ppVkCommandBuffers[imageIndex],
-	                                            &imageIndex);
+	result = mVkSwapChain->submitCommandBuffers(&ppVkCommandBuffers[imageIndex], &imageIndex);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-	    mVkWindow.wasWindowResized()) {
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mVkWindow.wasWindowResized()) {
 		mVkWindow.resetWindowResizedFlag();
 		recreateSwapChain();
 		return;

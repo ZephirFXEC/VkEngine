@@ -6,9 +6,7 @@
 #include <stdexcept>
 
 namespace vke {
-VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device,
-                                   const std::string& vertShader,
-                                   const std::string& fragShader,
+VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
                                    const PipelineConfigInfo& configInfo)
     : mDevice(device) {
 	createGraphicsPipeline(vertShader, fragShader, configInfo);
@@ -22,18 +20,15 @@ VkEnginePipeline::~VkEnginePipeline() {
 }
 
 void VkEnginePipeline::bind(const VkCommandBuffer commandBuffer) const {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-	                  pGraphicsPipeline);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
 }
 
-void VkEnginePipeline::defaultPipelineConfigInfo(
-    PipelineConfigInfo& configInfo) {
-	configInfo.viewportInfo = {
-	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-	    .viewportCount = 1,
-	    .pViewports = nullptr,
-	    .scissorCount = 1,
-	    .pScissors = nullptr};
+void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
+	configInfo.viewportInfo = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+	                           .viewportCount = 1,
+	                           .pViewports = nullptr,
+	                           .scissorCount = 1,
+	                           .pScissors = nullptr};
 
 	configInfo.inputAssemblyInfo = {
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -73,8 +68,8 @@ void VkEnginePipeline::defaultPipelineConfigInfo(
 	    .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,   // Optional
 	    .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,  // Optional
 	    .alphaBlendOp = VK_BLEND_OP_ADD,              // Optional
-	    .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-	                      VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+	    .colorWriteMask =
+	        VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 	};
 
 	configInfo.colorBlendInfo = {
@@ -106,8 +101,7 @@ void VkEnginePipeline::defaultPipelineConfigInfo(
 
 	configInfo.dynamicStateInfo = {
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-	    .dynamicStateCount =
-	        static_cast<uint32_t>(configInfo.dynamicStateEnables.size()),
+	    .dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size()),
 	    .pDynamicStates = configInfo.dynamicStateEnables.data(),
 	    .flags = 0,
 	};
@@ -129,9 +123,8 @@ std::vector<char> VkEnginePipeline::readFile(const std::string& filename) {
 	return buffer;
 }
 
-void VkEnginePipeline::createGraphicsPipeline(
-    const std::string& vertShader, const std::string& fragShader,
-    const PipelineConfigInfo& configInfo) {
+void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
+                                              const PipelineConfigInfo& configInfo) {
 	assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
 	       "Cannot create graphics pipeline: no pipelineLayout provided in "
 	       "configInfo");
@@ -163,18 +156,14 @@ void VkEnginePipeline::createGraphicsPipeline(
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr}}};
 
-	const auto bindingDescriptions =
-	    VkEngineModel::Vertex::getBindingDescriptions();
-	const auto attributeDescriptions =
-	    VkEngineModel::Vertex::getAttributeDescriptions();
+	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
+	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-	    .vertexBindingDescriptionCount =
-	        static_cast<uint32_t>(bindingDescriptions.size()),
+	    .vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size()),
 	    .pVertexBindingDescriptions = bindingDescriptions.data(),
-	    .vertexAttributeDescriptionCount =
-	        static_cast<uint32_t>(attributeDescriptions.size()),
+	    .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
 	    .pVertexAttributeDescriptions = attributeDescriptions.data(),
 	};
 
@@ -197,22 +186,18 @@ void VkEnginePipeline::createGraphicsPipeline(
 	    .basePipelineHandle = VK_NULL_HANDLE,
 	};
 
-	if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1,
-	                              &pipelineInfo, nullptr,
-	                              &pGraphicsPipeline) != VK_SUCCESS) {
+	if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline) !=
+	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline");
 	}
 }
 
-void VkEnginePipeline::createShaderModule(const std::vector<char>& code,
-                                          VkShaderModule* shaderModule) const {
-	const VkShaderModuleCreateInfo createInfo = {
-	    .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-	    .codeSize = code.size(),
-	    .pCode = reinterpret_cast<const uint32_t*>(code.data())};
+void VkEnginePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) const {
+	const VkShaderModuleCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+	                                             .codeSize = code.size(),
+	                                             .pCode = reinterpret_cast<const uint32_t*>(code.data())};
 
-	if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr,
-	                         shaderModule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module");
 	}
 }

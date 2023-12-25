@@ -4,3 +4,6 @@ Standard: c++20
 UseTab: ForIndentation
 IndentWidth: 4
 TabWidth: 4
+
+# length of line
+ColumnLimit: 120

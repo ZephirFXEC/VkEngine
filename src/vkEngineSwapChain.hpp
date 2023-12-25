@@ -24,26 +24,17 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-	[[nodiscard]] const VkFramebuffer& getFrameBuffer(
-	    const uint32_t index) const {
+	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
 		return ppSwapChainFramebuffers[index];
 	}
 
-	[[nodiscard]] const VkRenderPass& getRenderPass() const {
-		return pRenderPass;
-	}
+	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
 
-	[[nodiscard]] const VkImageView& getImageView(const uint32_t index) const {
-		return ppSwapChainImageViews[index];
-	}
+	[[nodiscard]] const VkImageView& getImageView(const uint32_t index) const { return ppSwapChainImageViews[index]; }
 
-	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const {
-		return mSwapChainImageFormat;
-	}
+	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 
-	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const {
-		return mSwapChainExtent;
-	}
+	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
 
 	[[nodiscard]] uint32_t width() const { return mSwapChainExtent.width; }
 
@@ -52,16 +43,14 @@ class VkEngineSwapChain {
 	[[nodiscard]] size_t imageCount() const { return swapChainImages.size(); }
 
 	[[nodiscard]] float extentAspectRatio() const {
-		return static_cast<float>(mSwapChainExtent.width) /
-		       static_cast<float>(mSwapChainExtent.height);
+		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
 	}
 
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
 	VkResult acquireNextImage(uint32_t* imageIndex) const;
 
-	VkResult submitCommandBuffers(const VkCommandBuffer* buffers,
-	                              const uint32_t* imageIndex);
+	VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex);
 
    private:
 	void init();
@@ -79,14 +68,11 @@ class VkEngineSwapChain {
 	void createSyncObjects();
 
 	// Helper functions
-	static VkSurfaceFormatKHR chooseSwapSurfaceFormat(
-	    const std::vector<VkSurfaceFormatKHR>& availableFormats);
+	static VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
-	static VkPresentModeKHR chooseSwapPresentMode(
-	    const std::vector<VkPresentModeKHR>& availablePresentModes);
+	static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
-	[[nodiscard]] VkExtent2D chooseSwapExtent(
-	    const VkSurfaceCapabilitiesKHR& capabilities) const;
+	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
 	VkEngineDevice& device;
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;

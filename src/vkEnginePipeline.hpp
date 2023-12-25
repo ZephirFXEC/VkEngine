@@ -35,8 +35,7 @@ class VkEnginePipeline {
    public:
 	explicit VkEnginePipeline() = delete;
 
-	VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader,
-	                 const std::string& fragShader,
+	VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
 	                 const PipelineConfigInfo& configInfo);
 
 	~VkEnginePipeline();
@@ -52,12 +51,10 @@ class VkEnginePipeline {
    private:
 	static std::vector<char> readFile(const std::string& filename);
 
-	void createGraphicsPipeline(const std::string& vertShader,
-	                            const std::string& fragShader,
+	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
 	                            const PipelineConfigInfo& configInfo);
 
-	void createShaderModule(const std::vector<char>& code,
-	                        VkShaderModule* shaderModule) const;
+	void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) const;
 
 	VkEngineDevice& mDevice;
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
