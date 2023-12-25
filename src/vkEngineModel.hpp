@@ -16,20 +16,21 @@
 #include <vector>
 
 namespace vke {
-class VkEngineModel
-{
-	public:
-	struct Vertex
-	{
+class VkEngineModel {
+   public:
+	struct Vertex {
 		glm::vec2 mPosition{};
 		glm::vec3 mColor{};
 
-		static std::vector<VkVertexInputBindingDescription> getBindingDescriptions();
+		static std::vector<VkVertexInputBindingDescription>
+		getBindingDescriptions();
 
-		static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
+		static std::vector<VkVertexInputAttributeDescription>
+		getAttributeDescriptions();
 	};
 
-	VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices,
+	              const std::vector<uint32_t>& indices);
 
 	~VkEngineModel();
 
@@ -41,26 +42,25 @@ class VkEngineModel
 
 	void draw(VkCommandBuffer commandBuffer) const;
 
-	private:
+   private:
 	template <typename T, typename MemAlloc>
-	void createVkBuffer(const std::vector<T>& data, VkBufferUsageFlags usage, VkBuffer& buffer, MemAlloc& bufferMemory) const;
+	void createVkBuffer(const std::vector<T>& data, VkBufferUsageFlags usage,
+	                    VkBuffer& buffer, MemAlloc& bufferMemory) const;
 
 	template <typename MemAlloc>
-	void createBuffer(VkDeviceSize          size,
-					  VkBufferUsageFlags    usage,
-					  VkMemoryPropertyFlags properties,
-					  VkBuffer&             buffer,
-					  MemAlloc&             bufferMemory) const;
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+	                  VkMemoryPropertyFlags properties, VkBuffer& buffer,
+	                  MemAlloc& bufferMemory) const;
 
 	void createVertexBuffers(const std::vector<Vertex>& vertices);
 
 	void createIndexBuffers(const std::vector<uint32_t>& indices);
 
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
+	                VkDeviceSize size) const;
 
 	template <typename MemAlloc>
-	struct DataBuffer
-	{
+	struct DataBuffer {
 		VkBuffer pDataBuffer = VK_NULL_HANDLE;
 		MemAlloc pDataBufferMemory = VK_NULL_HANDLE;
 	};
@@ -72,6 +72,6 @@ class VkEngineModel
 
 	VkEngineDevice& mDevice;
 };
-}    // namespace vke
+}  // namespace vke
 
-#endif    //VKENGINEMODEL_HPP
+#endif  // VKENGINEMODEL_HPP

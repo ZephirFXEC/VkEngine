@@ -6,7 +6,6 @@ project(vkEngine
     LANGUAGES CXX C
 )
 
-
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)

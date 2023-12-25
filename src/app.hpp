@@ -1,21 +1,20 @@
 #ifndef APP_HPP
 #define APP_HPP
 
+#include <memory>
+
 #include "vkEngineDevice.hpp"
+#include "vkEngineModel.hpp"
 #include "vkEnginePipeline.hpp"
 #include "vkEngineSwapChain.hpp"
 #include "vkEngineWindow.hpp"
-#include "vkEngineModel.hpp"
-
-#include <memory>
 
 namespace vke {
-class App
-{
-	public:
+class App {
+   public:
 	App();
 
-	~ App();
+	~App();
 
 	App(const App&) = delete;
 
@@ -26,7 +25,7 @@ class App
 
 	void run();
 
-	private:
+   private:
 	void loadModels();
 
 	void createPipelineLayout();
@@ -43,17 +42,17 @@ class App
 
 	void freeCommandBuffers();
 
-	VkEngineWindow mVkWindow{ WIDTH, HEIGHT, "VkEngine" }; // Vulkan window
+	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
 
-	VkEngineDevice mVkDevice{ mVkWindow };
+	VkEngineDevice mVkDevice{mVkWindow};
 
-	std::unique_ptr <VkEngineSwapChain> mVkSwapChain = nullptr;
-	std::unique_ptr <VkEnginePipeline>  pVkPipeline = nullptr;
-	std::unique_ptr <VkEngineModel>     pVkModel = nullptr;
+	std::unique_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
+	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 
-	VkPipelineLayout              pVkPipelineLayout = VK_NULL_HANDLE;
-	std::vector <VkCommandBuffer> ppVkCommandBuffers{};
+	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
+	std::vector<VkCommandBuffer> ppVkCommandBuffers{};
 };
-} // namespace vke
+}  // namespace vke
 
-#endif    // APP
+#endif  // APP_HPP
