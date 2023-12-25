@@ -3,11 +3,14 @@ cmake_minimum_required(VERSION 3.5.0)
 file(GLOB_RECURSE SOURCES "*.cpp")
 file(GLOB_RECURSE HEADERS "*.hpp")
 
+file(GLOB_RECURSE UTILS_SOURCES "../utils/*.cpp")
+file(GLOB_RECURSE UTILS_HEADERS "../utils/*.hpp")
 
 add_executable(engine
                ${SOURCES}
                ${HEADERS}
-               )
+               ${UTILS_SOURCES}
+               ${UTILS_HEADERS})
 
 set_property(TARGET engine PROPERTY CXX_STANDARD 20)
 target_compile_features(engine PUBLIC cxx_std_20)
