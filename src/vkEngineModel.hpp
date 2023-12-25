@@ -28,7 +28,7 @@ class VkEngineModel {
 		static VkVertexInputAttributeDescription* getAttributeDescriptions();
 	};
 
-	VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	VkEngineModel(VkEngineDevice& device, const Vertex* vertices, uint32_t vCount, const uint32_t* indices, const uint32_t iCount);
 
 	~VkEngineModel();
 
@@ -49,7 +49,7 @@ class VkEngineModel {
 	};
 
 	template <typename T, typename MemAlloc>
-	void createVkBuffer(const std::vector<T>& data, VkBufferUsageFlags usage, VkBuffer& buffer,
+	void createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage, VkBuffer& buffer,
 	                    MemAlloc& bufferMemory) const;
 
 	template <typename MemAlloc>
@@ -59,9 +59,9 @@ class VkEngineModel {
 	template<typename MemAlloc>
 	void destroyBuffer(const DataBuffer<MemAlloc>& buffer) const;
 
-	void createVertexBuffers(const std::vector<Vertex>& vertices);
+	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
-	void createIndexBuffers(const std::vector<uint32_t>& indices);
+	void createIndexBuffers(const uint32_t* indices, size_t vertexCount);
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 

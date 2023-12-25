@@ -5,11 +5,13 @@
 #include "vkEngineModel.hpp"
 
 namespace vke {
-VkEngineModel::VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices,
-                             const std::vector<uint32_t>& indices)
-    : mIndexCount{static_cast<uint32_t>(indices.size())}, mDevice{device} {
-	createIndexBuffers(indices);
-	createVertexBuffers(vertices);
+VkEngineModel::VkEngineModel(VkEngineDevice& device, const Vertex* vertices, const uint32_t vCount,
+                             const uint32_t* indices, const uint32_t iCount)
+
+    : mIndexCount{iCount}, mDevice{device} {
+
+	createIndexBuffers(indices, iCount);
+	createVertexBuffers(vertices, vCount);
 }
 
 VkEngineModel::~VkEngineModel() {
@@ -51,9 +53,9 @@ void VkEngineModel::draw(const VkCommandBuffer commandBuffer) const {
 }
 
 template <typename T, typename MemAlloc>
-void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsageFlags usage, VkBuffer& buffer,
-                                   MemAlloc& bufferMemory) const {
-	const VkDeviceSize bufferSize = sizeof(T) * data.size();
+void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const VkBufferUsageFlags usage,
+                                   VkBuffer& buffer, MemAlloc& bufferMemory) const {
+	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
 	VkBuffer stagingBuffer = nullptr;
 	MemAlloc stagingBufferMemory = nullptr;
@@ -70,7 +72,7 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 		vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
 	}
 
-	memcpy(mappedData, data.data(), static_cast<size_t>(bufferSize));
+	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
 
 	if constexpr (!USE_VMA) {
 		vkUnmapMemory(mDevice.device(), stagingBufferMemory);
@@ -91,13 +93,14 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 	}
 }
 
-void VkEngineModel::createVertexBuffers(const std::vector<Vertex>& vertices) {
-	createVkBuffer(vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer.pDataBuffer,
+void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t vertexCount) {
+	createVkBuffer(vertices, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer.pDataBuffer,
 	               mVertexBuffer.pDataBufferMemory);
 }
 
-void VkEngineModel::createIndexBuffers(const std::vector<uint32_t>& indices) {
-	createVkBuffer(indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer, mIndexBuffer.pDataBufferMemory);
+void VkEngineModel::createIndexBuffers(const uint32_t* indices, const size_t indexCount) {
+	createVkBuffer(indices, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
+	               mIndexBuffer.pDataBufferMemory);
 }
 
 template <typename MemAlloc>

@@ -156,8 +156,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr}}};
 
-	auto *const bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
-	auto *const attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+	auto* const bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
+	auto* const attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
 	constexpr uint32_t bindingDescriptionCount = 1;
 	constexpr uint32_t attributeDescriptionCount = 2;
 

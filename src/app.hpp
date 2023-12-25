@@ -1,12 +1,11 @@
 #pragma once
 
+#include "../utils/vector.hpp"
 #include "vkEngineDevice.hpp"
 #include "vkEngineModel.hpp"
 #include "vkEnginePipeline.hpp"
 #include "vkEngineSwapChain.hpp"
 #include "vkEngineWindow.hpp"
-
-#include "../utils/vector.hpp"
 
 namespace vke {
 class App {
