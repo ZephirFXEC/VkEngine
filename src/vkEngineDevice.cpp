@@ -116,7 +116,6 @@ VkEngineDevice::~VkEngineDevice() {
 }
 
 void VkEngineDevice::initExtensions() const {
-
 	mValidationLayer.mExtensions[0] = "VK_LAYER_KHRONOS_validation";
 
 	mDeviceExtensions.mExtensions[0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
@@ -138,7 +137,7 @@ void VkEngineDevice::createInstance() {
 	};
 
 	uint32_t extensionCount = 0;
-	auto *const extensions = getRequiredExtensions(&extensionCount);
+	auto* const extensions = getRequiredExtensions(&extensionCount);
 
 	VkInstanceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -147,7 +146,6 @@ void VkEngineDevice::createInstance() {
 	    .enabledExtensionCount = extensionCount,
 	    .ppEnabledExtensionNames = extensions,
 	};
-
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (enableValidationLayers) {
@@ -420,7 +418,8 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 	auto* availableExtensions = new VkExtensionProperties[extensionCount];
 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions);
 
-	std::set<std::string> requiredExtensions(mDeviceExtensions.mExtensions, mDeviceExtensions.mExtensions + mDeviceExtensions.mSize);
+	std::set<std::string> requiredExtensions(mDeviceExtensions.mExtensions,
+	                                         mDeviceExtensions.mExtensions + mDeviceExtensions.mSize);
 
 	for (uint32_t i = 0; i < extensionCount; ++i) {
 		requiredExtensions.erase(availableExtensions[i].extensionName);

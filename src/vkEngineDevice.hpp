@@ -151,18 +151,16 @@ class VkEngineDevice {
 	VkQueue pGraphicsQueue = VK_NULL_HANDLE;
 	VkQueue pPresentQueue = VK_NULL_HANDLE;
 
-	template<uint32_t T>
+	template <uint32_t T>
 	struct Extensions {
 		static constexpr uint32_t mSize = T;
-		const char** mExtensions = new const char*[mSize]{};
+		const char** mExtensions;
 
 		Extensions() : mExtensions(new const char*[T]) {}
 		~Extensions() { delete[] mExtensions; }
-
 	};
 
 	Extensions<1> mValidationLayer{};
 	Extensions<2> mDeviceExtensions{};
-
 };
 }  // namespace vke
