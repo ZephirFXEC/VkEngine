@@ -15,11 +15,25 @@ VkEngineModel::VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& 
 }
 
 VkEngineModel::~VkEngineModel() {
-	vkDestroyBuffer(mDevice.device(), mVertexBuffer.pDataBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), mVertexBuffer.pDataBufferMemory, nullptr);
+	destroyBuffer(mVertexBuffer);
+	destroyBuffer(mIndexBuffer);
+}
 
-	vkDestroyBuffer(mDevice.device(), mIndexBuffer.pDataBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), mIndexBuffer.pDataBufferMemory, nullptr);
+template <typename MemAlloc>
+void VkEngineModel::destroyBuffer(const DataBuffer<MemAlloc>& buffer) const {
+	if constexpr (std::is_same<VkDeviceMemory, MemAlloc>::value) {
+		vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
+		vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
+
+		vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
+		vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
+	} else {
+		vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
+		vmaFreeMemory(mDevice.getAllocator(), buffer.pDataBufferMemory);
+
+		vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
+		vmaFreeMemory(mDevice.getAllocator(), buffer.pDataBufferMemory);
+	}
 }
 
 std::vector<VkVertexInputBindingDescription> VkEngineModel::Vertex::getBindingDescriptions() {
@@ -51,7 +65,7 @@ void VkEngineModel::createVkBuffer(const std::vector<T>& data, const VkBufferUsa
 	VkBuffer stagingBuffer = nullptr;
 	MemAlloc stagingBufferMemory = nullptr;
 
-	createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
 	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
 	             stagingBufferMemory);
 
@@ -97,6 +111,7 @@ template <typename MemAlloc>
 void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer,
                                  MemAlloc& bufferMemory) const {
+
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
@@ -122,7 +137,8 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
 	} else {
 		constexpr VmaAllocationCreateInfo allocInfo{
-		    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
+		    .usage = VMA_MEMORY_USAGE_AUTO,
+			.flags =  VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
 		};
 
 		vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr);

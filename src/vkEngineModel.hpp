@@ -40,6 +40,13 @@ class VkEngineModel {
 	void draw(VkCommandBuffer commandBuffer) const;
 
    private:
+
+	template <typename MemAlloc>
+	struct DataBuffer {
+		VkBuffer pDataBuffer = VK_NULL_HANDLE;
+		MemAlloc pDataBufferMemory = VK_NULL_HANDLE;
+	};
+
 	template <typename T, typename MemAlloc>
 	void createVkBuffer(const std::vector<T>& data, VkBufferUsageFlags usage, VkBuffer& buffer,
 	                    MemAlloc& bufferMemory) const;
@@ -48,20 +55,21 @@ class VkEngineModel {
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 	                  MemAlloc& bufferMemory) const;
 
+	template<typename MemAlloc>
+	void destroyBuffer(const DataBuffer<MemAlloc>& buffer) const;
+
 	void createVertexBuffers(const std::vector<Vertex>& vertices);
 
 	void createIndexBuffers(const std::vector<uint32_t>& indices);
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
-	template <typename MemAlloc>
-	struct DataBuffer {
-		VkBuffer pDataBuffer = VK_NULL_HANDLE;
-		MemAlloc pDataBufferMemory = VK_NULL_HANDLE;
-	};
+	[[nodiscard]] const VkEngineDevice& getDevice() const { return mDevice; };
 
-	DataBuffer<VkDeviceMemory> mVertexBuffer{};
-	DataBuffer<VkDeviceMemory> mIndexBuffer{};
+
+
+	DataBuffer<VmaAllocation> mVertexBuffer{};
+	DataBuffer<VmaAllocation> mIndexBuffer{};
 
 	uint32_t mIndexCount = 0;
 
