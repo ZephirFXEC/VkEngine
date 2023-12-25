@@ -39,7 +39,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] uint32_t height() const { return mSwapChainExtent.height; }
 
-	[[nodiscard]] size_t imageCount() const { return swapChainImages.size(); }
+	[[nodiscard]] size_t imageCount() const { return mSwapChainImageCount; }
 
 	[[nodiscard]] float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
@@ -82,25 +82,18 @@ class VkEngineSwapChain {
 	VkExtent2D windowExtent{};
 
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
-
-	std::vector<VkFramebuffer> ppSwapChainFramebuffers{};
-	std::vector<VkImage> swapChainImages{};
-	std::vector<VkImage> depthImages{};
-	std::vector<VkDeviceMemory> ppDepthImageMemorys{};
-	std::vector<VkImageView> ppDepthImageViews{};
-	std::vector<VkImageView> ppSwapChainImageViews{};
-	std::vector<VkSemaphore> ppImageAvailableSemaphores{};
-	std::vector<VkSemaphore> ppRenderFinishedSemaphores{};
-	std::vector<VkFence> ppInFlightFences{};
-	std::vector<VkFence> ppInFlightImages{};
+	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
+	VkImage* swapChainImages = nullptr;
+	VkImage* depthImages = nullptr;
+	VkDeviceMemory* ppDepthImageMemorys = nullptr;
+	VkImageView* ppDepthImageViews = nullptr;
+	VkImageView* ppSwapChainImageViews = nullptr;
+	VkSemaphore* ppImageAvailableSemaphores = nullptr;
+	VkSemaphore* ppRenderFinishedSemaphores = nullptr;
+	VkFence* ppInFlightFences = nullptr;
+	VkFence* ppInFlightImages = nullptr;
 
 	size_t currentFrame = 0;
-
-	/*
-	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppImageAvailableSemaphores{};
-	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppRenderFinishedSemaphores{};
-	std::array<VkFence, MAX_FRAMES_IN_FLIGHT> ppInFlightFences{};
-	std::array<VkFence, MAX_FRAMES_IN_FLIGHT> ppImagesInFlight{};
-	*/
+	size_t mSwapChainImageCount = 0;
 };
 }  // namespace vke

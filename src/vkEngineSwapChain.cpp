@@ -34,22 +34,27 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroyImageView(device.device(), ppSwapChainImageViews[i], nullptr);
 	}
 
-	ppSwapChainImageViews.clear();
+	delete[] ppSwapChainImageViews;
 
 	if (swapChain != nullptr) {
 		vkDestroySwapchainKHR(device.device(), swapChain, nullptr);
 		swapChain = nullptr;
 	}
 
-	for (size_t i = 0; i < depthImages.size(); ++i) {
+	for (size_t i = 0; i < imageCount(); ++i) {
 		vkDestroyImageView(device.device(), ppDepthImageViews[i], nullptr);
 		vkDestroyImage(device.device(), depthImages[i], nullptr);
 		vkFreeMemory(device.device(), ppDepthImageMemorys[i], nullptr);
 	}
 
+	delete[] depthImages;
+	delete[] ppDepthImageViews;
+	delete[] ppDepthImageMemorys;
+
 	for (size_t i = 0; i < imageCount(); ++i) {
 		vkDestroyFramebuffer(device.device(), ppSwapChainFramebuffers[i], nullptr);
 	}
+	delete[] ppSwapChainFramebuffers;
 
 	vkDestroyRenderPass(device.device(), pRenderPass, nullptr);
 
@@ -59,6 +64,10 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroySemaphore(device.device(), ppImageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(device.device(), ppInFlightFences[i], nullptr);
 	}
+
+	delete[] ppRenderFinishedSemaphores;
+	delete[] ppImageAvailableSemaphores;
+	delete[] ppInFlightFences;
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
@@ -168,15 +177,16 @@ void VkEngineSwapChain::createSwapChain() {
 	// vkGetSwapchainImagesKHR, then resize the container and finally call it
 	// again to retrieve the handles.
 	vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, nullptr);
-	swapChainImages.resize(imageCount);
-	vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages.data());
+	mSwapChainImageCount = imageCount;
+	swapChainImages = new VkImage[imageCount];
+	vkGetSwapchainImagesKHR(device.device(), swapChain, &imageCount, swapChainImages);
 
 	mSwapChainImageFormat = chooseSwapSurfaceFormat(device.getSwapChainSupport().mFormats).format;
 	mSwapChainExtent = extent;
 }
 
 void VkEngineSwapChain::createImageViews() {
-	ppSwapChainImageViews.resize(imageCount());
+	ppSwapChainImageViews = new VkImageView[imageCount()];
 
 	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageViewCreateInfo viewInfo{
@@ -195,6 +205,9 @@ void VkEngineSwapChain::createImageViews() {
 			throw std::runtime_error("failed to create texture image view!");
 		}
 	}
+
+	// last use of swapChainImages
+	delete[] swapChainImages;
 }
 
 void VkEngineSwapChain::createRenderPass() {
@@ -264,7 +277,8 @@ void VkEngineSwapChain::createRenderPass() {
 }
 
 void VkEngineSwapChain::createFramebuffers() {
-	ppSwapChainFramebuffers.resize(imageCount());
+	ppSwapChainFramebuffers = new VkFramebuffer[imageCount()];
+
 	for (size_t i = 0; i < imageCount(); i++) {
 		std::array attachments = {ppSwapChainImageViews[i], ppDepthImageViews[i]};
 
@@ -286,11 +300,11 @@ void VkEngineSwapChain::createFramebuffers() {
 }
 
 void VkEngineSwapChain::createDepthResources() {
-	depthImages.resize(imageCount());
-	ppDepthImageMemorys.resize(imageCount());
-	ppDepthImageViews.resize(imageCount());
+	depthImages = new VkImage[imageCount()];
+	ppDepthImageMemorys = new VkDeviceMemory[imageCount()];
+	ppDepthImageViews = new VkImageView[imageCount()];
 
-	for (size_t i = 0; i < depthImages.size(); i++) {
+	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		    .imageType = VK_IMAGE_TYPE_2D,
@@ -328,10 +342,12 @@ void VkEngineSwapChain::createDepthResources() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-	ppImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	ppRenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-	ppInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-	ppInFlightImages.resize(imageCount(), VK_NULL_HANDLE);
+	ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
+	ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
+	ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT];
+
+	ppInFlightImages = new VkFence[imageCount()];
+	memset((void*)ppInFlightImages, 0, sizeof(VkFence) * imageCount());
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
 	    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
