@@ -9,7 +9,6 @@ VkEngineModel::VkEngineModel(VkEngineDevice& device, const Vertex* vertices, con
                              const uint32_t* indices, const uint32_t iCount)
 
     : mIndexCount{iCount}, mDevice{device} {
-
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);
 }
