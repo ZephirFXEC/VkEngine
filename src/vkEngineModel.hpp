@@ -64,10 +64,6 @@ class VkEngineModel {
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
-	[[nodiscard]] const VkEngineDevice& getDevice() const { return mDevice; };
-
-
-
 	DataBuffer<VmaAllocation> mVertexBuffer{};
 	DataBuffer<VmaAllocation> mIndexBuffer{};
 

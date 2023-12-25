@@ -4,8 +4,6 @@
 
 #include "vkEngineModel.hpp"
 
-#include <cassert>
-
 namespace vke {
 VkEngineModel::VkEngineModel(VkEngineDevice& device, const std::vector<Vertex>& vertices,
                              const std::vector<uint32_t>& indices)
@@ -137,8 +135,9 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
 	} else {
 		constexpr VmaAllocationCreateInfo allocInfo{
+		    .flags =
+		        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
 		    .usage = VMA_MEMORY_USAGE_AUTO,
-			.flags =  VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
 		};
 
 		vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr);
@@ -148,8 +147,8 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const {
 	const VkCommandBufferAllocateInfo allocInfo{
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	    .commandPool = mDevice.getCommandPool(),
+	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	    .commandBufferCount = 1,
 	};
 
