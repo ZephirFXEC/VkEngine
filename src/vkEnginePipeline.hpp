@@ -2,8 +2,7 @@
 // Created by zphrfx on 16/12/2023.
 //
 
-#ifndef VKPIPELINE_HPP
-#define VKPIPELINE_HPP
+#pragma once
 
 #include <vector>
 
@@ -63,5 +62,3 @@ class VkEnginePipeline {
 	VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
 };
 }  // namespace vke
-
-#endif  // VKPIPELINE_HPP

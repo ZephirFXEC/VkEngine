@@ -1,5 +1,4 @@
-#ifndef VK_ENGINE_WINDOW_HPP
-#define VK_ENGINE_WINDOW_HPP
+#pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -38,5 +37,3 @@ class VkEngineWindow {
 	GLFWwindow* pWindow{};  // pointer to a GLFWwindow object
 };
 }  // namespace vke
-
-#endif  // VK_ENGINE_WINDOW_HPP

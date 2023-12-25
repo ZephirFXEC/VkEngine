@@ -1,5 +1,4 @@
-#ifndef VKENGINE_SWAPCHAIN_HPP
-#define VKENGINE_SWAPCHAIN_HPP
+#pragma once
 
 #include "vkEngineDevice.hpp"
 
@@ -105,5 +104,3 @@ class VkEngineSwapChain {
 	*/
 };
 }  // namespace vke
-
-#endif  // !VKENGINE_SWAPCHAIN_HPP

@@ -1,5 +1,4 @@
-#ifndef APP_HPP
-#define APP_HPP
+#pragma once
 
 #include <memory>
 
@@ -54,5 +53,3 @@ class App {
 	std::vector<VkCommandBuffer> ppVkCommandBuffers{};
 };
 }  // namespace vke
-
-#endif  // APP_HPP

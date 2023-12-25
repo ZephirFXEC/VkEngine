@@ -1,5 +1,4 @@
-#ifndef VKDEVICE_HPP
-#define VKDEVICE_HPP
+#pragma once
 
 #include <vk_mem_alloc.h>
 
@@ -155,5 +154,3 @@ class VkEngineDevice {
 	"VK_KHR_portability_subset"};
 };
 }  // namespace vke
-
-#endif  // VKDEVICE_HPP

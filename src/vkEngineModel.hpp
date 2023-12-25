@@ -2,8 +2,7 @@
 // Created by Enzo Crema on 21/12/2023.
 //
 
-#ifndef VKENGINEMODEL_HPP
-#define VKENGINEMODEL_HPP
+#pragma once
 
 // engine
 #include "vkEngineDevice.hpp"
@@ -75,5 +74,3 @@ class VkEngineModel {
 	VkEngineDevice& mDevice;
 };
 }  // namespace vke
-
-#endif  // VKENGINEMODEL_HPP
