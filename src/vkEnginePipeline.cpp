@@ -4,6 +4,7 @@
 #include <cassert>
 #include <fstream>
 #include <stdexcept>
+#include "vkEngineModel.hpp"
 
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
@@ -13,8 +14,8 @@ VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& ve
 }
 
 VkEnginePipeline::~VkEnginePipeline() {
-	vkDestroyShaderModule(mDevice.device(), pVertShaderModule, nullptr);
-	vkDestroyShaderModule(mDevice.device(), pFragShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice.device(), mShaders.pVertShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice.device(), mShaders.pFragShaderModule, nullptr);
 
 	vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
 }
@@ -94,34 +95,37 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 	    .maxDepthBounds = 1.0f,  // Optional
 	};
 
-	configInfo.dynamicStateEnables = {
+	constexpr uint32_t dynamicStateCount = 2;
+	configInfo.pDynamicStateEnables = new VkDynamicState[dynamicStateCount] {
 	    VK_DYNAMIC_STATE_VIEWPORT,
 	    VK_DYNAMIC_STATE_SCISSOR,
 	};
 
 	configInfo.dynamicStateInfo = {
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-	    .dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size()),
-	    .pDynamicStates = configInfo.dynamicStateEnables.data(),
+	    .dynamicStateCount = dynamicStateCount,
+	    .pDynamicStates = configInfo.pDynamicStateEnables,
 	    .flags = 0,
 	};
 }
 
-std::vector<char> VkEnginePipeline::readFile(const std::string& filename) {
+char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize) {
 	std::ifstream file{filename, std::ios::ate | std::ios::binary};
 
 	if (!file.is_open()) {
 		throw std::runtime_error("failed to open file: " + filename);
 	}
 
-	std::vector<char> buffer(static_cast<size_t>(file.tellg()));
+	bufferSize = static_cast<size_t>(file.tellg());
+	auto *const buffer = new char[bufferSize];
 
 	file.seekg(0);
-	file.read(buffer.data(), static_cast<long>(buffer.size()));
+	file.read(buffer, static_cast<uint32_t>(bufferSize));
 	file.close();
 
 	return buffer;
 }
+
 
 void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
                                               const PipelineConfigInfo& configInfo) {
@@ -132,18 +136,21 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	       "Cannot create graphics pipeline: no renderPass provided in "
 	       "configInfo");
 
-	const auto vertShaderCode = readFile(vertShader);
-	const auto fragShaderCode = readFile(fragShader);
+	size_t vertShaderSize = 0;
+	size_t fragShaderSize = 0;
 
-	createShaderModule(vertShaderCode, &pVertShaderModule);
-	createShaderModule(fragShaderCode, &pFragShaderModule);
+	const auto *const vertShaderCode = readFile(vertShader, vertShaderSize);
+	const auto *const fragShaderCode = readFile(fragShader, fragShaderSize);
+
+	createShaderModule(vertShaderCode, vertShaderSize, &mShaders.pVertShaderModule);
+	createShaderModule(fragShaderCode, fragShaderSize, &mShaders.pFragShaderModule);
 
 	std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages{
 	    {{.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 	      .pNext = nullptr,
 	      .flags = 0,
 	      .stage = VK_SHADER_STAGE_VERTEX_BIT,
-	      .module = pVertShaderModule,
+	      .module = mShaders.pVertShaderModule,
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr
 
@@ -152,12 +159,13 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	      .pNext = nullptr,
 	      .flags = 0,
 	      .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-	      .module = pFragShaderModule,
+	      .module = mShaders.pFragShaderModule,
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr}}};
 
 	auto* const bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
 	auto* const attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+
 	constexpr uint32_t bindingDescriptionCount = 1;
 	constexpr uint32_t attributeDescriptionCount = 2;
 
@@ -195,15 +203,21 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 
 	delete[] bindingDescriptions;
 	delete[] attributeDescriptions;
+	delete[] vertShaderCode;
+	delete[] fragShaderCode;
+	delete[] configInfo.pDynamicStateEnables;
 }
 
-void VkEnginePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) const {
-	const VkShaderModuleCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-	                                             .codeSize = code.size(),
-	                                             .pCode = reinterpret_cast<const uint32_t*>(code.data())};
+void VkEnginePipeline::createShaderModule(const char* code, const size_t codeSize, VkShaderModule* shaderModule) const {
+	const VkShaderModuleCreateInfo createInfo = {
+		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+		.codeSize = codeSize,
+		.pCode = reinterpret_cast<const uint32_t*>(code)
+	};
 
 	if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module");
 	}
 }
+
 }  // namespace vke

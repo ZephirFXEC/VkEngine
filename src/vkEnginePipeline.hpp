@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "vkEngineDevice.hpp"
-#include "vkEngineModel.hpp"
 
 namespace vke {
 struct PipelineConfigInfo {
@@ -24,7 +23,7 @@ struct PipelineConfigInfo {
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-	std::vector<VkDynamicState> dynamicStateEnables{};
+	VkDynamicState* pDynamicStateEnables = nullptr;
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
@@ -49,16 +48,19 @@ class VkEnginePipeline {
 	void bind(VkCommandBuffer commandBuffer) const;
 
    private:
-	static std::vector<char> readFile(const std::string& filename);
+	static char* readFile(const std::string& filename, size_t& bufferSize);
 
 	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
 	                            const PipelineConfigInfo& configInfo);
 
-	void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) const;
+	void createShaderModule(const char* code, size_t codeSize, VkShaderModule* shaderModule) const;
 
 	VkEngineDevice& mDevice;
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
-	VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
-	VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
+
+	struct Shader {
+		VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
+		VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
+	} mShaders;
 };
 }  // namespace vke
