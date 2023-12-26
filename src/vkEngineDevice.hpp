@@ -84,7 +84,8 @@ class VkEngineDevice {
 
 		void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
-		void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height, uint32_t layerCount);
+		void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
+		                       uint32_t layerCount);
 
 		void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
 		                         VkDeviceMemory& imageMemory) const;

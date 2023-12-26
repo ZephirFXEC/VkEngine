@@ -562,7 +562,8 @@ void VkEngineDevice::endSingleTimeCommands() const {
 	vkFreeCommandBuffers(pDevice, mFrameData.pCommandPool, 1, &mFrameData.pCommandBuffer);
 }
 
-void VkEngineDevice::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer *const dstBuffer, const VkDeviceSize size) {
+void VkEngineDevice::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
+                                const VkDeviceSize size) {
 	beginSingleTimeCommands();
 
 	const VkBufferCopy copyRegion{.srcOffset = 0,
