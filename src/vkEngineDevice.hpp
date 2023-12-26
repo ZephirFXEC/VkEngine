@@ -73,12 +73,14 @@ class VkEngineDevice {
 		                                           VkFormatFeatureFlags features) const;
 
 		void beginSingleTimeCommands();
+
 		void endSingleTimeCommands() const;
 
 		// Buffer Helper Functions
 		template <typename MemAlloc>
-		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-					  MemAlloc& bufferMemory) const;
+		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
+		                  VkBuffer& buffer,
+		                  MemAlloc& bufferMemory) const;
 
 		void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
