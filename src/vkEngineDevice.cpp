@@ -59,24 +59,24 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 }
 } // namespace
 
-VkResult CreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+VkResult CreateDebugUtilsMessengerEXT(const VkInstance *const instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                       const VkAllocationCallbacks* pAllocator,
                                       VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+			vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
 		func != nullptr) {
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
 
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-void DestroyDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerEXT debugMessenger,
+void DestroyDebugUtilsMessengerEXT(const VkInstance *const instance, const VkDebugUtilsMessengerEXT *const debugMessenger,
                                    const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
 		func != nullptr) {
-		func(instance, debugMessenger, pAllocator);
+		func(*instance, *debugMessenger, pAllocator);
 	}
 }
 
@@ -105,7 +105,7 @@ VkEngineDevice::~VkEngineDevice() {
 
 	// 4. Optionally destroy the debug messenger if validation layers are enabled
 	if (enableValidationLayers) {
-		DestroyDebugUtilsMessengerEXT(pInstance, pDebugMessenger, nullptr);
+		DestroyDebugUtilsMessengerEXT(&pInstance, &pDebugMessenger, nullptr);
 	}
 
 	// 5. Destroy the surface
@@ -179,7 +179,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 	vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices);
 
 	for (uint32_t i = 0; i < deviceCount; ++i) {
-		if (isDeviceSuitable(devices[i])) {
+		if (isDeviceSuitable(&devices[i])) {
 			pPhysicalDevice = devices[i];
 			break;
 		}
@@ -196,8 +196,8 @@ void VkEngineDevice::pickPhysicalDevice() {
 }
 
 void VkEngineDevice::createLogicalDevice() {
-	const std::set uniqueQueueFamilies = {findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(),
-	                                      findQueueFamilies(pPhysicalDevice).mPresentFamily.value()};
+	const std::set uniqueQueueFamilies = {findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(),
+	                                      findQueueFamilies(&pPhysicalDevice).mPresentFamily.value()};
 
 	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()];
 
@@ -239,8 +239,8 @@ void VkEngineDevice::createLogicalDevice() {
 		throw std::runtime_error("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
-	vkGetDeviceQueue(pDevice, findQueueFamilies(pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
+	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
+	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
 
 	delete[] queueCreateInfos;
 }
@@ -277,7 +277,7 @@ void VkEngineDevice::createAllocator() {
 
 void VkEngineDevice::createSurface() { mWindow.createWindowSurface(pInstance, &pSurface); }
 
-bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice device) const {
+bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice *const device) const {
 	const QueueFamilyIndices indices = findQueueFamilies(device);
 	const bool extensionsSupported = checkDeviceExtensionSupport(device);
 
@@ -288,7 +288,7 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice device) const {
 	}
 
 	VkPhysicalDeviceFeatures supportedFeatures;
-	vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+	vkGetPhysicalDeviceFeatures(*device, &supportedFeatures);
 
 	return indices.isComplete() && extensionsSupported && swapChainAdequate &&
 	       (supportedFeatures.samplerAnisotropy != 0u);
@@ -313,7 +313,7 @@ void VkEngineDevice::setupDebugMessenger() {
 
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
-	if (CreateDebugUtilsMessengerEXT(pInstance, &createInfo, nullptr, &pDebugMessenger) != VK_SUCCESS) {
+	if (CreateDebugUtilsMessengerEXT(&pInstance, &createInfo, nullptr, &pDebugMessenger) != VK_SUCCESS) {
 		throw std::runtime_error("failed to set up debug messenger!");
 	}
 }
@@ -365,7 +365,7 @@ const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 
 	*extensionCount = glfwExtensionCount + additionalExtensionCount;
 
-	const char** extensions = new const char*[*extensionCount];
+	auto *const extensions = new const char*[*extensionCount];
 	memcpy(extensions, glfwExtensions, glfwExtensionCount * sizeof(const char*));
 
 	uint32_t index = glfwExtensionCount;
@@ -410,12 +410,12 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 	delete[] requiredExtensions;
 }
 
-bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) const {
+bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice *const device) const {
 	uint32_t extensionCount = 0;
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+	vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, nullptr);
 
 	auto* availableExtensions = new VkExtensionProperties[extensionCount];
-	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions);
+	vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, availableExtensions);
 
 	std::set<std::string> requiredExtensions(mDeviceExtensions.mExtensions,
 	                                         mDeviceExtensions.mExtensions + mDeviceExtensions.mSize);
@@ -428,21 +428,21 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice device) 
 	return requiredExtensions.empty();
 }
 
-QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice device) const {
+QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice *const device) const {
 	QueueFamilyIndices indices{};
 
 	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, nullptr);
 
 	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, queueFamilies.data());
 
 	for (uint32_t i = 0; i < queueFamilyCount; ++i) {
 		if (queueFamilies[i].queueCount > 0 && (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u) {
 			indices.mGraphicsFamily = i;
 		}
 		VkBool32 presentSupport = 0u;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, pSurface, &presentSupport);
+		vkGetPhysicalDeviceSurfaceSupportKHR(*device, i, pSurface, &presentSupport);
 		if (queueFamilies[i].queueCount > 0 && presentSupport != 0u) {
 			indices.mPresentFamily = i;
 		}
@@ -454,24 +454,24 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice devi
 	return indices;
 }
 
-SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDevice device) const {
+SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDevice *const device) const {
 	SwapChainSupportDetails details{};
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, pSurface, &details.mCapabilities);
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*device, pSurface, &details.mCapabilities);
 
 	uint32_t formatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(device, pSurface, &formatCount, nullptr);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(*device, pSurface, &formatCount, nullptr);
 
 	if (formatCount != 0) {
 		details.mFormats.resize(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(device, pSurface, &formatCount, details.mFormats.data());
+		vkGetPhysicalDeviceSurfaceFormatsKHR(*device, pSurface, &formatCount, details.mFormats.data());
 	}
 
 	uint32_t presentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(device, pSurface, &presentModeCount, nullptr);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount, nullptr);
 
 	if (presentModeCount != 0) {
 		details.mPresentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(device, pSurface, &presentModeCount, details.mPresentModes.data());
+		vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount, details.mPresentModes.data());
 	}
 	return details;
 }
@@ -560,7 +560,7 @@ void VkEngineDevice::endSingleTimeCommands() const {
 	vkFreeCommandBuffers(pDevice, mFrameData.pCommandPool, 1, &mFrameData.pCommandBuffer);
 }
 
-void VkEngineDevice::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) {
+void VkEngineDevice::copyBuffer(const VkBuffer *const srcBuffer, const VkBuffer *const dstBuffer, const VkDeviceSize size) {
 	beginSingleTimeCommands();
 
 	const VkBufferCopy copyRegion{.srcOffset = 0,
@@ -569,12 +569,12 @@ void VkEngineDevice::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuff
 	                              // Optional
 	                              .size = size};
 
-	vkCmdCopyBuffer(mFrameData.pCommandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	vkCmdCopyBuffer(mFrameData.pCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
 	endSingleTimeCommands();
 }
 
-void VkEngineDevice::copyBufferToImage(const VkBuffer buffer, const VkImage image, const uint32_t width,
+void VkEngineDevice::copyBufferToImage(const VkBuffer *const buffer, const VkImage *const image, const uint32_t width,
                                        const uint32_t height, const uint32_t layerCount) {
 	beginSingleTimeCommands();
 
@@ -590,7 +590,7 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer buffer, const VkImage imag
 	                               .imageOffset = {0, 0, 0},
 	                               .imageExtent = {width, height, 1}};
 
-	vkCmdCopyBufferToImage(mFrameData.pCommandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(mFrameData.pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 	endSingleTimeCommands();
 }

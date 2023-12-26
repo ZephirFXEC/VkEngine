@@ -9,32 +9,20 @@
 #include "utils/utility.hpp"
 #include "vkEngineWindow.hpp"
 
+#ifdef NDEBUG
+	static constexpr bool enableValidationLayers = false;
+#else
+static constexpr bool enableValidationLayers = true;
+#endif
+
+
 namespace vke {
-struct DeletionQueue {
-	std::deque<std::function<void()>> mDeletionQueue{};
-
-	void push_function(std::function<void()>&& function) { mDeletionQueue.push_back(std::move(function)); }
-
-	void flush() {
-		// reverse iterate the deletion queue to execute all the functions
-		for (const auto& it : std::ranges::reverse_view(mDeletionQueue)) {
-			it(); // call functions
-		}
-
-		mDeletionQueue.clear();
-	}
-};
-
 struct SwapChainSupportDetails {
 	VkSurfaceCapabilitiesKHR mCapabilities{};
 	std::vector<VkSurfaceFormatKHR> mFormats{};
 	std::vector<VkPresentModeKHR> mPresentModes{};
 };
 
-struct FrameData {
-	VkCommandPool pCommandPool = VK_NULL_HANDLE;
-	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
-};
 
 struct QueueFamilyIndices {
 	std::optional<uint32_t> mGraphicsFamily;
@@ -45,12 +33,6 @@ struct QueueFamilyIndices {
 
 class VkEngineDevice {
 	public:
-#ifdef NDEBUG
-	static constexpr bool enableValidationLayers = false;
-#else
-		static constexpr bool enableValidationLayers = true;
-#endif
-
 		explicit VkEngineDevice() = delete;
 
 		explicit VkEngineDevice(VkEngineWindow& window);
@@ -79,13 +61,13 @@ class VkEngineDevice {
 		NDC_INLINE const VkQueue& presentQueue() const { return pPresentQueue; }
 
 		[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
-			return querySwapChainSupport(pPhysicalDevice);
+			return querySwapChainSupport(&pPhysicalDevice);
 		}
 
 		[[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
 		[[nodiscard]] QueueFamilyIndices findPhysicalQueueFamilies() const {
-			return findQueueFamilies(pPhysicalDevice);
+			return findQueueFamilies(&pPhysicalDevice);
 		}
 
 		[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
@@ -100,9 +82,9 @@ class VkEngineDevice {
 
 		void endSingleTimeCommands() const;
 
-		void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+		void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
-		void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+		void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height, uint32_t layerCount);
 
 		void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
 		                         VkDeviceMemory& imageMemory) const;
@@ -127,21 +109,21 @@ class VkEngineDevice {
 		void createAllocator();
 
 		// helper functions
-		[[nodiscard]] bool isDeviceSuitable(VkPhysicalDevice device) const;
+		[[nodiscard]] bool isDeviceSuitable(const VkPhysicalDevice* device) const;
 
 		[[nodiscard]] static const char** getRequiredExtensions(uint32_t* extensionCount);
 
 		[[nodiscard]] bool checkValidationLayerSupport() const;
 
-		QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
+		QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice* device) const;
 
 		static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
 
 		static void hasGflwRequiredInstanceExtensions();
 
-		bool checkDeviceExtensionSupport(VkPhysicalDevice device) const;
+		bool checkDeviceExtensionSupport(const VkPhysicalDevice* device) const;
 
-		SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) const;
+		SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice* device) const;
 
 		VkDevice pDevice = VK_NULL_HANDLE;
 		VmaAllocator pAllocator = VK_NULL_HANDLE;
@@ -151,7 +133,10 @@ class VkEngineDevice {
 		VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
 		VkEngineWindow& mWindow;
 
-		FrameData mFrameData{};
+		struct FrameData {
+			VkCommandPool pCommandPool = VK_NULL_HANDLE;
+			VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
+		} mFrameData{};
 
 		VkSurfaceKHR pSurface = VK_NULL_HANDLE;
 		VkQueue pGraphicsQueue = VK_NULL_HANDLE;
