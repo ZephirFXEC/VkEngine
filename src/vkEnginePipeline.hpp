@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <vector>
-
 #include "vkEngineDevice.hpp"
 
 namespace vke {
@@ -31,7 +29,7 @@ struct PipelineConfigInfo {
 };
 
 class VkEnginePipeline {
-   public:
+public:
 	explicit VkEnginePipeline() = delete;
 
 	VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
@@ -47,7 +45,7 @@ class VkEnginePipeline {
 
 	void bind(VkCommandBuffer commandBuffer) const;
 
-   private:
+private:
 	static char* readFile(const std::string& filename, size_t& bufferSize);
 
 	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
@@ -61,6 +59,6 @@ class VkEnginePipeline {
 	struct Shader {
 		VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
 		VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
-	} mShaders;
+	} mShaders{};
 };
-}  // namespace vke
+} // namespace vke

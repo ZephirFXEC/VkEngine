@@ -8,7 +8,7 @@ namespace vke {
 VkEngineModel::VkEngineModel(VkEngineDevice& device, const Vertex* vertices, const uint32_t vCount,
                              const uint32_t* indices, const uint32_t iCount)
 
-    : mIndexCount{iCount}, mDevice{device} {
+	: mIndexCount{iCount}, mDevice{device} {
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);
 }
@@ -19,7 +19,7 @@ VkEngineModel::~VkEngineModel() {
 }
 
 template <typename MemAlloc>
-void VkEngineModel::destroyBuffer(const DataBuffer<MemAlloc>& buffer) const {
+void VkEngineModel::destroyBuffer(const DataBuffer <MemAlloc>& buffer) const {
 	if constexpr (!USE_VMA) {
 		vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
 		vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
@@ -30,18 +30,18 @@ void VkEngineModel::destroyBuffer(const DataBuffer<MemAlloc>& buffer) const {
 
 VkVertexInputBindingDescription* VkEngineModel::Vertex::getBindingDescriptions() {
 	return new VkVertexInputBindingDescription[1]{
-	    {.binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
+		{.binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
 }
 
 VkVertexInputAttributeDescription* VkEngineModel::Vertex::getAttributeDescriptions() {
 	return new VkVertexInputAttributeDescription[2]{
-	    {.binding = 0, .location = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
-	    {.binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
+		{.binding = 0, .location = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
+		{.binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
 }
 
 void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const {
 	const std::array buffers{mVertexBuffer.pDataBuffer};
-	constexpr std::array<VkDeviceSize, 1> offsets{0};
+	constexpr std::array <VkDeviceSize, 1> offsets{0};
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers.data(), offsets.data());
 	vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -71,7 +71,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 		vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
 	}
 
-	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
+	memcpy(mappedData, data, static_cast <size_t>(bufferSize));
 
 	if constexpr (!USE_VMA) {
 		vkUnmapMemory(mDevice.device(), stagingBufferMemory);
@@ -120,9 +120,9 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
 
 		const VkMemoryAllocateInfo allocInfo{
-		    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-		    .allocationSize = memRequirements.size,
-		    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
+			.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+			.allocationSize = memRequirements.size,
+			.memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
 		if (vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate buffer memory!");
@@ -131,8 +131,8 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
 	} else {
 		constexpr VmaAllocationCreateInfo allocInfo{
-		    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
-		    .usage = VMA_MEMORY_USAGE_AUTO,
+			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+			.usage = VMA_MEMORY_USAGE_AUTO,
 		};
 
 		vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr);
@@ -141,10 +141,10 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 
 void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const {
 	const VkCommandBufferAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .commandPool = mDevice.getCommandPool(),
-	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	    .commandBufferCount = 1,
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		.commandPool = mDevice.getCommandPool(),
+		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		.commandBufferCount = 1,
 	};
 
 	VkCommandBuffer commandBuffer = nullptr;
@@ -161,9 +161,9 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffe
 	vkEndCommandBuffer(commandBuffer);
 
 	const VkSubmitInfo submitInfo{
-	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	    .commandBufferCount = 1,
-	    .pCommandBuffers = &commandBuffer,
+		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+		.commandBufferCount = 1,
+		.pCommandBuffers = &commandBuffer,
 	};
 
 	vkQueueSubmit(mDevice.graphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
@@ -171,4 +171,4 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffe
 
 	vkFreeCommandBuffers(mDevice.device(), mDevice.getCommandPool(), 1, &commandBuffer);
 }
-}  // namespace vke
+} // namespace vke

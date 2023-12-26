@@ -12,16 +12,17 @@
 #include <glm/glm.hpp>
 
 constexpr static bool USE_VMA = true;
-using Alloc = std::conditional_t<USE_VMA, VmaAllocation, VkDeviceMemory>;
+using Alloc = std::conditional_t <USE_VMA, VmaAllocation, VkDeviceMemory>;
 
 namespace vke {
 class VkEngineModel {
-   public:
+public:
 	struct Vertex {
 		glm::vec2 mPosition{};
 		glm::vec3 mColor{};
 
 		static VkVertexInputBindingDescription* getBindingDescriptions();
+
 		static VkVertexInputAttributeDescription* getAttributeDescriptions();
 	};
 
@@ -38,8 +39,7 @@ class VkEngineModel {
 
 	void draw(VkCommandBuffer commandBuffer) const;
 
-   private:
-
+private:
 	template <typename MemAlloc>
 	struct DataBuffer {
 		VkBuffer pDataBuffer = VK_NULL_HANDLE;
@@ -54,20 +54,20 @@ class VkEngineModel {
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 	                  MemAlloc& bufferMemory) const;
 
-	template<typename MemAlloc>
-	void destroyBuffer(const DataBuffer<MemAlloc>& buffer) const;
+	template <typename MemAlloc>
+	void destroyBuffer(const DataBuffer <MemAlloc>& buffer) const;
 
 	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
-	void createIndexBuffers(const uint32_t* indices, size_t vertexCount);
+	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
-	DataBuffer<Alloc> mVertexBuffer{};
-	DataBuffer<Alloc> mIndexBuffer{};
+	DataBuffer <Alloc> mVertexBuffer{};
+	DataBuffer <Alloc> mIndexBuffer{};
 
 	uint32_t mIndexCount = 0;
 
 	VkEngineDevice& mDevice;
 };
-}  // namespace vke
+} // namespace vke

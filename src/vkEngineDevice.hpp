@@ -6,20 +6,19 @@
 #include <functional>
 #include <ranges>
 
-#include "vkEngineWindow.hpp"
-
 #include "utils/utility.hpp"
+#include "vkEngineWindow.hpp"
 
 namespace vke {
 struct DeletionQueue {
-	std::deque<std::function<void()>> mDeletionQueue{};
+	std::deque <std::function <void()>> mDeletionQueue{};
 
-	void push_function(std::function<void()>&& function) { mDeletionQueue.push_back(std::move(function)); }
+	void push_function(std::function <void()>&& function) { mDeletionQueue.push_back(std::move(function)); }
 
 	void flush() {
 		// reverse iterate the deletion queue to execute all the functions
-		for (auto& it : std::ranges::reverse_view(mDeletionQueue)) {
-			it();  // call functions
+		for (const auto& it : std::ranges::reverse_view(mDeletionQueue)) {
+			it(); // call functions
 		}
 
 		mDeletionQueue.clear();
@@ -28,8 +27,8 @@ struct DeletionQueue {
 
 struct SwapChainSupportDetails {
 	VkSurfaceCapabilitiesKHR mCapabilities{};
-	std::vector<VkSurfaceFormatKHR> mFormats{};
-	std::vector<VkPresentModeKHR> mPresentModes{};
+	std::vector <VkSurfaceFormatKHR> mFormats{};
+	std::vector <VkPresentModeKHR> mPresentModes{};
 };
 
 struct FrameData {
@@ -38,14 +37,14 @@ struct FrameData {
 };
 
 struct QueueFamilyIndices {
-	std::optional<uint32_t> mGraphicsFamily;
-	std::optional<uint32_t> mPresentFamily;
+	std::optional <uint32_t> mGraphicsFamily;
+	std::optional <uint32_t> mPresentFamily;
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
 };
 
 class VkEngineDevice {
-   public:
+public:
 #ifdef NDEBUG
 	static constexpr bool enableValidationLayers = false;
 #else
@@ -60,8 +59,11 @@ class VkEngineDevice {
 
 	// Not copyable or movable
 	VkEngineDevice(const VkEngineDevice&) = delete;
+
 	VkEngineDevice& operator=(const VkEngineDevice&) = delete;
+
 	VkEngineDevice(VkEngineDevice&&) = delete;
+
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
 	NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
@@ -82,7 +84,7 @@ class VkEngineDevice {
 
 	[[nodiscard]] QueueFamilyIndices findPhysicalQueueFamilies() const { return findQueueFamilies(pPhysicalDevice); }
 
-	[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+	[[nodiscard]] VkFormat findSupportedFormat(const std::vector <VkFormat>& candidates, VkImageTiling tiling,
 	                                           VkFormatFeatureFlags features) const;
 
 	void beginSingleTimeCommands();
@@ -102,7 +104,7 @@ class VkEngineDevice {
 
 	VkPhysicalDeviceProperties mProperties{};
 
-   private:
+private:
 	void initExtensions() const;
 
 	void createInstance();
@@ -155,11 +157,14 @@ class VkEngineDevice {
 		static constexpr uint32_t mSize = T;
 		const char** mExtensions;
 
-		Extensions() : mExtensions(new const char*[T]) {}
+		Extensions()
+			: mExtensions(new const char*[T]) {
+		}
+
 		~Extensions() { delete[] mExtensions; }
 	};
 
-	Extensions<1> mValidationLayer{};
-	Extensions<2> mDeviceExtensions{};
+	Extensions <1> mValidationLayer{};
+	Extensions <2> mDeviceExtensions{};
 };
-}  // namespace vke
+} // namespace vke

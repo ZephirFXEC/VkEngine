@@ -7,13 +7,13 @@
 
 namespace vke {
 class VkEngineWindow {
-   public:
-	explicit VkEngineWindow() = default;                      // default constructor
-	VkEngineWindow(int width, int height, std::string name);  // constructor
-	~VkEngineWindow();                                        // destructor
+public:
+	explicit VkEngineWindow() = default;                     // default constructor
+	VkEngineWindow(int width, int height, std::string name); // constructor
+	~VkEngineWindow();                                       // destructor
 
-	VkEngineWindow(const VkEngineWindow&) = delete;             // copy constructor
-	VkEngineWindow& operator=(const VkEngineWindow&) = delete;  // copy assignment operator
+	VkEngineWindow(const VkEngineWindow&) = delete;            // copy constructor
+	VkEngineWindow& operator=(const VkEngineWindow&) = delete; // copy assignment operator
 
 	[[nodiscard]] bool shouldClose() const;
 
@@ -25,15 +25,15 @@ class VkEngineWindow {
 
 	void resetWindowResizedFlag() { framebufferResized = false; }
 
-   private:
-	void initWindow();  // initialize GLFW window
+private:
+	void initWindow(); // initialize GLFW window
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
 	int mHeight = 0;
 	int mWidth = 0;
 	bool framebufferResized = false;
 
-	std::string mName{};    // window name
-	GLFWwindow* pWindow{};  // pointer to a GLFWwindow object
+	std::string mName{};   // window name
+	GLFWwindow* pWindow{}; // pointer to a GLFWwindow object
 };
-}  // namespace vke
+} // namespace vke
