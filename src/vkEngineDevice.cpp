@@ -59,7 +59,8 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 }
 } // namespace
 
-VkResult CreateDebugUtilsMessengerEXT(const VkInstance *const instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+VkResult CreateDebugUtilsMessengerEXT(const VkInstance* const instance,
+                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                       const VkAllocationCallbacks* pAllocator,
                                       VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
@@ -71,7 +72,8 @@ VkResult CreateDebugUtilsMessengerEXT(const VkInstance *const instance, const Vk
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
-void DestroyDebugUtilsMessengerEXT(const VkInstance *const instance, const VkDebugUtilsMessengerEXT *const debugMessenger,
+void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
+                                   const VkDebugUtilsMessengerEXT* const debugMessenger,
                                    const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
 			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
@@ -410,7 +412,7 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 	delete[] requiredExtensions;
 }
 
-bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice *const device) const {
+bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const device) const {
 	uint32_t extensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, nullptr);
 
@@ -454,7 +456,7 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice *con
 	return indices;
 }
 
-SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDevice *const device) const {
+SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDevice* const device) const {
 	SwapChainSupportDetails details{};
 	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*device, pSurface, &details.mCapabilities);
 
@@ -560,7 +562,7 @@ void VkEngineDevice::endSingleTimeCommands() const {
 	vkFreeCommandBuffers(pDevice, mFrameData.pCommandPool, 1, &mFrameData.pCommandBuffer);
 }
 
-void VkEngineDevice::copyBuffer(const VkBuffer *const srcBuffer, const VkBuffer *const dstBuffer, const VkDeviceSize size) {
+void VkEngineDevice::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer *const dstBuffer, const VkDeviceSize size) {
 	beginSingleTimeCommands();
 
 	const VkBufferCopy copyRegion{.srcOffset = 0,
@@ -574,7 +576,7 @@ void VkEngineDevice::copyBuffer(const VkBuffer *const srcBuffer, const VkBuffer 
 	endSingleTimeCommands();
 }
 
-void VkEngineDevice::copyBufferToImage(const VkBuffer *const buffer, const VkImage *const image, const uint32_t width,
+void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
                                        const uint32_t height, const uint32_t layerCount) {
 	beginSingleTimeCommands();
 
