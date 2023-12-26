@@ -181,8 +181,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 		  .pName = "main",
 		  .pSpecializationInfo = nullptr}}};
 
-	auto* const bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
-	auto* const attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
+	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
 
 	constexpr uint32_t bindingDescriptionCount = 1;
 	constexpr uint32_t attributeDescriptionCount = 2;
@@ -190,9 +190,9 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.vertexBindingDescriptionCount = bindingDescriptionCount,
-		.pVertexBindingDescriptions = bindingDescriptions,
+		.pVertexBindingDescriptions = bindingDescriptions->data(),
 		.vertexAttributeDescriptionCount = attributeDescriptionCount,
-		.pVertexAttributeDescriptions = attributeDescriptions,
+		.pVertexAttributeDescriptions = attributeDescriptions->data(),
 	};
 
 	const VkGraphicsPipelineCreateInfo pipelineInfo{
@@ -219,8 +219,6 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 		throw std::runtime_error("Failed to create graphics pipeline");
 	}
 
-	delete[] bindingDescriptions;
-	delete[] attributeDescriptions;
 	delete[] vertShaderCode;
 	delete[] fragShaderCode;
 }

@@ -125,7 +125,6 @@ void VkEngineDevice::initExtensions() const {
 #ifdef __APPLE__
 	mDeviceExtensions.mExtensions[1] = "VK_KHR_portability_subset";
 #endif
-
 }
 
 void VkEngineDevice::createInstance() {
@@ -283,7 +282,7 @@ void VkEngineDevice::createAllocator() {
 
 void VkEngineDevice::createSurface() { mWindow.createWindowSurface(pInstance, &pSurface); }
 
-bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice *const device) const {
+bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) const {
 	const QueueFamilyIndices indices = findQueueFamilies(device);
 	const bool extensionsSupported = checkDeviceExtensionSupport(device);
 
@@ -371,7 +370,7 @@ const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 
 	*extensionCount = glfwExtensionCount + additionalExtensionCount;
 
-	auto *const extensions = new const char*[*extensionCount];
+	auto* const extensions = new const char*[*extensionCount];
 	memcpy(extensions, glfwExtensions, glfwExtensionCount * sizeof(const char*));
 
 	uint32_t index = glfwExtensionCount;
@@ -434,7 +433,7 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const d
 	return requiredExtensions.empty();
 }
 
-QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice *const device) const {
+QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice* const device) const {
 	QueueFamilyIndices indices{};
 
 	uint32_t queueFamilyCount = 0;
@@ -512,30 +511,51 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter, const VkMemor
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
+template <typename MemAlloc>
 void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                                  VkDeviceMemory& bufferMemory) const {
+                                  VkMemoryPropertyFlags properties,
+                                  VkBuffer& buffer,
+                                  MemAlloc& bufferMemory) const {
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
-	if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create vertex buffer!");
+	if constexpr (USE_VMA) {
+		constexpr VmaAllocationCreateInfo allocInfo{
+			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+			.usage = VMA_MEMORY_USAGE_AUTO,
+		};
+
+		if (vmaCreateBuffer(getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr) !=
+		    VK_SUCCESS) {
+			throw std::runtime_error("failed to create buffer!");
+		}
+
+		vmaDestroyBuffer(getAllocator(), buffer, bufferMemory);
+	} else {
+		if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create vertex buffer!");
+		}
+
+		VkMemoryRequirements memRequirements;
+		vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
+
+		const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		                                     .allocationSize = memRequirements.size,
+		                                     .memoryTypeIndex = findMemoryType(
+			                                     memRequirements.memoryTypeBits, properties)};
+
+		if (vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+			throw std::runtime_error("failed to allocate vertex buffer memory!");
+		}
+
+		vkBindBufferMemory(pDevice, buffer, bufferMemory, 0);
+
+		//clear memory
+		vkDestroyBuffer(pDevice, buffer, nullptr);
+		vkFreeMemory(pDevice, bufferMemory, nullptr);
 	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	if (vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate vertex buffer memory!");
-	}
-
-	vkBindBufferMemory(pDevice, buffer, bufferMemory, 0);
 }
 
 void VkEngineDevice::beginSingleTimeCommands() {
@@ -597,7 +617,8 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
 	                               .imageOffset = {0, 0, 0},
 	                               .imageExtent = {width, height, 1}};
 
-	vkCmdCopyBufferToImage(mFrameData.pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	vkCmdCopyBufferToImage(mFrameData.pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+	                       &region);
 
 	endSingleTimeCommands();
 }
@@ -608,7 +629,7 @@ void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, con
 		throw std::runtime_error("failed to create image!");
 	}
 
-	VkMemoryRequirements memRequirements;
+	VkMemoryRequirements memRequirements{};
 	vkGetImageMemoryRequirements(pDevice, image, &memRequirements);
 
 	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,

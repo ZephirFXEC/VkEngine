@@ -1,13 +1,12 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
+#include "utils/utility.hpp"
+#include "vkEngineWindow.hpp"
 
 #include <deque>
 #include <functional>
 #include <ranges>
 
-#include "utils/utility.hpp"
-#include "vkEngineWindow.hpp"
 
 #ifdef NDEBUG
 	static constexpr bool enableValidationLayers = false;
@@ -74,13 +73,12 @@ class VkEngineDevice {
 		                                           VkFormatFeatureFlags features) const;
 
 		void beginSingleTimeCommands();
+		void endSingleTimeCommands() const;
 
 		// Buffer Helper Functions
-		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-		                  VkBuffer& buffer,
-		                  VkDeviceMemory& bufferMemory) const;
-
-		void endSingleTimeCommands() const;
+		template <typename MemAlloc>
+		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+					  MemAlloc& bufferMemory) const;
 
 		void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
@@ -132,7 +130,7 @@ class VkEngineDevice {
 		VkInstance pInstance = VK_NULL_HANDLE;
 		VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
 		VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
-		VkEngineWindow& mWindow;
+		const VkEngineWindow& mWindow;
 
 		struct FrameData {
 			VkCommandPool pCommandPool = VK_NULL_HANDLE;

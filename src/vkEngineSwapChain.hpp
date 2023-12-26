@@ -116,7 +116,7 @@ class VkEngineSwapChain {
 
 	SyncPrimitives mSyncPrimitives{};
 
-	VkEngineDevice& mDevice;
+	const VkEngineDevice& mDevice;
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
 

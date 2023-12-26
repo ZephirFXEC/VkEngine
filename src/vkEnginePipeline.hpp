@@ -57,7 +57,7 @@ private:
 
 	void createShaderModule(const char* code, size_t codeSize, VkShaderModule* shaderModule) const;
 
-	VkEngineDevice& mDevice;
+	const VkEngineDevice& mDevice;
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
 	struct Shader {
