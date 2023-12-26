@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vkEngineDevice.hpp"
-
+#include "utils/utility.hpp"
 // std lib headers
 #include <vector>
 
@@ -27,21 +27,21 @@ class VkEngineSwapChain {
 		return ppSwapChainFramebuffers[index];
 	}
 
-	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
+	NDC_INLINE const VkRenderPass& getRenderPass() const { return pRenderPass; }
 
-	[[nodiscard]] const VkImageView& getImageView(const uint32_t index) const { return ppSwapChainImageViews[index]; }
+	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const { return mSwapChainImages.ppImageViews[index]; }
 
-	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
+	NDC_INLINE const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 
-	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
+	NDC_INLINE const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
 
-	[[nodiscard]] uint32_t width() const { return mSwapChainExtent.width; }
+	NDC_INLINE uint32_t width() const { return mSwapChainExtent.width; }
 
-	[[nodiscard]] uint32_t height() const { return mSwapChainExtent.height; }
+	NDC_INLINE uint32_t height() const { return mSwapChainExtent.height; }
 
-	[[nodiscard]] size_t imageCount() const { return mSwapChainImageCount; }
+	NDC_INLINE size_t imageCount() const { return mSwapChainImageCount; }
 
-	[[nodiscard]] float extentAspectRatio() const {
+	NDC_INLINE float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
 	}
 
@@ -73,27 +73,62 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
-	VkEngineDevice& device;
+
+	struct SyncPrimitives {
+		VkSemaphore* ppImageAvailableSemaphores = nullptr; // Semaphores for image availability
+		VkSemaphore* ppRenderFinishedSemaphores = nullptr; // Semaphores for render finishing
+		VkFence* ppInFlightFences = nullptr;               // Fences for in-flight operations
+		VkFence* ppInFlightImages = nullptr;               // Fences for in-flight images
+
+		~SyncPrimitives() {
+			delete[] ppImageAvailableSemaphores;
+			delete[] ppRenderFinishedSemaphores;
+			delete[] ppInFlightFences;
+			delete[] ppInFlightImages;
+		}
+	};
+
+	struct VkImageRessource {
+		VkImageRessource() {
+			ppImages = new VkImage[MAX_FRAMES_IN_FLIGHT];
+			ppImageViews = new VkImageView[MAX_FRAMES_IN_FLIGHT];
+			ppImageMemorys = new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT];
+		}
+
+		VkImageRessource(const VkImageRessource&) = delete;
+		VkImageRessource& operator=(const VkImageRessource&) = delete;
+
+		VkImage* ppImages = nullptr;
+		VkImageView* ppImageViews = nullptr;
+		VkDeviceMemory* ppImageMemorys = nullptr;
+
+		~VkImageRessource() {
+			delete[] ppImages;
+			delete[] ppImageViews;
+			delete[] ppImageMemorys;
+		}
+	};
+
+	VkImageRessource mSwapChainImages{};
+	VkImageRessource mDepthImages{};
+
+	SyncPrimitives mSyncPrimitives{};
+
+	VkEngineDevice& mDevice;
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
-	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
 
 	VkFormat mSwapChainImageFormat{};
 	VkExtent2D mSwapChainExtent{};
-	VkExtent2D windowExtent{};
+	VkExtent2D mWindowExtent{};
 
-	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
+	// Framebuffers
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
-	VkImage* swapChainImages = nullptr;
-	VkImage* depthImages = nullptr;
-	VkDeviceMemory* ppDepthImageMemorys = nullptr;
-	VkImageView* ppDepthImageViews = nullptr;
-	VkImageView* ppSwapChainImageViews = nullptr;
-	VkSemaphore* ppImageAvailableSemaphores = nullptr;
-	VkSemaphore* ppRenderFinishedSemaphores = nullptr;
-	VkFence* ppInFlightFences = nullptr;
-	VkFence* ppInFlightImages = nullptr;
 
-	size_t currentFrame = 0;
+	// Pointer to old swap chain
+	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
+
+	size_t mCurrentFrame = 0;
 	size_t mSwapChainImageCount = 0;
 };
 }  // namespace vke
