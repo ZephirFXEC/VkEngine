@@ -64,12 +64,10 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 	vkWaitForFences(mDevice.device(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
-	const VkResult result = vkAcquireNextImageKHR(mDevice.device(), pSwapChain, UINT64_MAX,
-	                                              mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
-	                                              // must be a not signaled semaphore
-	                                              VK_NULL_HANDLE, imageIndex);
-
-	return result;
+	return vkAcquireNextImageKHR(mDevice.device(), pSwapChain, UINT64_MAX,
+												  mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
+												  // must be a not signaled semaphore
+												  VK_NULL_HANDLE, imageIndex);
 }
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex) {
@@ -81,6 +79,7 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	auto* const waitSemaphores = mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame];
 	auto* const signalSemaphores = mSyncPrimitives.ppRenderFinishedSemaphores[mCurrentFrame];
+
 	constexpr VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 	const VkSubmitInfo submitInfo = {
@@ -103,14 +102,12 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 
-	const std::array swapChains = {pSwapChain};
-
 	const VkPresentInfoKHR presentInfo{
 		.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 		.waitSemaphoreCount = 1,
 		.pWaitSemaphores = &signalSemaphores,
 		.swapchainCount = 1,
-		.pSwapchains = swapChains.data(),
+		.pSwapchains = &pSwapChain,
 		.pImageIndices = imageIndex,
 	};
 
@@ -168,10 +165,11 @@ void VkEngineSwapChain::createSwapChain() {
 	// we'll first query the final number of images with
 	// vkGetSwapchainImagesKHR, then resize the container and finally call it
 	// again to retrieve the handles.
-	vkGetSwapchainImagesKHR(mDevice.device(), pSwapChain, &imageCount, nullptr);
-	mSwapChainImageCount = imageCount;
+	vkGetSwapchainImagesKHR(mDevice.device(), pSwapChain, &mSwapChainImageCount, nullptr);
+
 	mSwapChainImages.ppImages = new VkImage[imageCount];
-	vkGetSwapchainImagesKHR(mDevice.device(), pSwapChain, &imageCount, mSwapChainImages.ppImages);
+	vkGetSwapchainImagesKHR(mDevice.device(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages);
+
 
 	mSwapChainImageFormat = chooseSwapSurfaceFormat(mDevice.getSwapChainSupport().mFormats).format;
 	mSwapChainExtent = extent;

@@ -2,13 +2,15 @@
 
 #include "utils/utility.hpp"
 #include "vkEngineDevice.hpp"
+
 // std lib headers
 #include <vector>
+
+static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace vke {
 class VkEngineSwapChain {
    public:
-	static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
 	explicit VkEngineSwapChain() = delete;
 
@@ -89,11 +91,10 @@ class VkEngineSwapChain {
 	};
 
 	struct VkImageRessource {
-		VkImageRessource() {
-			ppImages = new VkImage[MAX_FRAMES_IN_FLIGHT];
-			ppImageViews = new VkImageView[MAX_FRAMES_IN_FLIGHT];
-			ppImageMemorys = new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT];
-		}
+		VkImageRessource() :
+		ppImages(new VkImage[MAX_FRAMES_IN_FLIGHT]),
+		ppImageViews(new VkImageView[MAX_FRAMES_IN_FLIGHT]),
+		ppImageMemorys(new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT]) {}
 
 		VkImageRessource(const VkImageRessource&) = delete;
 		VkImageRessource& operator=(const VkImageRessource&) = delete;
@@ -129,6 +130,6 @@ class VkEngineSwapChain {
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
 	size_t mCurrentFrame = 0;
-	size_t mSwapChainImageCount = 0;
+	uint32_t mSwapChainImageCount = 0;
 };
 }  // namespace vke

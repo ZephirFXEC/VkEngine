@@ -121,7 +121,11 @@ void VkEngineDevice::initExtensions() const {
 	mValidationLayer.mExtensions[0] = "VK_LAYER_KHRONOS_validation";
 
 	mDeviceExtensions.mExtensions[0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+
+#ifdef __APPLE__
 	mDeviceExtensions.mExtensions[1] = "VK_KHR_portability_subset";
+#endif
+
 }
 
 void VkEngineDevice::createInstance() {

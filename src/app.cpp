@@ -119,9 +119,9 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	vkCmdSetViewport(ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
 	vkCmdSetScissor(ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
-	pVkPipeline->bind(ppVkCommandBuffers[imageIndex]);
-	pVkModel->bind(ppVkCommandBuffers[imageIndex]);
-	pVkModel->draw(ppVkCommandBuffers[imageIndex]);
+	pVkPipeline->bind(&ppVkCommandBuffers[imageIndex]);
+	pVkModel->bind(&ppVkCommandBuffers[imageIndex]);
+	pVkModel->draw(&ppVkCommandBuffers[imageIndex]);
 
 	vkCmdEndRenderPass(ppVkCommandBuffers[imageIndex]);
 

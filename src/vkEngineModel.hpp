@@ -11,7 +11,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-constexpr static bool USE_VMA = true;
+constexpr static bool USE_VMA = false;
 using Alloc = std::conditional_t <USE_VMA, VmaAllocation, VkDeviceMemory>;
 
 namespace vke {
@@ -35,9 +35,9 @@ public:
 
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
 
-	void bind(VkCommandBuffer commandBuffer) const;
+	void bind(const VkCommandBuffer* commandBuffer) const;
 
-	void draw(VkCommandBuffer commandBuffer) const;
+	void draw(const VkCommandBuffer* commandBuffer) const;
 
 private:
 	template <typename MemAlloc>
@@ -61,7 +61,7 @@ private:
 
 	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
 
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
+	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size) const;
 
 	DataBuffer <Alloc> mVertexBuffer{};
 	DataBuffer <Alloc> mIndexBuffer{};

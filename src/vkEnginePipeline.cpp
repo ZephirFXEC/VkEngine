@@ -21,8 +21,8 @@ VkEnginePipeline::~VkEnginePipeline() {
 	vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
 }
 
-void VkEnginePipeline::bind(const VkCommandBuffer commandBuffer) const {
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
+void VkEnginePipeline::bind(const VkCommandBuffer *const commandBuffer) const {
+	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
 }
 
 void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
@@ -157,7 +157,6 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 
 	size_t vertShaderSize = 0;
 	size_t fragShaderSize = 0;
-
 	const auto* const vertShaderCode = readFile(vertShader, vertShaderSize);
 	const auto* const fragShaderCode = readFile(fragShader, fragShaderSize);
 
@@ -224,7 +223,6 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	delete[] attributeDescriptions;
 	delete[] vertShaderCode;
 	delete[] fragShaderCode;
-	delete[] configInfo.pDynamicStateEnables;
 }
 
 void VkEnginePipeline::createShaderModule(const char* code, const size_t codeSize, VkShaderModule* shaderModule) const {

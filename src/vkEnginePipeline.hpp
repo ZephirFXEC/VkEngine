@@ -26,6 +26,10 @@ struct PipelineConfigInfo {
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
+
+	~PipelineConfigInfo() {
+		delete[] pDynamicStateEnables;
+	}
 };
 
 class VkEnginePipeline {
@@ -43,7 +47,7 @@ public:
 
 	static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
-	void bind(VkCommandBuffer commandBuffer) const;
+	void bind(const VkCommandBuffer* commandBuffer) const;
 
 private:
 	static char* readFile(const std::string& filename, size_t& bufferSize);

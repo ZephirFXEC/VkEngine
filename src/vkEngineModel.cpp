@@ -39,16 +39,16 @@ VkVertexInputAttributeDescription* VkEngineModel::Vertex::getAttributeDescriptio
 		{.binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
 }
 
-void VkEngineModel::bind(const VkCommandBuffer commandBuffer) const {
+void VkEngineModel::bind(const VkCommandBuffer *const commandBuffer) const {
 	const std::array buffers{mVertexBuffer.pDataBuffer};
 	constexpr std::array<VkDeviceSize, 1> offsets{0};
 
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers.data(), offsets.data());
-	vkCmdBindIndexBuffer(commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, buffers.data(), offsets.data());
+	vkCmdBindIndexBuffer(*commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
-void VkEngineModel::draw(const VkCommandBuffer commandBuffer) const {
-	vkCmdDrawIndexed(commandBuffer, mIndexCount, 1, 0, 0, 0);
+void VkEngineModel::draw(const VkCommandBuffer *const commandBuffer) const {
+	vkCmdDrawIndexed(*commandBuffer, mIndexCount, 1, 0, 0, 0);
 }
 
 template <typename T, typename MemAlloc>
@@ -82,7 +82,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
 
-	copyBuffer(stagingBuffer, buffer, bufferSize);
+	copyBuffer(&stagingBuffer, &buffer, bufferSize);
 
 	if constexpr (!USE_VMA) {
 		vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
@@ -139,7 +139,7 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 	}
 }
 
-void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffer, const VkDeviceSize size) const {
+void VkEngineModel::copyBuffer(const VkBuffer *const srcBuffer, const VkBuffer *const dstBuffer, const VkDeviceSize size) const {
 	const VkCommandBufferAllocateInfo allocInfo{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		.commandPool = mDevice.getCommandPool(),
@@ -156,7 +156,7 @@ void VkEngineModel::copyBuffer(const VkBuffer srcBuffer, const VkBuffer dstBuffe
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 
 	const VkBufferCopy copyRegion{.size = size};
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	vkCmdCopyBuffer(commandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
 	vkEndCommandBuffer(commandBuffer);
 
