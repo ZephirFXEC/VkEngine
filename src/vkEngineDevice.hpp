@@ -8,6 +8,8 @@
 
 #include "vkEngineWindow.hpp"
 
+#include "utils/utility.hpp"
+
 namespace vke {
 struct DeletionQueue {
 	std::deque<std::function<void()>> mDeletionQueue{};
@@ -58,24 +60,21 @@ class VkEngineDevice {
 
 	// Not copyable or movable
 	VkEngineDevice(const VkEngineDevice&) = delete;
-
 	VkEngineDevice& operator=(const VkEngineDevice&) = delete;
-
 	VkEngineDevice(VkEngineDevice&&) = delete;
-
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
-	[[nodiscard]] const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
+	NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
 
-	[[nodiscard]] const VkDevice& device() const { return pDevice; }
+	NDC_INLINE const VkDevice& device() const { return pDevice; }
 
-	[[nodiscard]] VmaAllocator getAllocator() const { return pAllocator; }
+	NDC_INLINE const VmaAllocator& getAllocator() const { return pAllocator; }
 
-	[[nodiscard]] const VkSurfaceKHR& surface() const { return pSurface; }
+	NDC_INLINE const VkSurfaceKHR& surface() const { return pSurface; }
 
-	[[nodiscard]] const VkQueue& graphicsQueue() const { return pGraphicsQueue; }
+	NDC_INLINE const VkQueue& graphicsQueue() const { return pGraphicsQueue; }
 
-	[[nodiscard]] const VkQueue& presentQueue() const { return pPresentQueue; }
+	NDC_INLINE const VkQueue& presentQueue() const { return pPresentQueue; }
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const { return querySwapChainSupport(pPhysicalDevice); }
 
