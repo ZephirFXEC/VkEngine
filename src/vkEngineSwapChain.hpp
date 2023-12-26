@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vkEngineDevice.hpp"
 #include "utils/utility.hpp"
+#include "vkEngineDevice.hpp"
 // std lib headers
 #include <vector>
 
