@@ -21,7 +21,7 @@ VkEnginePipeline::~VkEnginePipeline() {
 	vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
 }
 
-void VkEnginePipeline::bind(const VkCommandBuffer *const commandBuffer) const {
+void VkEnginePipeline::bind(const VkCommandBuffer* const commandBuffer) const {
 	vkCmdBindPipeline(*commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
 }
 

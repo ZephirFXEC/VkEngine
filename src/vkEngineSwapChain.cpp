@@ -65,9 +65,9 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 	vkWaitForFences(mDevice.device(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
 
 	return vkAcquireNextImageKHR(mDevice.device(), pSwapChain, UINT64_MAX,
-												  mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
-												  // must be a not signaled semaphore
-												  VK_NULL_HANDLE, imageIndex);
+	                             mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
+	                             // must be a not signaled semaphore
+	                             VK_NULL_HANDLE, imageIndex);
 }
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex) {

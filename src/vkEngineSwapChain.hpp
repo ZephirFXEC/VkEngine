@@ -91,10 +91,11 @@ class VkEngineSwapChain {
 	};
 
 	struct VkImageRessource {
-		VkImageRessource() :
-		ppImages(new VkImage[MAX_FRAMES_IN_FLIGHT]),
-		ppImageViews(new VkImageView[MAX_FRAMES_IN_FLIGHT]),
-		ppImageMemorys(new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT]) {}
+		VkImageRessource()
+			: ppImages(new VkImage[MAX_FRAMES_IN_FLIGHT]),
+			  ppImageViews(new VkImageView[MAX_FRAMES_IN_FLIGHT]),
+			  ppImageMemorys(new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT]) {
+		}
 
 		VkImageRessource(const VkImageRessource&) = delete;
 		VkImageRessource& operator=(const VkImageRessource&) = delete;
