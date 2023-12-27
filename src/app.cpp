@@ -23,20 +23,21 @@ void App::run() {
 }
 
 void App::loadModels() {
+
 	constexpr uint32_t iCount = 6;
 	constexpr uint32_t vCount = 4;
 
-	const VkEngineModel::Vertex* vertices = new VkEngineModel::Vertex[vCount]{{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-	                                                                          {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-	                                                                          {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-	                                                                          {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
+		VkEngineModel::Vertex{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+		VkEngineModel::Vertex{{0.5f, -0.5}, {0.0f, 1.0f, 0.0f}},  // 1
+		VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},   // 2
+		VkEngineModel::Vertex{{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},  // 3
+	};
 
-	const uint32_t* indices = new uint32_t[iCount]{0, 1, 2, 2, 3, 0};
+	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};
 
-	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices, vCount, indices, iCount);
+	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices.data(), vCount, indices.data(), iCount);
 
-	delete[] vertices;
-	delete[] indices;
 }
 
 void App::createPipelineLayout() {
