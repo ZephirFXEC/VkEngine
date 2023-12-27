@@ -14,9 +14,9 @@ class VkEngineSwapChain {
 
 	explicit VkEngineSwapChain() = delete;
 
-	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent);
+	VkEngineSwapChain(const VkEngineDevice& deviceRef, VkExtent2D windowExtent);
 
-	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent,
+	VkEngineSwapChain(const VkEngineDevice& deviceRef, VkExtent2D windowExtent,
 	                  const std::shared_ptr<VkEngineSwapChain>& previous);
 
 	~VkEngineSwapChain();
@@ -77,10 +77,15 @@ class VkEngineSwapChain {
 
 
 	struct SyncPrimitives {
+
 		VkSemaphore* ppImageAvailableSemaphores = nullptr; // Semaphores for image availability
 		VkSemaphore* ppRenderFinishedSemaphores = nullptr; // Semaphores for render finishing
 		VkFence* ppInFlightFences = nullptr;               // Fences for in-flight operations
 		VkFence* ppInFlightImages = nullptr;               // Fences for in-flight images
+
+		SyncPrimitives() = default;
+		SyncPrimitives(const SyncPrimitives&) = delete;
+		SyncPrimitives& operator=(const SyncPrimitives&) = delete;
 
 		~SyncPrimitives() {
 			delete[] ppImageAvailableSemaphores;
@@ -91,18 +96,14 @@ class VkEngineSwapChain {
 	};
 
 	struct VkImageRessource {
-		VkImageRessource()
-			: ppImages(new VkImage[MAX_FRAMES_IN_FLIGHT]),
-			  ppImageViews(new VkImageView[MAX_FRAMES_IN_FLIGHT]),
-			  ppImageMemorys(new VkDeviceMemory[MAX_FRAMES_IN_FLIGHT]) {
-		}
-
-		VkImageRessource(const VkImageRessource&) = delete;
-		VkImageRessource& operator=(const VkImageRessource&) = delete;
 
 		VkImage* ppImages = nullptr;
 		VkImageView* ppImageViews = nullptr;
 		VkDeviceMemory* ppImageMemorys = nullptr;
+
+		VkImageRessource() = default;
+		VkImageRessource(const VkImageRessource&) = delete;
+		VkImageRessource& operator=(const VkImageRessource&) = delete;
 
 		~VkImageRessource() {
 			delete[] ppImages;
