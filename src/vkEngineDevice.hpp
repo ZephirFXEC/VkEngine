@@ -49,15 +49,15 @@ class VkEngineDevice {
 
 		NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
 
-		NDC_INLINE const VkDevice& device() const { return pDevice; }
+		NDC_INLINE const VkDevice& getDevice() const { return pDevice; }
 
 		NDC_INLINE const VmaAllocator& getAllocator() const { return pAllocator; }
 
-		NDC_INLINE const VkSurfaceKHR& surface() const { return pSurface; }
+		NDC_INLINE const VkSurfaceKHR& getSurface() const { return pSurface; }
 
-		NDC_INLINE const VkQueue& graphicsQueue() const { return pGraphicsQueue; }
+		NDC_INLINE const VkQueue& getGraphicsQueue() const { return pGraphicsQueue; }
 
-		NDC_INLINE const VkQueue& presentQueue() const { return pPresentQueue; }
+		NDC_INLINE const VkQueue& getPresentQueue() const { return pPresentQueue; }
 
 		[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 			return querySwapChainSupport(&pPhysicalDevice);
@@ -77,10 +77,9 @@ class VkEngineDevice {
 		void endSingleTimeCommands() const;
 
 		// Buffer Helper Functions
-		template <typename MemAlloc>
 		void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
 		                  VkBuffer& buffer,
-		                  MemAlloc& bufferMemory) const;
+		                  Alloc& bufferMemory) const;
 
 		void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
@@ -93,8 +92,6 @@ class VkEngineDevice {
 		VkPhysicalDeviceProperties mProperties{};
 
 	private:
-		void initExtensions() const;
-
 		void createInstance();
 
 		void setupDebugMessenger();
@@ -143,19 +140,11 @@ class VkEngineDevice {
 		VkQueue pGraphicsQueue = VK_NULL_HANDLE;
 		VkQueue pPresentQueue = VK_NULL_HANDLE;
 
-		template <uint32_t T>
-		struct Extensions {
-			static constexpr uint32_t mSize = T;
-			const char** mExtensions;
-
-			Extensions()
-				: mExtensions(new const char*[T]) {
-			}
-
-			~Extensions() { delete[] mExtensions; }
+		const std::array<const char*, 1> mValidationLayer { "VK_LAYER_KHRONOS_validation" };
+		const std::array<const char*, 2> mDeviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME
+#ifdef __APPLE__
+			,"VK_KHR_portability_subset"
+#endif
 		};
-
-		Extensions<1> mValidationLayer{};
-		Extensions<2> mDeviceExtensions{};
 };
 } // namespace vke

@@ -150,7 +150,7 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	    .commandBufferCount = 1,
 	};
 
-	vkAllocateCommandBuffers(mDevice.device(), &allocInfo, &pCommandBuffer);
+	vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &pCommandBuffer);
 
 	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
@@ -168,9 +168,9 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	    .pCommandBuffers = &pCommandBuffer,
 	};
 
-	vkQueueSubmit(mDevice.graphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(mDevice.graphicsQueue());
+	vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(mDevice.getGraphicsQueue());
 
-	vkFreeCommandBuffers(mDevice.device(), mDevice.getCommandPool(), 1, &pCommandBuffer);
+	vkFreeCommandBuffers(mDevice.getDevice(), mDevice.getCommandPool(), 1, &pCommandBuffer);
 }
 }  // namespace vke

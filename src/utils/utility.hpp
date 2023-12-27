@@ -11,8 +11,13 @@
 // constants for the application
 #define USE_VMA true
 
-#ifndef USE_VMA
-using Alloc = VkDeviceMemory;
-#else
+#ifdef USE_VMA
 using Alloc = VmaAllocation;
+#else
+using Alloc = VkDeviceMemory;
 #endif
+
+struct DataBuffer {
+	VkBuffer pDataBuffer = VK_NULL_HANDLE;
+	Alloc pDataBufferMemory = VK_NULL_HANDLE;
+};

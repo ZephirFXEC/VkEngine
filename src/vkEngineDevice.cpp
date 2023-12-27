@@ -85,7 +85,6 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
 // class member functions
 VkEngineDevice::VkEngineDevice(VkEngineWindow& window)
 	: mWindow{window} {
-	initExtensions();
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -117,16 +116,6 @@ VkEngineDevice::~VkEngineDevice() {
 	vkDestroyInstance(pInstance, nullptr);
 }
 
-void VkEngineDevice::initExtensions() const {
-	mValidationLayer.mExtensions[0] = "VK_LAYER_KHRONOS_validation";
-
-	mDeviceExtensions.mExtensions[0] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-
-#ifdef __APPLE__
-	mDeviceExtensions.mExtensions[1] = "VK_KHR_portability_subset";
-#endif
-}
-
 void VkEngineDevice::createInstance() {
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -154,11 +143,11 @@ void VkEngineDevice::createInstance() {
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = mValidationLayer.mSize;
-		createInfo.ppEnabledLayerNames = mValidationLayer.mExtensions;
+		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayer.size());
+		createInfo.ppEnabledLayerNames = mValidationLayer.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
-		createInfo.pNext = reinterpret_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debugCreateInfo);
+		createInfo.pNext = &debugCreateInfo;
 	} else {
 		createInfo.enabledLayerCount = 0;
 		createInfo.pNext = nullptr;
@@ -226,16 +215,16 @@ void VkEngineDevice::createLogicalDevice() {
 		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 		.queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
 		.pQueueCreateInfos = queueCreateInfos,
-		.enabledExtensionCount = mDeviceExtensions.mSize,
-		.ppEnabledExtensionNames = mDeviceExtensions.mExtensions,
+		.enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
+		.ppEnabledExtensionNames = mDeviceExtensions.data(),
 		.pEnabledFeatures = &deviceFeatures,
 	};
 
 	// might not really be necessary anymore because device specific validation
 	// layers have been deprecated
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = mValidationLayer.mSize,
-			createInfo.ppEnabledLayerNames = mValidationLayer.mExtensions;
+		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayer.size()),
+			createInfo.ppEnabledLayerNames = mValidationLayer.data();
 	} else {
 		createInfo.enabledLayerCount = 0;
 	}
@@ -280,7 +269,7 @@ void VkEngineDevice::createAllocator() {
 	vmaCreateAllocator(&allocatorInfo, &pAllocator);
 }
 
-void VkEngineDevice::createSurface() { mWindow.createWindowSurface(pInstance, &pSurface); }
+void VkEngineDevice::createSurface() { mWindow.createWindowSurface(&pInstance, &pSurface); }
 
 bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) const {
 	const QueueFamilyIndices indices = findQueueFamilies(device);
@@ -334,11 +323,11 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 	auto* availableLayers = new VkLayerProperties[layerCount];
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
-	for (size_t i = 0; i < mValidationLayer.mSize; ++i) {
+	for (size_t i = 0; i < mValidationLayer.size(); ++i) {
 		bool layerFound = false;
 
 		for (size_t j = 0; j < layerCount; ++j) {
-			if (strcmp(mValidationLayer.mExtensions[i], availableLayers[j].layerName) == 0) {
+			if (strcmp(mValidationLayer.data()[i], availableLayers[j].layerName) == 0) {
 				layerFound = true;
 				break;
 			}
@@ -422,8 +411,8 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const d
 	auto* availableExtensions = new VkExtensionProperties[extensionCount];
 	vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, availableExtensions);
 
-	std::set<std::string> requiredExtensions(mDeviceExtensions.mExtensions,
-	                                         mDeviceExtensions.mExtensions + mDeviceExtensions.mSize);
+	std::set<std::string> requiredExtensions(mDeviceExtensions.data(),
+	                                         mDeviceExtensions.data() + mDeviceExtensions.size());
 
 	for (uint32_t i = 0; i < extensionCount; ++i) {
 		requiredExtensions.erase(availableExtensions[i].extensionName);
@@ -511,17 +500,16 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter, const VkMemor
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
-template <typename MemAlloc>
 void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
                                   VkMemoryPropertyFlags properties,
                                   VkBuffer& buffer,
-                                  MemAlloc& bufferMemory) const {
+                                  Alloc& bufferMemory) const {
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
-	if constexpr (USE_VMA) {
+#ifdef USE_VMA
 		constexpr VmaAllocationCreateInfo allocInfo{
 			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
 			.usage = VMA_MEMORY_USAGE_AUTO,
@@ -533,7 +521,7 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFl
 		}
 
 		vmaDestroyBuffer(getAllocator(), buffer, bufferMemory);
-	} else {
+#else
 		if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create vertex buffer!");
 		}
@@ -555,7 +543,8 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFl
 		//clear memory
 		vkDestroyBuffer(pDevice, buffer, nullptr);
 		vkFreeMemory(pDevice, bufferMemory, nullptr);
-	}
+#endif
+
 }
 
 void VkEngineDevice::beginSingleTimeCommands() {
