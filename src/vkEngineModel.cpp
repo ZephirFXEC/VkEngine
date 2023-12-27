@@ -22,8 +22,8 @@ void VkEngineModel::destroyBuffer(const DataBuffer& buffer) const {
 #ifdef USE_VMA
 	vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
 #else
-	vkDestroyBuffer(mDevice.device(), buffer.pDataBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), buffer.pDataBufferMemory, nullptr);
+	vkDestroyBuffer(mDevice.getDevice(), buffer.pDataBuffer, nullptr);
+	vkFreeMemory(mDevice.getDevice(), buffer.pDataBufferMemory, nullptr);
 #endif
 }
 
@@ -69,7 +69,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 #ifdef USE_VMA
 	vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
 #else
-	vkMapMemory(mDevice.device(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
+	vkMapMemory(mDevice.getDevice(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
 #endif
 
 	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
@@ -77,7 +77,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 #ifdef USE_VMA
 	vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
 #else
-	vkUnmapMemory(mDevice.device(), stagingBufferMemory);
+	vkUnmapMemory(mDevice.getDevice(), stagingBufferMemory);
 #endif
 
 	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -88,8 +88,8 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 #ifdef USE_VMA
 	vmaDestroyBuffer(mDevice.getAllocator(), stagingBuffer, stagingBufferMemory);
 #else
-	vkDestroyBuffer(mDevice.device(), stagingBuffer, nullptr);
-	vkFreeMemory(mDevice.device(), stagingBufferMemory, nullptr);
+	vkDestroyBuffer(mDevice.getDevice(), stagingBuffer, nullptr);
+	vkFreeMemory(mDevice.getDevice(), stagingBufferMemory, nullptr);
 #endif
 }
 
@@ -121,23 +121,23 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 		throw std::runtime_error("failed to create buffer!");
 	}
 #else
-	if (vkCreateBuffer(mDevice.device(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+	if (vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create buffer!");
 	}
 
 	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(mDevice.device(), buffer, &memRequirements);
+	vkGetBufferMemoryRequirements(mDevice.getDevice(), buffer, &memRequirements);
 
 	const VkMemoryAllocateInfo allocInfo{
 	    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 	    .allocationSize = memRequirements.size,
 	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
-	if (vkAllocateMemory(mDevice.device(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+	if (vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate buffer memory!");
 	}
 
-	vkBindBufferMemory(mDevice.device(), buffer, bufferMemory, 0);
+	vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0);
 #endif
 }
 
