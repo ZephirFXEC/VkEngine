@@ -9,9 +9,10 @@
 #define NDC_INLINE [[nodiscard]] __attribute__((always_inline)) inline
 
 // constants for the application
-#define USE_VMA true
+#define VMA
 
-#ifdef USE_VMA
+#ifdef VMA
+#define USE_VMA
 using Alloc = VmaAllocation;
 #else
 using Alloc = VkDeviceMemory;
