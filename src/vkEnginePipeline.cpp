@@ -15,10 +15,10 @@ VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& ve
 }
 
 VkEnginePipeline::~VkEnginePipeline() {
-	vkDestroyShaderModule(mDevice.device(), mShaders.pVertShaderModule, nullptr);
-	vkDestroyShaderModule(mDevice.device(), mShaders.pFragShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pVertShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pFragShaderModule, nullptr);
 
-	vkDestroyPipeline(mDevice.device(), pGraphicsPipeline, nullptr);
+	vkDestroyPipeline(mDevice.getDevice(), pGraphicsPipeline, nullptr);
 }
 
 void VkEnginePipeline::bind(const VkCommandBuffer* const commandBuffer) const {
@@ -214,7 +214,7 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 		.basePipelineHandle = VK_NULL_HANDLE,
 	};
 
-	if (vkCreateGraphicsPipelines(mDevice.device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline) !=
+	if (vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline) !=
 	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to create graphics pipeline");
 	}
@@ -228,7 +228,7 @@ void VkEnginePipeline::createShaderModule(const char* code, const size_t codeSiz
 	                                             .codeSize = codeSize,
 	                                             .pCode = reinterpret_cast<const uint32_t*>(code)};
 
-	if (vkCreateShaderModule(mDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+	if (vkCreateShaderModule(mDevice.getDevice(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module");
 	}
 }

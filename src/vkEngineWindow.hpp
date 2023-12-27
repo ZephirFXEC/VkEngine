@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include <string>
+#include <utils/utility.hpp>
 
 namespace vke {
 class VkEngineWindow {
@@ -19,9 +20,9 @@ class VkEngineWindow {
 
 		[[nodiscard]] VkExtent2D getExtent() const;
 
-		[[nodiscard]] bool wasWindowResized() const { return framebufferResized; }
+		NDC_INLINE bool wasWindowResized() const { return framebufferResized; }
 
-		void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface) const;
+		void createWindowSurface(const VkInstance* instance, VkSurfaceKHR* surface) const;
 
 		void resetWindowResizedFlag() { framebufferResized = false; }
 

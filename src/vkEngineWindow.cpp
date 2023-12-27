@@ -13,8 +13,8 @@ VkEngineWindow::~VkEngineWindow() {
 	glfwTerminate();            // terminate GLFW
 }
 
-void VkEngineWindow::createWindowSurface(const VkInstance instance, VkSurfaceKHR* surface) const {
-	if (glfwCreateWindowSurface(instance, pWindow, nullptr, surface) != VK_SUCCESS) {
+void VkEngineWindow::createWindowSurface(const VkInstance *const instance, VkSurfaceKHR* surface) const {
+	if (glfwCreateWindowSurface(*instance, pWindow, nullptr, surface) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create window surface!");
 	}
 }

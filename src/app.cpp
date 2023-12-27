@@ -10,7 +10,7 @@ App::App() {
 	createCommandBuffers();
 }
 
-App::~App() { vkDestroyPipelineLayout(mVkDevice.device(), pVkPipelineLayout, nullptr); }
+App::~App() { vkDestroyPipelineLayout(mVkDevice.getDevice(), pVkPipelineLayout, nullptr); }
 
 void App::run() {
 	while (!mVkWindow.shouldClose()) {
@@ -19,7 +19,7 @@ void App::run() {
 		drawFrame();      // draw frame
 	}
 
-	vkDeviceWaitIdle(mVkDevice.device());
+	vkDeviceWaitIdle(mVkDevice.getDevice());
 }
 
 void App::loadModels() {
@@ -46,7 +46,7 @@ void App::createPipelineLayout() {
 	                                                        .pushConstantRangeCount = 0,
 	                                                        .pPushConstantRanges = nullptr};
 
-	if (vkCreatePipelineLayout(mVkDevice.device(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout) != VK_SUCCESS) {
+	if (vkCreatePipelineLayout(mVkDevice.getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
 }
@@ -72,7 +72,7 @@ void App::createCommandBuffers() {
 		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		.commandBufferCount = static_cast<uint32_t>(mVkSwapChain->imageCount())};
 
-	if (vkAllocateCommandBuffers(mVkDevice.device(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
+	if (vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command buffers!");
 	}
 }
@@ -131,7 +131,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 }
 
 void App::freeCommandBuffers() const {
-	vkFreeCommandBuffers(mVkDevice.device(), mVkDevice.getCommandPool(),
+	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkDevice.getCommandPool(),
 	                     static_cast<uint32_t>(ppVkCommandBuffers.size()), ppVkCommandBuffers.data());
 }
 
@@ -142,7 +142,7 @@ void App::recreateSwapChain() {
 		glfwWaitEvents();
 	}
 
-	vkDeviceWaitIdle(mVkDevice.device());
+	vkDeviceWaitIdle(mVkDevice.getDevice());
 
 	if (mVkSwapChain == nullptr) {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
