@@ -27,6 +27,7 @@ Checks: "*,
         -readability-uppercase-literal-suffix
         -cppcoreguidelines-pro-type-reinterpret-cast
         -cppcoreguidelines-special-member-functions
+        -cppcoreguidelines-avoid-do-while
 "
 FormatStyle: google
 

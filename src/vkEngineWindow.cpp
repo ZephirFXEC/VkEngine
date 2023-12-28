@@ -1,8 +1,5 @@
 #include "vkEngineWindow.hpp"
 
-#include <stdexcept>
-#include <utility>
-
 namespace vke {
 VkEngineWindow::VkEngineWindow(const int width, const int height, std::string  name)
     : mHeight(height), mWidth(width), mName(std::move(name)) {
@@ -15,9 +12,7 @@ VkEngineWindow::~VkEngineWindow() {
 }
 
 void VkEngineWindow::createWindowSurface(const VkInstance* const instance, VkSurfaceKHR* surface) const {
-	if (glfwCreateWindowSurface(*instance, pWindow, nullptr, surface) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create window surface!");
-	}
+	VK_CHECK(glfwCreateWindowSurface(*instance, pWindow, nullptr, surface));
 }
 
 void VkEngineWindow::initWindow() {

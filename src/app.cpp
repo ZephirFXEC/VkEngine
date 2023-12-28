@@ -45,13 +45,10 @@ void App::createPipelineLayout() {
 	                                                        .pushConstantRangeCount = 0,
 	                                                        .pPushConstantRanges = nullptr};
 
-	if (vkCreatePipelineLayout(mVkDevice.getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
+	VK_CHECK(vkCreatePipelineLayout(mVkDevice.getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout));
 }
 
 void App::createPipeline() {
-
 	assert(mVkSwapChain != nullptr && "Cannot create pipeline before swap chain");
 	assert(pVkPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
@@ -69,16 +66,12 @@ void App::createPipeline() {
 void App::createCommandBuffers() {
 	ppVkCommandBuffers.resize(mVkSwapChain->imageCount());
 
-	const VkCommandBufferAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .commandPool = mVkDevice.getCommandPool(),
-	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	    .commandBufferCount = static_cast<uint32_t>(ppVkCommandBuffers.size())
-		};
+	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+	                                            .commandPool = mVkDevice.getCommandPool(),
+	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+	                                            .commandBufferCount = static_cast<uint32_t>(ppVkCommandBuffers.size())};
 
-	if (vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create command buffers!");
-	}
+	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, ppVkCommandBuffers.data()));
 }
 
 void App::recordCommandsBuffers(const size_t imageIndex) const {
@@ -87,9 +80,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
 
-	if (vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
-		throw std::runtime_error("failed to begin recording command buffer!");
-	}
+	VK_CHECK(vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo));
 
 	VkRenderPassBeginInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -129,9 +120,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 
 	vkCmdEndRenderPass(ppVkCommandBuffers[imageIndex]);
 
-	if (vkEndCommandBuffer(ppVkCommandBuffers[imageIndex]) != VK_SUCCESS) {
-		throw std::runtime_error("failed to record command buffer!");
-	}
+	VK_CHECK(vkEndCommandBuffer(ppVkCommandBuffers[imageIndex]));
 }
 
 void App::freeCommandBuffers() const {
@@ -147,7 +136,7 @@ void App::recreateSwapChain() {
 		glfwWaitEvents();
 	}
 
-	vkDeviceWaitIdle(mVkDevice.getDevice());
+	VK_CHECK(vkDeviceWaitIdle(mVkDevice.getDevice()));
 
 	if (mVkSwapChain == nullptr) {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
@@ -184,7 +173,7 @@ void App::drawFrame() {
 		return;
 	}
 
-	if(result != VK_SUCCESS) {
+	if (result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
 }

@@ -12,7 +12,7 @@ set_property(TARGET engine PROPERTY CXX_STANDARD 20)
 target_compile_features(engine PUBLIC cxx_std_20)
 target_include_directories(engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
-target_link_libraries(engine PUBLIC Vulkan::Vulkan glfw glm::glm GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(engine PUBLIC Vulkan::Vulkan glfw glm::glm GPUOpen::VulkanMemoryAllocator fmt::fmt)
 
 target_precompile_headers(engine PUBLIC
                           <unordered_set>

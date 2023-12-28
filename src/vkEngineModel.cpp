@@ -67,7 +67,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 	void* mappedData = nullptr;
 
 #ifdef USE_VMA
-	vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData);
+	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
 #else
 	vkMapMemory(mDevice.getDevice(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
 #endif
@@ -116,10 +116,8 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 	    .usage = VMA_MEMORY_USAGE_AUTO,
 	};
 
-	if (vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr) !=
-	    VK_SUCCESS) {
-		throw std::runtime_error("failed to create buffer!");
-	}
+	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
+
 #else
 	if (vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create buffer!");
@@ -150,17 +148,17 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	    .commandBufferCount = 1,
 	};
 
-	vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &pCommandBuffer);
+	VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &pCommandBuffer));
 
 	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
 
-	vkBeginCommandBuffer(pCommandBuffer, &beginInfo);
+	VK_CHECK(vkBeginCommandBuffer(pCommandBuffer, &beginInfo));
 
 	const VkBufferCopy copyRegion{.size = size};
 	vkCmdCopyBuffer(pCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
-	vkEndCommandBuffer(pCommandBuffer);
+	VK_CHECK(vkEndCommandBuffer(pCommandBuffer));
 
 	const VkSubmitInfo submitInfo{
 	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -168,8 +166,8 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	    .pCommandBuffers = &pCommandBuffer,
 	};
 
-	vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-	vkQueueWaitIdle(mDevice.getGraphicsQueue());
+	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+	VK_CHECK(vkQueueWaitIdle(mDevice.getGraphicsQueue()));
 
 	vkFreeCommandBuffers(mDevice.getDevice(), mDevice.getCommandPool(), 1, &pCommandBuffer);
 }

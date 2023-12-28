@@ -3,9 +3,6 @@
 #include "utils/utility.hpp"
 #include "vkEngineDevice.hpp"
 
-// std lib headers
-#include <vector>
-
 static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace vke {

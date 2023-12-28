@@ -1,11 +1,5 @@
 #include "vkEngineSwapChain.hpp"
 
-// std
-#include <array>
-#include <iostream>
-#include <limits>
-#include <set>
-#include <stdexcept>
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
@@ -92,10 +86,7 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]);
 
-	if (vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]) !=
-	    VK_SUCCESS) {
-		throw std::runtime_error("failed to submit draw command buffer!");
-	}
+	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
 	const VkPresentInfoKHR presentInfo{
 	    .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -151,9 +142,7 @@ void VkEngineSwapChain::createSwapChain() {
 	    .oldSwapchain = pOldSwapChain == nullptr ? VK_NULL_HANDLE : pOldSwapChain->pSwapChain,
 	};
 
-	if (vkCreateSwapchainKHR(mDevice.getDevice(), &createInfo, nullptr, &pSwapChain) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create swap chain!");
-	}
+	VK_CHECK(vkCreateSwapchainKHR(mDevice.getDevice(), &createInfo, nullptr, &pSwapChain));
 
 	// we only specified a minimum number of images in the swap chain, so the
 	// implementation is allowed to create a swap chain with more. That's why
@@ -185,10 +174,7 @@ void VkEngineSwapChain::createImageViews() {
 		                         .layerCount = 1},
 		};
 
-		if (vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mSwapChainImages.ppImageViews[i]) !=
-		    VK_SUCCESS) {
-			throw std::runtime_error("failed to create texture image view!");
-		}
+		VK_CHECK(vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mSwapChainImages.ppImageViews[i]));
 	}
 }
 
@@ -253,9 +239,7 @@ void VkEngineSwapChain::createRenderPass() {
 	    .pDependencies = &dependency,
 	};
 
-	if (vkCreateRenderPass(mDevice.getDevice(), &renderPassInfo, nullptr, &pRenderPass) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create render pass!");
-	}
+	VK_CHECK(vkCreateRenderPass(mDevice.getDevice(), &renderPassInfo, nullptr, &pRenderPass));
 }
 
 void VkEngineSwapChain::createFramebuffers() {
@@ -274,10 +258,7 @@ void VkEngineSwapChain::createFramebuffers() {
 		    .layers = 1,
 		};
 
-		if (vkCreateFramebuffer(mDevice.getDevice(), &framebufferInfo, nullptr, &ppSwapChainFramebuffers[i]) !=
-		    VK_SUCCESS) {
-			throw std::runtime_error("failed to create framebuffer!");
-		}
+		VK_CHECK(vkCreateFramebuffer(mDevice.getDevice(), &framebufferInfo, nullptr, &ppSwapChainFramebuffers[i]));
 	}
 }
 
@@ -317,9 +298,7 @@ void VkEngineSwapChain::createDepthResources() {
 
 		};
 
-		if (vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mDepthImages.ppImageViews[i]) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create texture image view!");
-		}
+		VK_CHECK(vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mDepthImages.ppImageViews[i]));
 	}
 }
 
@@ -341,14 +320,11 @@ void VkEngineSwapChain::createSyncObjects() {
 	};
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		if (vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
-		                      &mSyncPrimitives.ppImageAvailableSemaphores[i]) != VK_SUCCESS ||
-		    vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
-		                      &mSyncPrimitives.ppRenderFinishedSemaphores[i]) != VK_SUCCESS ||
-		    vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences[i]) !=
-		        VK_SUCCESS) {
-			throw std::runtime_error("failed to create synchronization objects for a frame!");
-		}
+
+		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppImageAvailableSemaphores[i]));
+		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppRenderFinishedSemaphores[i]));
+		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences[i]));
+
 	}
 }
 

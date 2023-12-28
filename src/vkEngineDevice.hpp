@@ -1,9 +1,5 @@
 #pragma once
 
-#include <deque>
-#include <functional>
-#include <ranges>
-
 #include "utils/utility.hpp"
 #include "vkEngineWindow.hpp"
 
