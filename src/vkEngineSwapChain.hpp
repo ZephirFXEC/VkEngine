@@ -6,12 +6,11 @@
 // std lib headers
 #include <vector>
 
-static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace vke {
 class VkEngineSwapChain {
    public:
-
 	explicit VkEngineSwapChain() = delete;
 
 	VkEngineSwapChain(const VkEngineDevice& deviceRef, VkExtent2D windowExtent);
@@ -25,13 +24,15 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
+	NDC_INLINE const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
 		return ppSwapChainFramebuffers[index];
 	}
 
 	NDC_INLINE const VkRenderPass& getRenderPass() const { return pRenderPass; }
 
-	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const { return mSwapChainImages.ppImageViews[index]; }
+	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const {
+		return mSwapChainImages.ppImageViews[index];
+	}
 
 	NDC_INLINE const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 
@@ -75,13 +76,11 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
-
 	struct SyncPrimitives {
-
-		VkSemaphore* ppImageAvailableSemaphores = nullptr; // Semaphores for image availability
-		VkSemaphore* ppRenderFinishedSemaphores = nullptr; // Semaphores for render finishing
-		VkFence* ppInFlightFences = nullptr;               // Fences for in-flight operations
-		VkFence* ppInFlightImages = nullptr;               // Fences for in-flight images
+		VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability
+		VkSemaphore* ppRenderFinishedSemaphores = nullptr;  // Semaphores for render finishing
+		VkFence* ppInFlightFences = nullptr;                // Fences for in-flight operations
+		VkFence* ppInFlightImages = nullptr;                // Fences for in-flight images
 
 		SyncPrimitives() = default;
 		SyncPrimitives(const SyncPrimitives&) = delete;
@@ -96,7 +95,6 @@ class VkEngineSwapChain {
 	};
 
 	struct VkImageRessource {
-
 		VkImage* ppImages = nullptr;
 		VkImageView* ppImageViews = nullptr;
 		VkDeviceMemory* ppImageMemorys = nullptr;
@@ -112,23 +110,19 @@ class VkEngineSwapChain {
 		}
 	};
 
-	VkImageRessource mSwapChainImages{};
-	VkImageRessource mDepthImages{};
-
-	SyncPrimitives mSyncPrimitives{};
-
 	const VkEngineDevice& mDevice;
+
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
 
+	VkImageRessource mSwapChainImages{};
+	VkImageRessource mDepthImages{};
+	SyncPrimitives mSyncPrimitives{};
 	VkFormat mSwapChainImageFormat{};
 	VkExtent2D mSwapChainExtent{};
 	VkExtent2D mWindowExtent{};
 
-	// Framebuffers
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
-
-	// Pointer to old swap chain
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
 	size_t mCurrentFrame = 0;

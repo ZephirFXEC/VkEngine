@@ -5,7 +5,7 @@
 #include <iostream>
 
 int main() {
-	vke::App app{}; // create app
+	vke::App app{};  // create app
 
 	try {
 		// try to run app

@@ -18,11 +18,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
 	message << "\t"
-		<< "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+	        << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
 	message << "\t"
-		<< "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+	        << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
 	message << "\t"
-		<< "message         = <" << pCallbackData->pMessage << ">\n";
+	        << "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message << std::string("\t") << "Queue Labels:\n";
 		for (uint32_t i = 0; i < pCallbackData->queueLabelCount; i++) {
@@ -40,11 +40,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 		for (uint32_t i = 0; i < pCallbackData->objectCount; i++) {
 			message << std::string("\t\t") << "Object " << i << "\n";
 			message << std::string("\t\t\t")
-				<< "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
+			        << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
 			message << std::string("\t\t\t") << "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
 			if (pCallbackData->pObjects[i].pObjectName != nullptr) {
 				message << std::string("\t\t\t") << "objectName   = <" << pCallbackData->pObjects[i].pObjectName
-					<< ">\n";
+				        << ">\n";
 			}
 		}
 	}
@@ -57,15 +57,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 
 	return 0u;
 }
-} // namespace
+}  // namespace
 
 VkResult CreateDebugUtilsMessengerEXT(const VkInstance* const instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                       const VkAllocationCallbacks* pAllocator,
                                       VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
-		func != nullptr) {
+	        vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
+	    func != nullptr) {
 		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
 
@@ -76,15 +76,14 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
                                    const VkDebugUtilsMessengerEXT* const debugMessenger,
                                    const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
-		func != nullptr) {
+	        vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
+	    func != nullptr) {
 		func(*instance, *debugMessenger, pAllocator);
 	}
 }
 
 // class member functions
-VkEngineDevice::VkEngineDevice(VkEngineWindow& window)
-	: mWindow{window} {
+VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -122,23 +121,23 @@ void VkEngineDevice::createInstance() {
 	}
 
 	constexpr VkApplicationInfo appInfo = {
-		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-		.pApplicationName = "VkEngine",
-		.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-		.pEngineName = "No Engine",
-		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
-		.apiVersion = VK_API_VERSION_1_3,
+	    .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+	    .pApplicationName = "VkEngine",
+	    .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+	    .pEngineName = "No Engine",
+	    .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+	    .apiVersion = VK_API_VERSION_1_3,
 	};
 
 	uint32_t extensionCount = 0;
 	auto* const extensions = getRequiredExtensions(&extensionCount);
 
 	VkInstanceCreateInfo createInfo = {
-		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-		.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
-		.pApplicationInfo = &appInfo,
-		.enabledExtensionCount = extensionCount,
-		.ppEnabledExtensionNames = extensions,
+	    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+	    .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
+	    .pApplicationInfo = &appInfo,
+	    .enabledExtensionCount = extensionCount,
+	    .ppEnabledExtensionNames = extensions,
 	};
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -198,33 +197,33 @@ void VkEngineDevice::createLogicalDevice() {
 	float queuePriority = 1.0f;
 	for (const auto queueFamily : uniqueQueueFamilies) {
 		const VkDeviceQueueCreateInfo queueCreateInfo{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = queueFamily,
-			.queueCount = 1,
-			.pQueuePriorities = &queuePriority,
+		    .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+		    .queueFamilyIndex = queueFamily,
+		    .queueCount = 1,
+		    .pQueuePriorities = &queuePriority,
 		};
 
 		queueCreateInfos[queueFamily] = queueCreateInfo;
 	}
 
 	constexpr VkPhysicalDeviceFeatures deviceFeatures = {
-		.samplerAnisotropy = VK_TRUE,
+	    .samplerAnisotropy = VK_TRUE,
 	};
 
 	VkDeviceCreateInfo createInfo = {
-		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-		.queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
-		.pQueueCreateInfos = queueCreateInfos,
-		.enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
-		.ppEnabledExtensionNames = mDeviceExtensions.data(),
-		.pEnabledFeatures = &deviceFeatures,
+	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+	    .queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
+	    .pQueueCreateInfos = queueCreateInfos,
+	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
+	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
+	    .pEnabledFeatures = &deviceFeatures,
 	};
 
 	// might not really be necessary anymore because device specific validation
 	// layers have been deprecated
 	if (enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayer.size()),
-			createInfo.ppEnabledLayerNames = mValidationLayer.data();
+		createInfo.ppEnabledLayerNames = mValidationLayer.data();
 	} else {
 		createInfo.enabledLayerCount = 0;
 	}
@@ -241,9 +240,9 @@ void VkEngineDevice::createLogicalDevice() {
 
 void VkEngineDevice::createCommandPool() {
 	const VkCommandPoolCreateInfo poolInfo = {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		.queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+	    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	    .queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};
 
@@ -254,16 +253,16 @@ void VkEngineDevice::createCommandPool() {
 
 void VkEngineDevice::createAllocator() {
 	VmaVulkanFunctions vulkanFunctions{
-		.vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
-		.vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
+	    .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
+	    .vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
-		.physicalDevice = pPhysicalDevice,
-		.device = pDevice,
-		.pVulkanFunctions = &vulkanFunctions,
-		.instance = pInstance,
-		.vulkanApiVersion = VK_API_VERSION_1_3,
+	    .physicalDevice = pPhysicalDevice,
+	    .device = pDevice,
+	    .pVulkanFunctions = &vulkanFunctions,
+	    .instance = pInstance,
+	    .vulkanApiVersion = VK_API_VERSION_1_3,
 	};
 
 	vmaCreateAllocator(&allocatorInfo, &pAllocator);
@@ -290,13 +289,13 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 
 void VkEngineDevice::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {
-		.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-		.messageSeverity =
-		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-		.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-		               VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-		.pfnUserCallback = debugCallback,
-		.pUserData = nullptr // Optional
+	    .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+	    .messageSeverity =
+	        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+	    .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+	                   VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+	    .pfnUserCallback = debugCallback,
+	    .pUserData = nullptr  // Optional
 	};
 }
 
@@ -323,11 +322,11 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 	auto* availableLayers = new VkLayerProperties[layerCount];
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers);
 
-	for (size_t i = 0; i < mValidationLayer.size(); ++i) {
+	for (const auto* const i : mValidationLayer) {
 		bool layerFound = false;
 
 		for (size_t j = 0; j < layerCount; ++j) {
-			if (strcmp(mValidationLayer.data()[i], availableLayers[j].layerName) == 0) {
+			if (strcmp(i, availableLayers[j].layerName) == 0) {
 				layerFound = true;
 				break;
 			}
@@ -354,7 +353,7 @@ const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 	}
 
 #if __APPLE__
-	additionalExtensionCount += 2; // For the two additional extensions on Apple platforms.
+	additionalExtensionCount += 2;  // For the two additional extensions on Apple platforms.
 #endif
 
 	*extensionCount = glfwExtensionCount + additionalExtensionCount;
@@ -501,50 +500,46 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter, const VkMemor
 }
 
 void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                  VkMemoryPropertyFlags properties,
-                                  VkBuffer& buffer,
-                                  Alloc& bufferMemory) const {
+                                  VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
+
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
 #ifdef USE_VMA
-		constexpr VmaAllocationCreateInfo allocInfo{
-			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-			.usage = VMA_MEMORY_USAGE_AUTO,
-		};
+	constexpr VmaAllocationCreateInfo allocInfo{
+	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+	    .usage = VMA_MEMORY_USAGE_AUTO,
+	};
 
-		if (vmaCreateBuffer(getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr) !=
-		    VK_SUCCESS) {
-			throw std::runtime_error("failed to create buffer!");
-		}
+	if (vmaCreateBuffer(getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create buffer!");
+	}
 
-		vmaDestroyBuffer(getAllocator(), buffer, bufferMemory);
+	vmaDestroyBuffer(getAllocator(), buffer, bufferMemory);
 #else
-		if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create vertex buffer!");
-		}
+	if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create vertex buffer!");
+	}
 
-		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
 
-		const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-		                                     .allocationSize = memRequirements.size,
-		                                     .memoryTypeIndex = findMemoryType(
-			                                     memRequirements.memoryTypeBits, properties)};
+	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+	                                     .allocationSize = memRequirements.size,
+	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
 
-		if (vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-			throw std::runtime_error("failed to allocate vertex buffer memory!");
-		}
+	if (vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate vertex buffer memory!");
+	}
 
-		vkBindBufferMemory(pDevice, buffer, bufferMemory, 0);
+	vkBindBufferMemory(pDevice, buffer, bufferMemory, 0);
 
-		//clear memory
-		vkDestroyBuffer(pDevice, buffer, nullptr);
-		vkFreeMemory(pDevice, bufferMemory, nullptr);
+	// clear memory
+	vkDestroyBuffer(pDevice, buffer, nullptr);
+	vkFreeMemory(pDevice, bufferMemory, nullptr);
 #endif
-
 }
 
 void VkEngineDevice::beginSingleTimeCommands() {
@@ -565,9 +560,7 @@ void VkEngineDevice::endSingleTimeCommands() const {
 	vkEndCommandBuffer(mFrameData.pCommandBuffer);
 
 	const VkSubmitInfo submitInfo{
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		.commandBufferCount = 1,
-		.pCommandBuffers = &mFrameData.pCommandBuffer};
+	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO, .commandBufferCount = 1, .pCommandBuffers = &mFrameData.pCommandBuffer};
 
 	vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(pGraphicsQueue);
@@ -633,4 +626,4 @@ void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, con
 		throw std::runtime_error("failed to bind image memory!");
 	}
 }
-} // namespace vke
+}  // namespace vke

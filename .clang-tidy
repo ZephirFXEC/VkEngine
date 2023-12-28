@@ -28,6 +28,6 @@ Checks: "*,
         -cppcoreguidelines-pro-type-reinterpret-cast
         -cppcoreguidelines-special-member-functions
 "
-FormatStyle: llvm
+FormatStyle: google
 
 # Path: .clang-format

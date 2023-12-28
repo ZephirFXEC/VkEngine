@@ -3,16 +3,17 @@ cmake_minimum_required(VERSION 3.5.0)
 project(vkEngine
         VERSION 0.1.0
         DESCRIPTION "A Vulkan Engine"
-        LANGUAGES CXX C
+        LANGUAGES CXX
         )
+
 
 find_package(glm CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-
 add_subdirectory(src)
+
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin)
 

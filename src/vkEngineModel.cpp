@@ -105,11 +105,11 @@ void VkEngineModel::createIndexBuffers(const uint32_t* indices, const size_t ind
 
 void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
+
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
-
 #ifdef USE_VMA
 	constexpr VmaAllocationCreateInfo allocInfo{
 	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,

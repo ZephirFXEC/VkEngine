@@ -8,7 +8,7 @@
 
 namespace vke {
 class App {
-public:
+   public:
 	App();
 
 	~App();
@@ -22,7 +22,7 @@ public:
 
 	void run();
 
-private:
+   private:
 	void loadModels();
 
 	void createPipelineLayout();
@@ -39,15 +39,15 @@ private:
 
 	void freeCommandBuffers() const;
 
-	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
+	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
 
 	VkEngineDevice mVkDevice{mVkWindow};
 
-	std::unique_ptr <VkEngineSwapChain> mVkSwapChain = nullptr;
-	std::unique_ptr <VkEnginePipeline> pVkPipeline = nullptr;
-	std::unique_ptr <VkEngineModel> pVkModel = nullptr;
+	std::unique_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
+	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-	std::vector <VkCommandBuffer> ppVkCommandBuffers{};
+	std::vector<VkCommandBuffer> ppVkCommandBuffers{};
 };
-} // namespace vke
+}  // namespace vke

@@ -15,29 +15,27 @@ App::~App() { vkDestroyPipelineLayout(mVkDevice.getDevice(), pVkPipelineLayout, 
 void App::run() {
 	while (!mVkWindow.shouldClose()) {
 		// while window is open
-		glfwPollEvents(); // poll for events
-		drawFrame();      // draw frame
+		glfwPollEvents();  // poll for events
+		drawFrame();       // draw frame
 	}
 
 	vkDeviceWaitIdle(mVkDevice.getDevice());
 }
 
 void App::loadModels() {
-
 	constexpr uint32_t iCount = 6;
 	constexpr uint32_t vCount = 4;
 
 	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
-		VkEngineModel::Vertex{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
-		VkEngineModel::Vertex{{0.5f, -0.5}, {0.0f, 1.0f, 0.0f}},  // 1
-		VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},   // 2
-		VkEngineModel::Vertex{{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},  // 3
+	    VkEngineModel::Vertex{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
+	    VkEngineModel::Vertex{{0.5f, -0.5}, {0.0f, 1.0f, 0.0f}},    // 1
+	    VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},    // 2
+	    VkEngineModel::Vertex{{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},   // 3
 	};
 
 	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};
 
 	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices.data(), vCount, indices.data(), iCount);
-
 }
 
 void App::createPipelineLayout() {
@@ -53,6 +51,10 @@ void App::createPipelineLayout() {
 }
 
 void App::createPipeline() {
+
+	assert(mVkSwapChain != nullptr && "Cannot create pipeline before swap chain");
+	assert(pVkPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+
 	PipelineConfigInfo pipelineConfig{};
 	VkEnginePipeline::defaultPipelineConfigInfo(pipelineConfig);
 
@@ -60,18 +62,19 @@ void App::createPipeline() {
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
 	pVkPipeline =
-		std::make_unique<VkEnginePipeline>(mVkDevice, "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
-		                                   "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
+	    std::make_unique<VkEnginePipeline>(mVkDevice, "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
+	                                       "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {
 	ppVkCommandBuffers.resize(mVkSwapChain->imageCount());
 
 	const VkCommandBufferAllocateInfo allocInfo{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-		.commandPool = mVkDevice.getCommandPool(),
-		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		.commandBufferCount = static_cast<uint32_t>(mVkSwapChain->imageCount())};
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+	    .commandPool = mVkDevice.getCommandPool(),
+	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+	    .commandBufferCount = static_cast<uint32_t>(ppVkCommandBuffers.size())
+		};
 
 	if (vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, ppVkCommandBuffers.data()) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command buffers!");
@@ -80,8 +83,8 @@ void App::createCommandBuffers() {
 
 void App::recordCommandsBuffers(const size_t imageIndex) const {
 	constexpr VkCommandBufferBeginInfo beginInfo{
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
 
 	if (vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo) != VK_SUCCESS) {
@@ -89,10 +92,10 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	}
 
 	VkRenderPassBeginInfo renderPassInfo{
-		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-		.renderPass = mVkSwapChain->getRenderPass(),
-		.framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
-		.renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
+	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+	    .renderPass = mVkSwapChain->getRenderPass(),
+	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
+	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
 	};
 
 	std::array<VkClearValue, 2> clearValues{};
@@ -103,17 +106,17 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	renderPassInfo.pClearValues = clearValues.data();
 
 	const VkViewport viewport{
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = static_cast<float>(mVkSwapChain->getSwapChainExtent().width),
-		.height = static_cast<float>(mVkSwapChain->getSwapChainExtent().height),
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f,
+	    .x = 0.0f,
+	    .y = 0.0f,
+	    .width = static_cast<float>(mVkSwapChain->getSwapChainExtent().width),
+	    .height = static_cast<float>(mVkSwapChain->getSwapChainExtent().height),
+	    .minDepth = 0.0f,
+	    .maxDepth = 1.0f,
 	};
 
 	const VkRect2D scissor{
-		.offset = {0, 0},
-		.extent = mVkSwapChain->getSwapChainExtent(),
+	    .offset = {0, 0},
+	    .extent = mVkSwapChain->getSwapChainExtent(),
 	};
 
 	vkCmdBeginRenderPass(ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -138,6 +141,7 @@ void App::freeCommandBuffers() const {
 
 void App::recreateSwapChain() {
 	auto extent = mVkWindow.getExtent();
+
 	while (extent.width == 0 || extent.height == 0) {
 		extent = mVkWindow.getExtent();
 		glfwWaitEvents();
@@ -180,8 +184,8 @@ void App::drawFrame() {
 		return;
 	}
 
-	if (result != VK_SUCCESS) {
+	if(result != VK_SUCCESS) {
 		throw std::runtime_error("failed to present swap chain image!");
 	}
 }
-} // namespace vke
+}  // namespace vke

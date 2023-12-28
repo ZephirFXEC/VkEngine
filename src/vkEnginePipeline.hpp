@@ -27,13 +27,11 @@ struct PipelineConfigInfo {
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	uint32_t subpass = 0;
 
-	~PipelineConfigInfo() {
-		delete[] pDynamicStateEnables;
-	}
+	~PipelineConfigInfo() { delete[] pDynamicStateEnables; }
 };
 
 class VkEnginePipeline {
-public:
+   public:
 	explicit VkEnginePipeline() = delete;
 
 	VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
@@ -49,7 +47,7 @@ public:
 
 	void bind(const VkCommandBuffer* commandBuffer) const;
 
-private:
+   private:
 	static char* readFile(const std::string& filename, size_t& bufferSize);
 
 	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
@@ -60,9 +58,6 @@ private:
 	const VkEngineDevice& mDevice;
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
-	struct Shader {
-		VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
-		VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
-	} mShaders{};
+	Shader mShaders{};
 };
-} // namespace vke
+}  // namespace vke
