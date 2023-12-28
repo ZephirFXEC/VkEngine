@@ -47,11 +47,12 @@ class VkEngineModel {
 
 	void destroyBuffer(const DataBuffer& buffer) const;
 
+	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
+
 	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
 	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
 
-	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};

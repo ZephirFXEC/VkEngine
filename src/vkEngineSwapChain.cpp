@@ -56,7 +56,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
-	vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX);
+	VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
 	return vkAcquireNextImageKHR(mDevice.getDevice(), pSwapChain, UINT64_MAX,
 	                             mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
@@ -66,7 +66,7 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex) {
 	if (mSyncPrimitives.ppInFlightImages[*imageIndex] != VK_NULL_HANDLE) {
-		vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightImages[*imageIndex], VK_TRUE, UINT64_MAX);
+		VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightImages[*imageIndex], VK_TRUE, UINT64_MAX));
 	}
 
 	mSyncPrimitives.ppInFlightImages[*imageIndex] = mSyncPrimitives.ppInFlightFences[mCurrentFrame];
@@ -84,7 +84,7 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 	                                 .signalSemaphoreCount = 1,
 	                                 .pSignalSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores[mCurrentFrame]};
 
-	vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]);
+	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
 	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
@@ -97,11 +97,9 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 	    .pImageIndices = imageIndex,
 	};
 
-	const auto result = vkQueuePresentKHR(mDevice.getPresentQueue(), &presentInfo);
-
 	mCurrentFrame = (mCurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 
-	return result;
+	return vkQueuePresentKHR(mDevice.getPresentQueue(), &presentInfo);
 }
 
 void VkEngineSwapChain::createSwapChain() {
@@ -149,17 +147,17 @@ void VkEngineSwapChain::createSwapChain() {
 	// we'll first query the final number of images with
 	// vkGetSwapchainImagesKHR, then resize the container and finally call it
 	// again to retrieve the handles.
-	vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, nullptr);
+	VK_CHECK(vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, nullptr));
 
-	mSwapChainImages.ppImages = new VkImage[imageCount];
-	vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages);
+	mSwapChainImages.ppImages = new VkImage[imageCount]{};
+	VK_CHECK(vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages));
 
 	mSwapChainImageFormat = chooseSwapSurfaceFormat(mDevice.getSwapChainSupport().mFormats).format;
 	mSwapChainExtent = extent;
 }
 
 void VkEngineSwapChain::createImageViews() {
-	mSwapChainImages.ppImageViews = new VkImageView[imageCount()];
+	mSwapChainImages.ppImageViews = new VkImageView[imageCount()]{};
 
 	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageViewCreateInfo viewInfo{
@@ -243,7 +241,7 @@ void VkEngineSwapChain::createRenderPass() {
 }
 
 void VkEngineSwapChain::createFramebuffers() {
-	ppSwapChainFramebuffers = new VkFramebuffer[imageCount()];
+	ppSwapChainFramebuffers = new VkFramebuffer[imageCount()]{};
 
 	for (size_t i = 0; i < imageCount(); i++) {
 		std::array attachments = {mSwapChainImages.ppImageViews[i], mDepthImages.ppImageViews[i]};
@@ -263,9 +261,9 @@ void VkEngineSwapChain::createFramebuffers() {
 }
 
 void VkEngineSwapChain::createDepthResources() {
-	mDepthImages.ppImages = new VkImage[imageCount()];
-	mDepthImages.ppImageMemorys = new VkDeviceMemory[imageCount()];
-	mDepthImages.ppImageViews = new VkImageView[imageCount()];
+	mDepthImages.ppImages = new VkImage[imageCount()]{};
+	mDepthImages.ppImageMemorys = new VkDeviceMemory[imageCount()]{};
+	mDepthImages.ppImageViews = new VkImageView[imageCount()]{};
 
 	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageCreateInfo imageInfo{
@@ -303,11 +301,11 @@ void VkEngineSwapChain::createDepthResources() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-	mSyncPrimitives.ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
-	mSyncPrimitives.ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT];
-	mSyncPrimitives.ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT];
+	mSyncPrimitives.ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
+	mSyncPrimitives.ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
+	mSyncPrimitives.ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT]{};
 
-	mSyncPrimitives.ppInFlightImages = new VkFence[imageCount()];
+	mSyncPrimitives.ppInFlightImages = new VkFence[imageCount()]{};
 	memset(static_cast<void*>(mSyncPrimitives.ppInFlightImages), 0, sizeof(VkFence) * imageCount());
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
@@ -356,7 +354,7 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPr
 }
 
 VkExtent2D VkEngineSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const {
-	if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+	if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
 	}
 

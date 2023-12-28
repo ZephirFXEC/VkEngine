@@ -63,15 +63,9 @@ class VkEngineDevice {
 	[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
 	                                           VkFormatFeatureFlags features) const;
 
-	void beginSingleTimeCommands();
-
-	void endSingleTimeCommands() const;
-
 	// Buffer Helper Functions
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 	                  Alloc& bufferMemory) const;
-
-	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
 	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
 	                       uint32_t layerCount);

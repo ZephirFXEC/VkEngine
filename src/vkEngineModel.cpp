@@ -69,7 +69,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 #ifdef USE_VMA
 	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
 #else
-	vkMapMemory(mDevice.getDevice(), stagingBufferMemory, 0, bufferSize, 0, &mappedData);
+	VK_CHECK(vkMapMemory(mDevice.getDevice(), stagingBufferMemory, 0, bufferSize, 0, &mappedData));
 #endif
 
 	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
@@ -119,9 +119,7 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
 
 #else
-	if (vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create buffer!");
-	}
+	VK_CHECK(vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer));
 
 	VkMemoryRequirements memRequirements{};
 	vkGetBufferMemoryRequirements(mDevice.getDevice(), buffer, &memRequirements);
@@ -131,11 +129,10 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 	    .allocationSize = memRequirements.size,
 	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
-	if (vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate buffer memory!");
-	}
+	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory));
 
-	vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0);
+
+	VK_CHECK(vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0));
 #endif
 }
 
