@@ -347,11 +347,11 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPr
 		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
-		std::cout << "Present mode: Imediate" << '\n';
+		fmt::println("Present mode: Imediate");
 		return *it;
 	}
 
-	std::cout << "Present mode: V-Sync" << '\n';
+	fmt::println("Present mode: V-Sync");
 	return VK_PRESENT_MODE_FIFO_KHR;
 }
 

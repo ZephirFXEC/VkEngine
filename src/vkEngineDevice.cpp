@@ -46,7 +46,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 #ifdef _WIN32
 	MessageBox(NULL, message.str().c_str(), "Alert", MB_OK);
 #else
-	std::cerr << message.str() << '\n';
+	fmt::println("{}",message.str());
 #endif
 
 	return 0u;
@@ -156,7 +156,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 	uint32_t deviceCount = 0;
 	VK_CHECK(vkEnumeratePhysicalDevices(pInstance, &deviceCount, nullptr));
 
-	std::cout << "Device count: " << deviceCount << '\n';
+	fmt::println("device count: {}", deviceCount);
 
 	auto* devices = new VkPhysicalDevice[deviceCount];
 	VK_CHECK(vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices));
@@ -175,7 +175,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 	}
 
 	vkGetPhysicalDeviceProperties(pPhysicalDevice, &mProperties);
-	std::cout << "physical device: " << mProperties.deviceName << '\n';
+	fmt::println("physical device: {}", mProperties.deviceName);
 }
 
 void VkEngineDevice::createLogicalDevice() {
@@ -364,19 +364,19 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 	auto* extensions = new VkExtensionProperties[extensionCount];
 	VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions));
 
-	std::cout << "available extensions:" << '\n';
+	fmt::println("available extensions:");
 	std::unordered_set<std::string> available{};
 	for (uint32_t i = 0; i < extensionCount; ++i) {
-		std::cout << "\t" << extensions[i].extensionName << '\n';
+		fmt::println("\t{}", extensions[i].extensionName);
 		available.insert(extensions[i].extensionName);
 	}
 
-	std::cout << "required extensions:" << '\n';
+	fmt::println("required extensions:");
 
 	uint32_t requiredExtensionCount = 0;
 	const char** requiredExtensions = getRequiredExtensions(&requiredExtensionCount);
 	for (uint32_t i = 0; i < requiredExtensionCount; ++i) {
-		std::cout << "\t" << requiredExtensions[i] << '\n';
+		fmt::println("\t{}", requiredExtensions[i]);
 		if (!available.contains(requiredExtensions[i])) {
 			throw std::runtime_error("missing required extension");
 		}

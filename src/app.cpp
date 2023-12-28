@@ -1,7 +1,5 @@
 #include "app.hpp"
 
-#include <stdexcept>
-
 namespace vke {
 App::App() {
 	loadModels();

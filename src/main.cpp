@@ -1,8 +1,6 @@
 #include "app.hpp"
 
 // std
-#include <cstdlib>
-#include <iostream>
 
 int main() {
 	vke::App app{};  // create app
