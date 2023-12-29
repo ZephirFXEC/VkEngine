@@ -122,7 +122,7 @@ void VkEngineDevice::createInstance() {
 	    .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
 	    .pEngineName = "No Engine",
 	    .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-	    .apiVersion = VK_API_VERSION_1_3,
+	    .apiVersion = VK_API_VERSION_1_1,
 	};
 
 	uint32_t extensionCount = 0;
@@ -198,8 +198,18 @@ void VkEngineDevice::createLogicalDevice() {
 		queueCreateInfos[queueFamily] = queueCreateInfo;
 	}
 
-	constexpr VkPhysicalDeviceFeatures deviceFeatures = {
-	    .samplerAnisotropy = VK_TRUE,
+	VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures{
+	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
+	    .bufferDeviceAddress = VK_TRUE,
+	};
+
+	VkPhysicalDeviceFeatures2 deviceFeatures = {
+	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+	    .features =
+	        {
+	            .samplerAnisotropy = VK_TRUE,
+	        },
+		.pNext = &bufferDeviceAddressFeatures
 	};
 
 	VkDeviceCreateInfo createInfo = {
@@ -208,7 +218,7 @@ void VkEngineDevice::createLogicalDevice() {
 	    .pQueueCreateInfos = queueCreateInfos,
 	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
 	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
-	    .pEnabledFeatures = &deviceFeatures,
+	    .pNext = &deviceFeatures,
 	};
 
 	// might not really be necessary anymore because device specific validation
@@ -231,7 +241,7 @@ void VkEngineDevice::createLogicalDevice() {
 void VkEngineDevice::createCommandPool() {
 	const VkCommandPoolCreateInfo poolInfo = {
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-	    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 	    .queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};
@@ -246,11 +256,12 @@ void VkEngineDevice::createAllocator() {
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
+		.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
 	    .physicalDevice = pPhysicalDevice,
 	    .device = pDevice,
 	    .pVulkanFunctions = &vulkanFunctions,
 	    .instance = pInstance,
-	    .vulkanApiVersion = VK_API_VERSION_1_3,
+	    .vulkanApiVersion = VK_API_VERSION_1_1,
 	};
 
 	VK_CHECK(vmaCreateAllocator(&allocatorInfo, &pAllocator));
@@ -270,6 +281,10 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 
 	VkPhysicalDeviceFeatures supportedFeatures{};
 	vkGetPhysicalDeviceFeatures(*device, &supportedFeatures);
+
+	VkPhysicalDeviceFeatures2 supportedFeatures2{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+	vkGetPhysicalDeviceFeatures2(*device, &supportedFeatures2);
+
 
 	return indices.isComplete() && extensionsSupported && swapChainAdequate &&
 	       (supportedFeatures.samplerAnisotropy != 0u);
@@ -500,9 +515,9 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFl
 	    .usage = VMA_MEMORY_USAGE_AUTO,
 	};
 
-	VK_CHECK(vmaCreateBuffer(getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
+	VK_CHECK(vmaCreateBuffer(pAllocator, &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
 
-	vmaDestroyBuffer(getAllocator(), buffer, bufferMemory);
+	vmaDestroyBuffer(pAllocator, buffer, bufferMemory);
 #else
 	VK_CHECK(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer));
 

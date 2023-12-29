@@ -40,17 +40,17 @@ class VkEngineDevice {
 
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
-	NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData.pCommandPool; }
+	NDC_INLINE const VkCommandPool& getCommandPool() const& { return mFrameData.pCommandPool; }
 
-	NDC_INLINE const VkDevice& getDevice() const { return pDevice; }
+	NDC_INLINE const VkDevice& getDevice() const& { return pDevice; }
 
-	NDC_INLINE const VmaAllocator& getAllocator() const { return pAllocator; }
+	NDC_INLINE const VmaAllocator& getAllocator() const& { return pAllocator; }
 
-	NDC_INLINE const VkSurfaceKHR& getSurface() const { return pSurface; }
+	NDC_INLINE const VkSurfaceKHR& getSurface() const& { return pSurface; }
 
-	NDC_INLINE const VkQueue& getGraphicsQueue() const { return pGraphicsQueue; }
+	NDC_INLINE const VkQueue& getGraphicsQueue() const& { return pGraphicsQueue; }
 
-	NDC_INLINE const VkQueue& getPresentQueue() const { return pPresentQueue; }
+	NDC_INLINE const VkQueue& getPresentQueue() const& { return pPresentQueue; }
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);
@@ -108,8 +108,8 @@ class VkEngineDevice {
 	SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice* device) const;
 
 	const VkEngineWindow& mWindow;
-
 	VkDevice pDevice = VK_NULL_HANDLE;
+
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
 
 	VkInstance pInstance = VK_NULL_HANDLE;
@@ -123,10 +123,10 @@ class VkEngineDevice {
 	FrameData mFrameData{};
 
 	const std::array<const char*, 1> mValidationLayer{"VK_LAYER_KHRONOS_validation"};
-	const std::array<const char*, 2> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	const std::array<const char*, 3> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME
 #ifdef __APPLE__
 	                                                   ,
-	                                                   "VK_KHR_portability_subset"
+	                                                   "VK_KHR_portability_subset", "VK_KHR_buffer_device_address"
 #endif
 	};
 };
