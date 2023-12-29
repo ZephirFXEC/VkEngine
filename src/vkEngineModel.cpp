@@ -113,7 +113,7 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 #ifdef USE_VMA
 	constexpr VmaAllocationCreateInfo allocInfo{
 	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-	    .usage = VMA_MEMORY_USAGE_AUTO,
+	    .usage = VMA_MEMORY_USAGE_AUTO	,
 	};
 
 	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));

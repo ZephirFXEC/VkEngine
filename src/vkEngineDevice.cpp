@@ -1,24 +1,26 @@
 #define VMA_IMPLEMENTATION
 #include "vkEngineDevice.hpp"
 
+#include <vkEngineSwapChain.hpp>
+
 #include "utils/bufferUtils.hpp"
 
 namespace vke {
 // local callback functions
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                             const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                             void* /*pUserData*/) {
+											 const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+											 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+											 void* /*pUserData*/) {
 	std::ostringstream message;
 	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
 	message << "\t"
-	        << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+			<< "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
 	message << "\t"
-	        << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+			<< "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
 	message << "\t"
-	        << "message         = <" << pCallbackData->pMessage << ">\n";
+			<< "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message << std::string("\t") << "Queue Labels:\n";
 		for (uint32_t i = 0; i < pCallbackData->queueLabelCount; i++) {
@@ -36,11 +38,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 		for (uint32_t i = 0; i < pCallbackData->objectCount; i++) {
 			message << std::string("\t\t") << "Object " << i << "\n";
 			message << std::string("\t\t\t")
-			        << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
+					<< "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
 			message << std::string("\t\t\t") << "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
 			if (pCallbackData->pObjects[i].pObjectName != nullptr) {
 				message << std::string("\t\t\t") << "objectName   = <" << pCallbackData->pObjects[i].pObjectName
-				        << ">\n";
+						<< ">\n";
 			}
 		}
 	}
@@ -56,26 +58,26 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 }  // namespace
 
 VkResult CreateDebugUtilsMessengerEXT(const VkInstance* const instance,
-                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                      const VkAllocationCallbacks* pAllocator,
-                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
+									  const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+									  const VkAllocationCallbacks* pAllocator,
+									  VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-	        vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
-	    func != nullptr) {
+			vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
+		func != nullptr) {
 		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
+		}
 
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
 void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
-                                   const VkDebugUtilsMessengerEXT* const debugMessenger,
-                                   const VkAllocationCallbacks* pAllocator) {
+								   const VkDebugUtilsMessengerEXT* const debugMessenger,
+								   const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-	        vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
-	    func != nullptr) {
+			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
+		func != nullptr) {
 		func(*instance, *debugMessenger, pAllocator);
-	}
+		}
 }
 
 // class member functions
@@ -90,9 +92,11 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 }
 
 VkEngineDevice::~VkEngineDevice() {
-	// 1. Destroy the command pool
-	vkDestroyCommandPool(pDevice, mFrameData.pCommandPool, nullptr);
-
+	// vkDeviceWaitIdle(pDevice);
+	//  1. Destroy the command pool
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vkDestroyCommandPool(pDevice, mFrameData[i].pCommandPool, nullptr);
+	}
 	// 2. Destroy the allocator
 	vmaDestroyAllocator(pAllocator);
 
@@ -110,6 +114,7 @@ VkEngineDevice::~VkEngineDevice() {
 	// 6. Destroy the Vulkan instance
 	vkDestroyInstance(pInstance, nullptr);
 }
+
 
 void VkEngineDevice::createInstance() {
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
@@ -241,12 +246,26 @@ void VkEngineDevice::createLogicalDevice() {
 void VkEngineDevice::createCommandPool() {
 	const VkCommandPoolCreateInfo poolInfo = {
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 	    .queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};
 
-	VK_CHECK(vkCreateCommandPool(pDevice, &poolInfo, nullptr, &mFrameData.pCommandPool));
+	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+
+		VK_CHECK(vkCreateCommandPool(pDevice, &poolInfo, nullptr, &mFrameData[i].pCommandPool));
+
+		// allocate the default command buffer that we will use for rendering
+		VkCommandBufferAllocateInfo cmdAllocInfo {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.commandPool = mFrameData[i].pCommandPool,
+			.commandBufferCount = 1,
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		};
+
+		VK_CHECK(vkAllocateCommandBuffers(pDevice, &cmdAllocInfo, &mFrameData[i].pCommandBuffer));
+	}
 }
 
 void VkEngineDevice::createAllocator() {
@@ -541,7 +560,7 @@ void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFl
 void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
                                        const uint32_t height, const uint32_t layerCount) {
 
-	BufferUtils::beginSingleTimeCommands(pDevice, mFrameData);
+	BufferUtils::beginSingleTimeCommands(pDevice, mFrameData[mCurrentFrame]);
 
 	const VkBufferImageCopy region{.bufferOffset = 0,
 	                               .bufferRowLength = 0,
@@ -555,14 +574,24 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
 	                               .imageOffset = {0, 0, 0},
 	                               .imageExtent = {width, height, 1}};
 
-	vkCmdCopyBufferToImage(mFrameData.pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+	vkCmdCopyBufferToImage(mFrameData[mCurrentFrame].pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
 	                       &region);
 
-	BufferUtils::endSingleTimeCommands(pDevice, mFrameData, pGraphicsQueue);
+	BufferUtils::endSingleTimeCommands(pDevice, mFrameData[mCurrentFrame], pGraphicsQueue);
 }
 
 void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
-                                         VkImage& image, VkDeviceMemory& imageMemory) const {
+                                         VkImage& image, Alloc& imageMemory) const {
+
+#ifdef USE_VMA
+	constexpr VmaAllocationCreateInfo rimg_allocinfo{
+		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
+		.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+	};
+
+	vmaCreateImage(pAllocator, &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
+
+#else
 
 	VK_CHECK(vkCreateImage(pDevice, &imageInfo, nullptr, &image));
 
@@ -576,5 +605,10 @@ void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, con
 	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &imageMemory));
 
 	VK_CHECK(vkBindImageMemory(pDevice, image, imageMemory, 0));
+#endif
+}
+
+const VkCommandPool& VkEngineDevice::getCommandPool() const {
+	return mFrameData[mCurrentFrame].pCommandPool;
 }
 }  // namespace vke

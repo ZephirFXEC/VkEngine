@@ -3,9 +3,10 @@
 #include "utils/utility.hpp"
 #include "vkEngineDevice.hpp"
 
-static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
 namespace vke {
+ static uint32_t mCurrentFrame = 0;
+
 class VkEngineSwapChain {
    public:
 	explicit VkEngineSwapChain() = delete;
@@ -39,7 +40,7 @@ class VkEngineSwapChain {
 
 	NDC_INLINE uint32_t height() const { return mSwapChainExtent.height; }
 
-	NDC_INLINE size_t imageCount() const { return mSwapChainImageCount; }
+	NDC_INLINE uint32_t imageCount() const { return mSwapChainImageCount; }
 
 	NDC_INLINE float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
@@ -94,7 +95,7 @@ class VkEngineSwapChain {
 	struct VkImageRessource {
 		VkImage* ppImages = nullptr;
 		VkImageView* ppImageViews = nullptr;
-		VkDeviceMemory* ppImageMemorys = nullptr;
+		Alloc* ppImageMemorys = nullptr;
 
 		VkImageRessource() = default;
 		VkImageRessource(const VkImageRessource&) = delete;
@@ -122,7 +123,6 @@ class VkEngineSwapChain {
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
-	size_t mCurrentFrame = 0;
 	uint32_t mSwapChainImageCount = 0;
 };
 }  // namespace vke

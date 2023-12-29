@@ -36,6 +36,7 @@
 
 // constants for the application
 #define VMA
+static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
 #ifdef VMA
 #define USE_VMA

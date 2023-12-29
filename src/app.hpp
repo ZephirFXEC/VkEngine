@@ -48,6 +48,10 @@ class App {
 	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-	std::vector<VkCommandBuffer> ppVkCommandBuffers{};
+
+	struct CommandBuffer {
+		VkCommandBuffer* ppVkCommandBuffers{};
+		uint32_t mSize{}; // number of command buffers (could be uint8_t)
+	} mCommandBuffer{};
 };
 }  // namespace vke

@@ -40,17 +40,17 @@ class VkEngineDevice {
 
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
-	NDC_INLINE const VkCommandPool& getCommandPool() const& { return mFrameData.pCommandPool; }
+	[[nodiscard]] const VkCommandPool& getCommandPool() const;
 
-	NDC_INLINE const VkDevice& getDevice() const& { return pDevice; }
+	NDC_INLINE const VkDevice& getDevice() const { return pDevice; }
 
-	NDC_INLINE const VmaAllocator& getAllocator() const& { return pAllocator; }
+	NDC_INLINE const VmaAllocator& getAllocator() const { return pAllocator; }
 
-	NDC_INLINE const VkSurfaceKHR& getSurface() const& { return pSurface; }
+	NDC_INLINE const VkSurfaceKHR& getSurface() const { return pSurface; }
 
-	NDC_INLINE const VkQueue& getGraphicsQueue() const& { return pGraphicsQueue; }
+	NDC_INLINE const VkQueue& getGraphicsQueue() const { return pGraphicsQueue; }
 
-	NDC_INLINE const VkQueue& getPresentQueue() const& { return pPresentQueue; }
+	NDC_INLINE const VkQueue& getPresentQueue() const { return pPresentQueue; }
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);
@@ -71,7 +71,7 @@ class VkEngineDevice {
 	                       uint32_t layerCount);
 
 	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
-	                         VkDeviceMemory& imageMemory) const;
+	                         Alloc& imageMemory) const;
 
 	VkPhysicalDeviceProperties mProperties{};
 
@@ -120,7 +120,7 @@ class VkEngineDevice {
 	VkQueue pGraphicsQueue = VK_NULL_HANDLE;
 	VkQueue pPresentQueue = VK_NULL_HANDLE;
 
-	FrameData mFrameData{};
+	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};
 
 	const std::array<const char*, 1> mValidationLayer{"VK_LAYER_KHRONOS_validation"};
 	const std::array<const char*, 3> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME

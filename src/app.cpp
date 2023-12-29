@@ -61,15 +61,17 @@ void App::createPipeline() {
 	                                       "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
+
 void App::createCommandBuffers() {
-	ppVkCommandBuffers.resize(mVkSwapChain->imageCount());
+	mCommandBuffer.mSize = mVkSwapChain->imageCount();
+	mCommandBuffer.ppVkCommandBuffers = new VkCommandBuffer[mCommandBuffer.mSize];
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	                                            .commandPool = mVkDevice.getCommandPool(),
 	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	                                            .commandBufferCount = static_cast<uint32_t>(ppVkCommandBuffers.size())};
+	                                            .commandBufferCount = mCommandBuffer.mSize};
 
-	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, ppVkCommandBuffers.data()));
+	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, mCommandBuffer.ppVkCommandBuffers));
 }
 
 void App::recordCommandsBuffers(const size_t imageIndex) const {
@@ -78,21 +80,20 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
 
-	VK_CHECK(vkBeginCommandBuffer(ppVkCommandBuffers[imageIndex], &beginInfo));
-
-	VkRenderPassBeginInfo renderPassInfo{
-	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
-	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
-	};
+	VK_CHECK(vkBeginCommandBuffer(mCommandBuffer.ppVkCommandBuffers[imageIndex], &beginInfo));
 
 	std::array<VkClearValue, 2> clearValues{};
 	clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
 
-	renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	renderPassInfo.pClearValues = clearValues.data();
+	const VkRenderPassBeginInfo renderPassInfo{
+	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+	    .renderPass = mVkSwapChain->getRenderPass(),
+	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
+	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
+		.clearValueCount = static_cast<uint32_t>(clearValues.size()),
+		.pClearValues = clearValues.data(),
+	};
 
 	const VkViewport viewport{
 	    .x = 0.0f,
@@ -108,22 +109,22 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .extent = mVkSwapChain->getSwapChainExtent(),
 	};
 
-	vkCmdBeginRenderPass(ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdSetViewport(ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
-	vkCmdSetScissor(ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
+	vkCmdBeginRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdSetViewport(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
+	vkCmdSetScissor(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
-	pVkPipeline->bind(&ppVkCommandBuffers[imageIndex]);
-	pVkModel->bind(&ppVkCommandBuffers[imageIndex]);
-	pVkModel->draw(&ppVkCommandBuffers[imageIndex]);
+	pVkPipeline->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+	pVkModel->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+	pVkModel->draw(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
-	vkCmdEndRenderPass(ppVkCommandBuffers[imageIndex]);
+	vkCmdEndRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
-	VK_CHECK(vkEndCommandBuffer(ppVkCommandBuffers[imageIndex]));
+	VK_CHECK(vkEndCommandBuffer(mCommandBuffer.ppVkCommandBuffers[imageIndex]));
 }
 
 void App::freeCommandBuffers() const {
-	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkDevice.getCommandPool(),
-	                     static_cast<uint32_t>(ppVkCommandBuffers.size()), ppVkCommandBuffers.data());
+	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkDevice.getCommandPool(), mCommandBuffer.mSize, mCommandBuffer.ppVkCommandBuffers);
+	delete[] mCommandBuffer.ppVkCommandBuffers;
 }
 
 void App::recreateSwapChain() {
@@ -141,7 +142,7 @@ void App::recreateSwapChain() {
 	} else {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
 
-		if (mVkSwapChain->imageCount() != ppVkCommandBuffers.size()) {
+		if (mVkSwapChain->imageCount() != mCommandBuffer.mSize) {
 			freeCommandBuffers();
 			createCommandBuffers();
 		}
@@ -152,27 +153,35 @@ void App::recreateSwapChain() {
 
 void App::drawFrame() {
 	uint32_t imageIndex = 0;
-	auto result = mVkSwapChain->acquireNextImage(&imageIndex);
+	VkResult result = mVkSwapChain->acquireNextImage(&imageIndex);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-		recreateSwapChain();
-	}
-
-	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		throw std::runtime_error("failed to acquire swap chain image!");
-	}
-
-	recordCommandsBuffers(imageIndex);
-	result = mVkSwapChain->submitCommandBuffers(&ppVkCommandBuffers[imageIndex], &imageIndex);
-
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mVkWindow.wasWindowResized()) {
+	// Combining the check for VK_ERROR_OUT_OF_DATE_KHR with VK_SUBOPTIMAL_KHR.
+	// Also including the window resize check here to avoid duplicate code.
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || mVkWindow.wasWindowResized() || result == VK_SUBOPTIMAL_KHR) {
 		mVkWindow.resetWindowResizedFlag();
+		recreateSwapChain();
+		return;  // Early return to avoid further processing since swapchain needs recreation.
+	}
+
+	// Consolidating error handling for acquisition failure into one check.
+	if (result != VK_SUCCESS) {
+		throw std::runtime_error("Failed to acquire swap chain image!");
+	}
+
+	// Moved recordCommandsBuffers inside the success conditional to avoid calling it
+	// when swapchain recreation is needed or an error occurs.
+	recordCommandsBuffers(imageIndex);
+
+	result = mVkSwapChain->submitCommandBuffers(&mCommandBuffer.ppVkCommandBuffers[imageIndex], &imageIndex);
+
+	// Checking for swap chain-related errors after submitting command buffers.
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 		recreateSwapChain();
 		return;
 	}
 
 	if (result != VK_SUCCESS) {
-		throw std::runtime_error("failed to present swap chain image!");
+		throw std::runtime_error("Failed to present swap chain image!");
 	}
 }
 }  // namespace vke

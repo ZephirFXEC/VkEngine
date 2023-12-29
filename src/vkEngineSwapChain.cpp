@@ -36,7 +36,12 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	for (size_t i = 0; i < imageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mDepthImages.ppImageViews[i], nullptr);
 		vkDestroyImage(mDevice.getDevice(), mDepthImages.ppImages[i], nullptr);
+#ifdef USE_VMA
+		vmaFreeMemory(mDevice.getAllocator(), mDepthImages.ppImageMemorys[i]);
+#else
 		vkFreeMemory(mDevice.getDevice(), mDepthImages.ppImageMemorys[i], nullptr);
+#endif
+
 	}
 
 	for (size_t i = 0; i < imageCount(); ++i) {
@@ -53,6 +58,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences[i], nullptr);
 	}
+
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
@@ -262,8 +268,9 @@ void VkEngineSwapChain::createFramebuffers() {
 
 void VkEngineSwapChain::createDepthResources() {
 	mDepthImages.ppImages = new VkImage[imageCount()]{};
-	mDepthImages.ppImageMemorys = new VkDeviceMemory[imageCount()]{};
+	mDepthImages.ppImageMemorys = new Alloc[imageCount()]{};
 	mDepthImages.ppImageViews = new VkImageView[imageCount()]{};
+
 
 	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageCreateInfo imageInfo{
@@ -275,12 +282,13 @@ void VkEngineSwapChain::createDepthResources() {
 		    .arrayLayers = 1,
 		    .samples = VK_SAMPLE_COUNT_1_BIT,
 		    .tiling = VK_IMAGE_TILING_OPTIMAL,
-		    .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		    .usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
-		mDevice.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImages.ppImages[i],
+		//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; <- for non arm devices
+		mDevice.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, mDepthImages.ppImages[i],
 		                            mDepthImages.ppImageMemorys[i]);
 
 		VkImageViewCreateInfo viewInfo{
@@ -306,7 +314,7 @@ void VkEngineSwapChain::createSyncObjects() {
 	mSyncPrimitives.ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT]{};
 
 	mSyncPrimitives.ppInFlightImages = new VkFence[imageCount()]{};
-	memset(static_cast<void*>(mSyncPrimitives.ppInFlightImages), 0, sizeof(VkFence) * imageCount());
+	memset(mSyncPrimitives.ppInFlightImages, 0, sizeof(VkFence) * imageCount());
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
 	    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -345,7 +353,7 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPr
 		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
-		fmt::println("Present mode: Imediate");
+		fmt::println("Present mode: FIFO Relaxed");
 		return *it;
 	}
 
