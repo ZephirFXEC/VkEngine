@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/utility.hpp"
+
 #include "vkEngineWindow.hpp"
 
 #ifdef NDEBUG

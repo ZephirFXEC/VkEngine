@@ -1,10 +1,6 @@
 #define VMA_IMPLEMENTATION
 #include "vkEngineDevice.hpp"
 
-#include <vkEngineSwapChain.hpp>
-
-#include "utils/bufferUtils.hpp"
-
 namespace vke {
 // local callback functions
 namespace {

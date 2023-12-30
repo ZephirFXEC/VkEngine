@@ -3,6 +3,10 @@
 //
 #pragma once
 
+#include "utility.hpp"
+#include "vkEngineDevice.hpp"
+
+
 namespace vke {
 class BufferUtils {
    public:
@@ -12,14 +16,14 @@ class BufferUtils {
 	static void endSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,
 	                                  VkCommandBuffer& commandBuffer, const VkQueue& graphicsQueue);
 
+	static void createModelBuffer(const VkEngineDevice& device,  VkDeviceSize size,  VkBufferUsageFlags usage,
+								  VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
-		[[maybe_unused]] static void copyBuffer(
-		const VkDevice& device,
-		const VkCommandPool& commandPool,
-		VkCommandBuffer& commandBuffer,
-		const VkBuffer& srcBuffer,
-		const VkBuffer& dstBuffer,
-		const VkDeviceSize& size);
+	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
+	                         VkBuffer& buffer, VmaAllocation& bufferMemory);
+
+
 };
+
 
 }  // namespace vke

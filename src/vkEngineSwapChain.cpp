@@ -367,43 +367,6 @@ void VkEngineSwapChain::createSyncObjects() {
 	}
 }
 
-void VkEngineSwapChain::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                     const VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                                     Alloc& bufferMemory) const {
-	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = size,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
-
-#ifdef USE_VMA
-	constexpr VmaAllocationCreateInfo allocInfo{
-	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-	    .usage = VMA_MEMORY_USAGE_AUTO,
-	};
-
-	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
-
-	vmaDestroyBuffer(mDevice.getAllocator(), buffer, bufferMemory);
-#else
-	VK_CHECK(vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(mDevice.getDevice(), buffer, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory));
-
-	VK_CHECK(vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0));
-
-	// clear memory
-	vkDestroyBuffer(mDevice.getDevice(), buffer, nullptr);
-	vkFreeMemory(mDevice.getDevice(), bufferMemory, nullptr);
-#endif
-}
-
 void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image,
                                           const uint32_t width, const uint32_t height, const uint32_t layerCount) {
 	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
@@ -446,7 +409,7 @@ void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, 
 
 	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
+	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
 	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &imageMemory));
 

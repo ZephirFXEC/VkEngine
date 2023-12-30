@@ -4,9 +4,7 @@
 
 #include "vkEngineModel.hpp"
 
-
 #include "utils/bufferUtils.hpp"
-
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device,const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, const uint32_t vCount,
@@ -61,40 +59,61 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
                                    VkBuffer& buffer, Alloc& bufferMemory) {
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
+	auto createBuffer = [&](VkBufferUsageFlags additionalUsage, Alloc& memory, VkBuffer& buf) {
+#ifdef USE_VMA
+		BufferUtils::createModelBuffer(mDevice, bufferSize, usage | additionalUsage, buf, memory);
+#else
+		BufferUtils::createModelBuffer(mDevice, bufferSize, usage | additionalUsage,
+									   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+									   buf, memory);
+#endif
+	};
+
+	auto mapBufferMemory = [&](Alloc& memory, void** dataPtr) {
+#ifdef USE_VMA
+		VK_CHECK(vmaMapMemory(mDevice.getAllocator(), memory, dataPtr));
+#else
+		VK_CHECK(vkMapMemory(mDevice.getDevice(), memory, 0, bufferSize, 0, dataPtr));
+#endif
+	};
+
+	auto unmapBufferMemory = [&](Alloc& memory) {
+#ifdef USE_VMA
+		vmaUnmapMemory(mDevice.getAllocator(), memory);
+#else
+		vkUnmapMemory(mDevice.getDevice(), memory);
+#endif
+	};
+
+	auto destroyBuffer = [&](VkBuffer& buf, Alloc& memory) {
+#ifdef USE_VMA
+		vmaDestroyBuffer(mDevice.getAllocator(), buf, memory);
+#else
+		vkDestroyBuffer(mDevice.getDevice(), buf, nullptr);
+		vkFreeMemory(mDevice.getDevice(), memory, nullptr);
+#endif
+	};
+
+	 // todo : refactor this shit
+
 	VkBuffer stagingBuffer = nullptr;
 	Alloc stagingBufferMemory = nullptr;
 
-	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer,
-	             stagingBufferMemory);
+	createBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBufferMemory, stagingBuffer);
 
 	void* mappedData = nullptr;
-
-#ifdef USE_VMA
-	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
-#else
-	VK_CHECK(vkMapMemory(mDevice.getDevice(), stagingBufferMemory, 0, bufferSize, 0, &mappedData));
-#endif
+	mapBufferMemory(stagingBufferMemory, &mappedData);
 
 	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
 
-#ifdef USE_VMA
-	vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
-#else
-	vkUnmapMemory(mDevice.getDevice(), stagingBufferMemory);
-#endif
+	unmapBufferMemory(stagingBufferMemory);
 
-	createBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-	             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, bufferMemory);
+	createBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, bufferMemory, buffer);
 
 	copyBuffer(&stagingBuffer, &buffer, bufferSize);
 
-#ifdef USE_VMA
-	vmaDestroyBuffer(mDevice.getAllocator(), stagingBuffer, stagingBufferMemory);
-#else
-	vkDestroyBuffer(mDevice.getDevice(), stagingBuffer, nullptr);
-	vkFreeMemory(mDevice.getDevice(), stagingBufferMemory, nullptr);
-#endif
+	destroyBuffer(stagingBuffer, stagingBufferMemory);
+
 }
 
 void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t vertexCount) {
@@ -107,42 +126,8 @@ void VkEngineModel::createIndexBuffers(const uint32_t* indices, const size_t ind
 	               mIndexBuffer.pDataBufferMemory);
 }
 
-void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                 const VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
-
-	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = size,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
-#ifdef USE_VMA
-	constexpr VmaAllocationCreateInfo allocInfo{
-	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-	    .usage = VMA_MEMORY_USAGE_AUTO	,
-	};
-
-	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
-
-#else
-	VK_CHECK(vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(mDevice.getDevice(), buffer, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	    .allocationSize = memRequirements.size,
-	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory));
-
-
-	VK_CHECK(vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0));
-#endif
-}
-
 void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
                                const VkDeviceSize size) {
-
 	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer);
 
 	const VkBufferCopy copyRegion{.size = size};
