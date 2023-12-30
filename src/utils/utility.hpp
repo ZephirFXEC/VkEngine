@@ -79,7 +79,6 @@ struct NO_COPY_NOR_MOVE {
 struct FrameData : NO_COPY_NOR_MOVE {
 	VkCommandPool pCommandPool = VK_NULL_HANDLE;
 	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
-	DeletionQueue mDeletionQueue{};
 };
 
 struct SyncPrimitives : NO_COPY_NOR_MOVE {

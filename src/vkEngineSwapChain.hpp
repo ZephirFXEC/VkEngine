@@ -44,7 +44,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
-	VkResult acquireNextImage(uint32_t* imageIndex) const;
+	VkResult acquireNextImage(uint32_t* imageIndex);
 
 	VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex);
 
@@ -93,8 +93,6 @@ class VkEngineSwapChain {
 	VkFormat mSwapChainImageFormat{};
 	VkExtent2D mSwapChainExtent{};
 	VkExtent2D mWindowExtent{};
-
-	DeletionQueue mMainDeletionQueue{};
 
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
 	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};

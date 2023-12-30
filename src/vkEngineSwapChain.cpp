@@ -26,12 +26,6 @@ void VkEngineSwapChain::init() {
 }
 
 VkEngineSwapChain::~VkEngineSwapChain() {
-	// vkDeviceWaitIdle(pDevice);
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
-	}
-
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
@@ -54,7 +48,6 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyFramebuffer(mDevice.getDevice(), ppSwapChainFramebuffers[i], nullptr);
 	}
-
 	delete[] ppSwapChainFramebuffers;
 
 	vkDestroyRenderPass(mDevice.getDevice(), pRenderPass, nullptr);
@@ -65,9 +58,13 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences[i], nullptr);
 	}
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
+	}
 }
 
-VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
+VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex)  {
 	VK_CHECK(
 	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
