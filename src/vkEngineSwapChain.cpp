@@ -1,5 +1,6 @@
 #include "vkEngineSwapChain.hpp"
 
+#include "utils/bufferUtils.hpp"
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
@@ -20,10 +21,17 @@ void VkEngineSwapChain::init() {
 	createRenderPass();
 	createDepthResources();
 	createFramebuffers();
+	createCommandPools();
 	createSyncObjects();
 }
 
 VkEngineSwapChain::~VkEngineSwapChain() {
+	// vkDeviceWaitIdle(pDevice);
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
+	}
+
 	for (size_t i = 0; i < imageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
@@ -282,13 +290,13 @@ void VkEngineSwapChain::createDepthResources() {
 		    .arrayLayers = 1,
 		    .samples = VK_SAMPLE_COUNT_1_BIT,
 		    .tiling = VK_IMAGE_TILING_OPTIMAL,
-		    .usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		    .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
 		    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
-		//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT; <- for non arm devices
-		mDevice.createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT, mDepthImages.ppImages[i],
+		//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+		createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImages.ppImages[i],
 		                            mDepthImages.ppImageMemorys[i]);
 
 		VkImageViewCreateInfo viewInfo{
@@ -307,6 +315,31 @@ void VkEngineSwapChain::createDepthResources() {
 		VK_CHECK(vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mDepthImages.ppImageViews[i]));
 	}
 }
+
+void VkEngineSwapChain::createCommandPools() {
+	const VkCommandPoolCreateInfo poolInfo = {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex = mDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+
+	};
+
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		VK_CHECK(vkCreateCommandPool(mDevice.getDevice(), &poolInfo, nullptr, &mFrameData.at(i).pCommandPool));
+
+		// allocate the default command buffer that we will use for rendering
+		VkCommandBufferAllocateInfo cmdAllocInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.pNext = nullptr,
+			.commandPool = mFrameData.at(i).pCommandPool,
+			.commandBufferCount = 1,
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		};
+
+		VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &cmdAllocInfo, &mFrameData.at(i).pCommandBuffer));
+	}
+}
+
 
 void VkEngineSwapChain::createSyncObjects() {
 	mSyncPrimitives.ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
@@ -334,6 +367,94 @@ void VkEngineSwapChain::createSyncObjects() {
 	}
 }
 
+void VkEngineSwapChain::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
+                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
+	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+	                                    .size = size,
+	                                    .usage = usage,
+	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+
+#ifdef USE_VMA
+	constexpr VmaAllocationCreateInfo allocInfo{
+	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+	    .usage = VMA_MEMORY_USAGE_AUTO,
+	};
+
+	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
+
+	vmaDestroyBuffer(mDevice.getAllocator(), buffer, bufferMemory);
+#else
+	VK_CHECK(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer));
+
+	VkMemoryRequirements memRequirements{};
+	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
+
+	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+	                                     .allocationSize = memRequirements.size,
+	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
+
+	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory));
+
+	VK_CHECK(vkBindBufferMemory(pDevice, buffer, bufferMemory, 0));
+
+	// clear memory
+	vkDestroyBuffer(pDevice, buffer, nullptr);
+	vkFreeMemory(pDevice, bufferMemory, nullptr);
+#endif
+}
+
+void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
+                                       const uint32_t height, const uint32_t layerCount) {
+
+	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame));
+
+	const VkBufferImageCopy region{.bufferOffset = 0,
+	                               .bufferRowLength = 0,
+	                               .bufferImageHeight = 0,
+
+	                               .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+	                                                    .mipLevel = 0,
+	                                                    .baseArrayLayer = 0,
+	                                                    .layerCount = layerCount},
+
+	                               .imageOffset = {0, 0, 0},
+	                               .imageExtent = {width, height, 1}};
+
+	vkCmdCopyBufferToImage(mFrameData.at(mCurrentFrame).pCommandBuffer, *buffer, *image,
+	                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame), mDevice.getGraphicsQueue());
+}
+
+void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
+                                         VkImage& image, Alloc& imageMemory) const {
+#ifdef USE_VMA
+	constexpr VmaAllocationCreateInfo rimg_allocinfo{
+	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
+	    .requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+
+	vmaCreateImage(mDevice.getAllocator(), &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
+
+#else
+
+	VK_CHECK(vkCreateImage(pDevice, &imageInfo, nullptr, &image));
+
+	VkMemoryRequirements memRequirements{};
+	vkGetImageMemoryRequirements(pDevice, image, &memRequirements);
+
+	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+	                                     .allocationSize = memRequirements.size,
+	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
+
+	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &imageMemory));
+
+	VK_CHECK(vkBindImageMemory(pDevice, image, imageMemory, 0));
+#endif
+}
+
+
+
+
 VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	if (const auto it = std::ranges::find_if(availableFormats.begin(), availableFormats.end(),
 	                                         [](const VkSurfaceFormatKHR& availableFormat) {
@@ -350,7 +471,7 @@ VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<
 VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	if (const auto it = std::ranges::find_if(availablePresentModes.begin(), availablePresentModes.end(),
 	                                         [](const VkPresentModeKHR& availablePresentMode) {
-		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
+		                                         return availablePresentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
 		fmt::println("Present mode: FIFO Relaxed");

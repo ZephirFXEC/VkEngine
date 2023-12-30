@@ -2,9 +2,9 @@
 
 namespace vke {
 App::App() {
-	loadModels();
 	createPipelineLayout();
 	recreateSwapChain();
+	loadModels();
 	createCommandBuffers();
 }
 
@@ -33,7 +33,7 @@ void App::loadModels() {
 
 	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};
 
-	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, vertices.data(), vCount, indices.data(), iCount);
+	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
 }
 
 void App::createPipelineLayout() {
@@ -67,7 +67,7 @@ void App::createCommandBuffers() {
 	mCommandBuffer.ppVkCommandBuffers = new VkCommandBuffer[mCommandBuffer.mSize];
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	                                            .commandPool = mVkDevice.getCommandPool(),
+	                                            .commandPool = mVkSwapChain->getCommandPool(),
 	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	                                            .commandBufferCount = mCommandBuffer.mSize};
 
@@ -123,7 +123,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 }
 
 void App::freeCommandBuffers() const {
-	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkDevice.getCommandPool(), mCommandBuffer.mSize, mCommandBuffer.ppVkCommandBuffers);
+	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize, mCommandBuffer.ppVkCommandBuffers);
 	delete[] mCommandBuffer.ppVkCommandBuffers;
 }
 

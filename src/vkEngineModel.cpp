@@ -4,11 +4,13 @@
 
 #include "vkEngineModel.hpp"
 
+#include "utils/bufferUtils.hpp"
+
 namespace vke {
-VkEngineModel::VkEngineModel(VkEngineDevice& device, const Vertex* vertices, const uint32_t vCount,
+VkEngineModel::VkEngineModel(const VkEngineDevice& device,const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, const uint32_t vCount,
                              const uint32_t* indices, const uint32_t iCount)
 
-    : mIndexCount{iCount}, mDevice{device} {
+    : mIndexCount{iCount}, mDevice{device}, mSwapChain{swapchain} {
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);
 }
@@ -138,9 +140,10 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 
 void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
                                const VkDeviceSize size) {
+
 	const VkCommandBufferAllocateInfo allocInfo{
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .commandPool = mDevice.getCommandPool(),
+	    .commandPool = mSwapChain->getCommandPool(),
 	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	    .commandBufferCount = 1,
 	};
@@ -166,6 +169,6 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
 	VK_CHECK(vkQueueWaitIdle(mDevice.getGraphicsQueue()));
 
-	vkFreeCommandBuffers(mDevice.getDevice(), mDevice.getCommandPool(), 1, &pCommandBuffer);
+	vkFreeCommandBuffers(mDevice.getDevice(), mSwapChain->getCommandPool(), 1, &pCommandBuffer);
 }
 }  // namespace vke

@@ -5,8 +5,6 @@
 
 
 namespace vke {
- static uint32_t mCurrentFrame = 0;
-
 class VkEngineSwapChain {
    public:
 	explicit VkEngineSwapChain() = delete;
@@ -22,6 +20,7 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
+
 	NDC_INLINE const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
 		return ppSwapChainFramebuffers[index];
 	}
@@ -31,6 +30,8 @@ class VkEngineSwapChain {
 	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const {
 		return mSwapChainImages.ppImageViews[index];
 	}
+
+	NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData[mCurrentFrame].pCommandPool; };
 
 	NDC_INLINE const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 
@@ -65,6 +66,8 @@ class VkEngineSwapChain {
 
 	void createFramebuffers();
 
+	void createCommandPools();
+
 	void createSyncObjects();
 
 	// Helper functions
@@ -73,6 +76,16 @@ class VkEngineSwapChain {
 	static VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
+
+	// Buffer Helper Functions
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+					  Alloc& bufferMemory) const;
+
+	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
+						   uint32_t layerCount);
+
+	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
+							 Alloc& imageMemory) const;
 
 	struct SyncPrimitives {
 		VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability
@@ -121,8 +134,10 @@ class VkEngineSwapChain {
 	VkExtent2D mWindowExtent{};
 
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
+	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
 	uint32_t mSwapChainImageCount = 0;
+	uint32_t mCurrentFrame = 0;
 };
 }  // namespace vke

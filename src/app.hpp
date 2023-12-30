@@ -43,7 +43,7 @@ class App {
 
 	VkEngineDevice mVkDevice{mVkWindow};
 
-	std::unique_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
+	std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
 	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
 

@@ -11,6 +11,7 @@
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+#include <vkEngineSwapChain.hpp>
 
 namespace vke {
 class VkEngineModel {
@@ -24,7 +25,7 @@ class VkEngineModel {
 		static std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> getAttributeDescriptions();
 	};
 
-	VkEngineModel(VkEngineDevice& device, const Vertex* vertices, uint32_t vCount, const uint32_t* indices,
+	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, uint32_t vCount, const uint32_t* indices,
 	              uint32_t iCount);
 
 	~VkEngineModel();
@@ -62,5 +63,8 @@ class VkEngineModel {
 	uint32_t mIndexCount = 0;
 
 	const VkEngineDevice& mDevice;
+
+	// note don't access mDevice using the swap chain, since it's
+	const std::shared_ptr<VkEngineSwapChain> mSwapChain;
 };
 }  // namespace vke

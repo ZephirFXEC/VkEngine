@@ -9,18 +9,18 @@ namespace vke {
 // local callback functions
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-											 const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-											 const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-											 void* /*pUserData*/) {
+                                             const VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                             void* /*pUserData*/) {
 	std::ostringstream message;
 	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
 	message << "\t"
-			<< "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+	        << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
 	message << "\t"
-			<< "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+	        << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
 	message << "\t"
-			<< "message         = <" << pCallbackData->pMessage << ">\n";
+	        << "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message << std::string("\t") << "Queue Labels:\n";
 		for (uint32_t i = 0; i < pCallbackData->queueLabelCount; i++) {
@@ -38,11 +38,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 		for (uint32_t i = 0; i < pCallbackData->objectCount; i++) {
 			message << std::string("\t\t") << "Object " << i << "\n";
 			message << std::string("\t\t\t")
-					<< "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
+			        << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
 			message << std::string("\t\t\t") << "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
 			if (pCallbackData->pObjects[i].pObjectName != nullptr) {
 				message << std::string("\t\t\t") << "objectName   = <" << pCallbackData->pObjects[i].pObjectName
-						<< ">\n";
+				        << ">\n";
 			}
 		}
 	}
@@ -50,7 +50,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 #ifdef _WIN32
 	MessageBox(NULL, message.str().c_str(), "Alert", MB_OK);
 #else
-	fmt::println("{}",message.str());
+	fmt::println("{}", message.str());
 #endif
 
 	return 0u;
@@ -58,26 +58,26 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 }  // namespace
 
 VkResult CreateDebugUtilsMessengerEXT(const VkInstance* const instance,
-									  const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-									  const VkAllocationCallbacks* pAllocator,
-									  VkDebugUtilsMessengerEXT* pDebugMessenger) {
+                                      const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+                                      const VkAllocationCallbacks* pAllocator,
+                                      VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
-		func != nullptr) {
+	        vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
+	    func != nullptr) {
 		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
-		}
+	}
 
 	return VK_ERROR_EXTENSION_NOT_PRESENT;
 }
 
 void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
-								   const VkDebugUtilsMessengerEXT* const debugMessenger,
-								   const VkAllocationCallbacks* pAllocator) {
+                                   const VkDebugUtilsMessengerEXT* const debugMessenger,
+                                   const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
-		func != nullptr) {
+	        vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
+	    func != nullptr) {
 		func(*instance, *debugMessenger, pAllocator);
-		}
+	}
 }
 
 // class member functions
@@ -87,16 +87,10 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 	createSurface();
 	pickPhysicalDevice();
 	createLogicalDevice();
-	createCommandPool();
 	createAllocator();
 }
 
 VkEngineDevice::~VkEngineDevice() {
-	// vkDeviceWaitIdle(pDevice);
-	//  1. Destroy the command pool
-	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		vkDestroyCommandPool(pDevice, mFrameData[i].pCommandPool, nullptr);
-	}
 	// 2. Destroy the allocator
 	vmaDestroyAllocator(pAllocator);
 
@@ -115,7 +109,6 @@ VkEngineDevice::~VkEngineDevice() {
 	vkDestroyInstance(pInstance, nullptr);
 }
 
-
 void VkEngineDevice::createInstance() {
 	if (enableValidationLayers && !checkValidationLayerSupport()) {
 		throw std::runtime_error("validation layers requested, but not available!");
@@ -127,7 +120,7 @@ void VkEngineDevice::createInstance() {
 	    .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
 	    .pEngineName = "No Engine",
 	    .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-	    .apiVersion = VK_API_VERSION_1_1,
+	    .apiVersion = VK_API_VERSION_1_3,
 	};
 
 	uint32_t extensionCount = 0;
@@ -203,9 +196,18 @@ void VkEngineDevice::createLogicalDevice() {
 		queueCreateInfos[queueFamily] = queueCreateInfo;
 	}
 
-	VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures{
-	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES,
+	// vulkan 1.2 features
+	VkPhysicalDeviceVulkan12Features features12{
+	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
 	    .bufferDeviceAddress = VK_TRUE,
+	    .descriptorIndexing = VK_TRUE,
+	};
+
+	VkPhysicalDeviceVulkan13Features features13{
+	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+	    .dynamicRendering = VK_TRUE,
+	    .synchronization2 = VK_TRUE,
+	    .pNext = &features12,  // link the 1.2 features to the 1.3 features
 	};
 
 	VkPhysicalDeviceFeatures2 deviceFeatures = {
@@ -214,7 +216,8 @@ void VkEngineDevice::createLogicalDevice() {
 	        {
 	            .samplerAnisotropy = VK_TRUE,
 	        },
-		.pNext = &bufferDeviceAddressFeatures
+	    .pNext = &features13,  // link the 1.3 features to the 2.0 features
+
 	};
 
 	VkDeviceCreateInfo createInfo = {
@@ -223,7 +226,7 @@ void VkEngineDevice::createLogicalDevice() {
 	    .pQueueCreateInfos = queueCreateInfos,
 	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
 	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
-	    .pNext = &deviceFeatures,
+	    .pNext = &deviceFeatures,  // link the 2.0 features to the device create info
 	};
 
 	// might not really be necessary anymore because device specific validation
@@ -243,31 +246,6 @@ void VkEngineDevice::createLogicalDevice() {
 	delete[] queueCreateInfos;
 }
 
-void VkEngineDevice::createCommandPool() {
-	const VkCommandPoolCreateInfo poolInfo = {
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-	    .queueFamilyIndex = findPhysicalQueueFamilies().mGraphicsFamily.value(),
-
-	};
-
-	for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-
-		VK_CHECK(vkCreateCommandPool(pDevice, &poolInfo, nullptr, &mFrameData[i].pCommandPool));
-
-		// allocate the default command buffer that we will use for rendering
-		VkCommandBufferAllocateInfo cmdAllocInfo {
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.pNext = nullptr,
-			.commandPool = mFrameData[i].pCommandPool,
-			.commandBufferCount = 1,
-			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		};
-
-		VK_CHECK(vkAllocateCommandBuffers(pDevice, &cmdAllocInfo, &mFrameData[i].pCommandBuffer));
-	}
-}
-
 void VkEngineDevice::createAllocator() {
 	VmaVulkanFunctions vulkanFunctions{
 	    .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
@@ -275,12 +253,12 @@ void VkEngineDevice::createAllocator() {
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
-		.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+	    .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
 	    .physicalDevice = pPhysicalDevice,
 	    .device = pDevice,
 	    .pVulkanFunctions = &vulkanFunctions,
 	    .instance = pInstance,
-	    .vulkanApiVersion = VK_API_VERSION_1_1,
+	    .vulkanApiVersion = VK_API_VERSION_1_3,
 	};
 
 	VK_CHECK(vmaCreateAllocator(&allocatorInfo, &pAllocator));
@@ -303,7 +281,6 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 
 	VkPhysicalDeviceFeatures2 supportedFeatures2{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
 	vkGetPhysicalDeviceFeatures2(*device, &supportedFeatures2);
-
 
 	return indices.isComplete() && extensionsSupported && swapChainAdequate &&
 	       (supportedFeatures.samplerAnisotropy != 0u);
@@ -485,7 +462,8 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 
 	if (presentModeCount != 0) {
 		details.mPresentModes.resize(presentModeCount);
-		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount, details.mPresentModes.data()));
+		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount,
+		                                                   details.mPresentModes.data()));
 	}
 	return details;
 }
@@ -518,97 +496,5 @@ uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter, const VkMemor
 	}
 
 	throw std::runtime_error("failed to find suitable memory type!");
-}
-
-void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
-
-	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = size,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
-
-#ifdef USE_VMA
-	constexpr VmaAllocationCreateInfo allocInfo{
-	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-	    .usage = VMA_MEMORY_USAGE_AUTO,
-	};
-
-	VK_CHECK(vmaCreateBuffer(pAllocator, &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
-
-	vmaDestroyBuffer(pAllocator, buffer, bufferMemory);
-#else
-	VK_CHECK(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory));
-
-	VK_CHECK(vkBindBufferMemory(pDevice, buffer, bufferMemory, 0));
-
-	// clear memory
-	vkDestroyBuffer(pDevice, buffer, nullptr);
-	vkFreeMemory(pDevice, bufferMemory, nullptr);
-#endif
-}
-
-void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
-                                       const uint32_t height, const uint32_t layerCount) {
-
-	BufferUtils::beginSingleTimeCommands(pDevice, mFrameData[mCurrentFrame]);
-
-	const VkBufferImageCopy region{.bufferOffset = 0,
-	                               .bufferRowLength = 0,
-	                               .bufferImageHeight = 0,
-
-	                               .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-	                                                    .mipLevel = 0,
-	                                                    .baseArrayLayer = 0,
-	                                                    .layerCount = layerCount},
-
-	                               .imageOffset = {0, 0, 0},
-	                               .imageExtent = {width, height, 1}};
-
-	vkCmdCopyBufferToImage(mFrameData[mCurrentFrame].pCommandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-	                       &region);
-
-	BufferUtils::endSingleTimeCommands(pDevice, mFrameData[mCurrentFrame], pGraphicsQueue);
-}
-
-void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
-                                         VkImage& image, Alloc& imageMemory) const {
-
-#ifdef USE_VMA
-	constexpr VmaAllocationCreateInfo rimg_allocinfo{
-		.usage = VMA_MEMORY_USAGE_GPU_ONLY,
-		.requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-	};
-
-	vmaCreateImage(pAllocator, &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
-
-#else
-
-	VK_CHECK(vkCreateImage(pDevice, &imageInfo, nullptr, &image));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetImageMemoryRequirements(pDevice, image, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &imageMemory));
-
-	VK_CHECK(vkBindImageMemory(pDevice, image, imageMemory, 0));
-#endif
-}
-
-const VkCommandPool& VkEngineDevice::getCommandPool() const {
-	return mFrameData[mCurrentFrame].pCommandPool;
 }
 }  // namespace vke

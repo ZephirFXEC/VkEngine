@@ -34,10 +34,13 @@
 #define NDC_FINLINE [[nodiscard]] __attribute__((always_inline)) inline
 #define NDC_INLINE [[nodiscard]] inline
 
-// constants for the application
+// User defined types
 #define VMA
 static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
+
+
+// Definitions
 #ifdef VMA
 #define USE_VMA
 using Alloc = VmaAllocation;

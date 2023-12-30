@@ -11,6 +11,9 @@ class BufferUtils {
 	static void beginSingleTimeCommands(const VkDevice& device, FrameData& frameData);
 
 	static void endSingleTimeCommands(const VkDevice& device, FrameData& frameData, const VkQueue& graphicsQueue);
+
+	static void copyBuffer(const VkDevice& device, FrameData& frameData, const VkBuffer& srcBuffer, const VkBuffer& dstBuffer,
+	                       const VkDeviceSize& size);
 };
 
 }  // namespace vke
