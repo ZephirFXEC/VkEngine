@@ -16,10 +16,7 @@ class BufferUtils {
 	                                  VkCommandBuffer& commandBuffer, const VkQueue& graphicsQueue);
 
 	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
-	                              VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
-	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
-	                              VkBuffer& buffer, VmaAllocation& bufferMemory);
+	                              VkBuffer& buffer, VmaAllocation& bufferMemory,VmaMemoryUsage memoryUsage);
 };
 
 }  // namespace vke

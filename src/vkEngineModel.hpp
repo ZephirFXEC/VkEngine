@@ -41,10 +41,10 @@ class VkEngineModel {
    private:
 	template <typename T>
 	void createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage, VkBuffer& buffer,
-	                    Alloc& bufferMemory);
+	                    VmaAllocation& bufferMemory);
 
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-	                  Alloc& bufferMemory) const;
+	                  VmaAllocation& bufferMemory) const;
 
 	void destroyBuffer(const DataBuffer& buffer) const;
 
@@ -53,13 +53,6 @@ class VkEngineModel {
 	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
 	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
-
-	void createModelBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer& buffer, Alloc& bufferMemory) const;
-	void mapBufferMemory(Alloc& memory, VkDeviceSize size, void** dataPtr) const;
-
-	void unmapBufferMemory(Alloc& memory) const;
-
-	void destroyBuffer(VkBuffer& buffer, Alloc& memory) const;
 
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};

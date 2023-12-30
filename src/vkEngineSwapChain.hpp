@@ -44,7 +44,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
-	VkResult acquireNextImage(uint32_t* imageIndex);
+	VkResult acquireNextImage(uint32_t* imageIndex) const;
 
 	VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex);
 
@@ -74,13 +74,13 @@ class VkEngineSwapChain {
 
 	// Buffer Helper Functions
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-	                  Alloc& bufferMemory) const;
+	                  VmaAllocation& bufferMemory) const;
 
 	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
 	                       uint32_t layerCount);
 
-	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
-	                         Alloc& imageMemory) const;
+	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
+	                         VmaAllocation& imageMemory) const;
 
 	const VkEngineDevice& mDevice;
 

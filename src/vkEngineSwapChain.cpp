@@ -37,12 +37,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mDepthImages.ppImageViews[i], nullptr);
-#ifdef USE_VMA
 		vmaDestroyImage(mDevice.getAllocator(), mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
-#else
-		vkDestroyImage(mDevice.getDevice(), mDepthImages.ppImages[i], nullptr);
-		vkFreeMemory(mDevice.getDevice(), mDepthImages.ppImageMemorys[i], nullptr);
-#endif
 	}
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
@@ -51,6 +46,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	delete[] ppSwapChainFramebuffers;
 
 	vkDestroyRenderPass(mDevice.getDevice(), pRenderPass, nullptr);
+
 
 	// cleanup synchronization objects
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
@@ -64,7 +60,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	}
 }
 
-VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex)  {
+VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 	VK_CHECK(
 	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
@@ -275,7 +271,7 @@ void VkEngineSwapChain::createFramebuffers() {
 
 void VkEngineSwapChain::createDepthResources() {
 	mDepthImages.ppImages = new VkImage[getImageCount()]{};
-	mDepthImages.ppImageMemorys = new Alloc[getImageCount()]{};
+	mDepthImages.ppImageMemorys = new VmaAllocation[getImageCount()]{};
 	mDepthImages.ppImageViews = new VkImageView[getImageCount()]{};
 
 	for (size_t i = 0; i < getImageCount(); i++) {
@@ -293,9 +289,7 @@ void VkEngineSwapChain::createDepthResources() {
 		    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
-		// constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
-		createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImages.ppImages[i],
-		                    mDepthImages.ppImageMemorys[i]);
+		createImageWithInfo(imageInfo, mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
 
 		VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -387,32 +381,14 @@ void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const Vk
 	                                   mFrameData.at(mCurrentFrame).pCommandBuffer, mDevice.getGraphicsQueue());
 }
 
-void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
-                                            VkImage& image, Alloc& imageMemory) const {
-#ifdef USE_VMA
+void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory) const {
+
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
 	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-	    .requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+	    .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 	};
 
 	vmaCreateImage(mDevice.getAllocator(), &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
-
-#else
-
-	VK_CHECK(vkCreateImage(mDevice.getDevice(), &imageInfo, nullptr, &image));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetImageMemoryRequirements(mDevice.getDevice(), image, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	    .allocationSize = memRequirements.size,
-	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &imageMemory));
-
-	VK_CHECK(vkBindImageMemory(mDevice.getDevice(), image, imageMemory, 0));
-#endif
 }
 
 VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {

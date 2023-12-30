@@ -33,16 +33,8 @@
 #define NDC_INLINE [[nodiscard]] inline
 
 // User defined types
-#define VMA
 static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
-// Definitions
-#ifdef VMA
-#define USE_VMA
-using Alloc = VmaAllocation;
-#else
-using Alloc = VkDeviceMemory;
-#endif
 
 struct DeletionQueue {
 	std::deque<std::function<void()>> mQueue{};
@@ -60,7 +52,7 @@ struct DeletionQueue {
 
 struct DataBuffer {
 	VkBuffer pDataBuffer = VK_NULL_HANDLE;
-	Alloc pDataBufferMemory = VK_NULL_HANDLE;
+	VmaAllocation pDataBufferMemory = VK_NULL_HANDLE;
 };
 
 struct Shader {
@@ -91,7 +83,7 @@ struct SyncPrimitives : NO_COPY_NOR_MOVE {
 struct VkImageRessource : NO_COPY_NOR_MOVE {
 	VkImage* ppImages = nullptr;
 	VkImageView* ppImageViews = nullptr;
-	Alloc* ppImageMemorys = nullptr;
+	VmaAllocation* ppImageMemorys = nullptr;
 };
 
 struct SwapChainSupportDetails {
@@ -105,4 +97,12 @@ struct QueueFamilyIndices {
 	std::optional<uint32_t> mPresentFamily;
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
+};
+
+struct AllocatedImage {
+	VkImage pImage;
+	VkImageView pImageView;
+	VmaAllocation pAllocation;
+	VkExtent3D mImageExtent;
+	VkFormat mImageFormat;
 };

@@ -35,39 +35,18 @@ void BufferUtils::endSingleTimeCommands(const VkDevice& device, const VkCommandP
 	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
+
 void BufferUtils::createModelBuffer(const VkEngineDevice& device, const VkDeviceSize size,
-                                    const VkBufferUsageFlags usage, const VkMemoryPropertyFlags properties,
-                                    VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+                                    const VkBufferUsageFlags usage, VkBuffer& buffer, VmaAllocation& bufferMemory, const VmaMemoryUsage memoryUsage) {
+
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
 	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
-	VK_CHECK(vkCreateBuffer(device.getDevice(), &bufferInfo, nullptr, &buffer));
-
-	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(device.getDevice(), buffer, &memRequirements);
-
-	const VkMemoryAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	    .allocationSize = memRequirements.size,
-	    .memoryTypeIndex = device.findMemoryType(memRequirements.memoryTypeBits, properties)};
-
-	VK_CHECK(vkAllocateMemory(device.getDevice(), &allocInfo, nullptr, &bufferMemory));
-
-	VK_CHECK(vkBindBufferMemory(device.getDevice(), buffer, bufferMemory, 0));
-}
-
-void BufferUtils::createModelBuffer(const VkEngineDevice& device, const VkDeviceSize size,
-                                    const VkBufferUsageFlags usage, VkBuffer& buffer, VmaAllocation& bufferMemory) {
-	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = size,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
-
-	constexpr VmaAllocationCreateInfo allocInfo{
-	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-	    .usage = VMA_MEMORY_USAGE_AUTO,
+	const VmaAllocationCreateInfo allocInfo{
+	    .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT,
+	    .usage = memoryUsage,
 	};
 
 	VK_CHECK(vmaCreateBuffer(device.getAllocator(), &bufferInfo, &allocInfo, &buffer, &bufferMemory, nullptr));
