@@ -35,7 +35,7 @@
 #define NDC_INLINE [[nodiscard]] inline
 
 // User defined types
-#define VMA
+//#define VMA
 static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
 
 

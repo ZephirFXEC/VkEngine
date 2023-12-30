@@ -49,7 +49,6 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 #else
 		vkFreeMemory(mDevice.getDevice(), mDepthImages.ppImageMemorys[i], nullptr);
 #endif
-
 	}
 
 	for (size_t i = 0; i < imageCount(); ++i) {
@@ -66,11 +65,11 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences[i], nullptr);
 	}
-
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
-	VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
+	VK_CHECK(
+	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
 	return vkAcquireNextImageKHR(mDevice.getDevice(), pSwapChain, UINT64_MAX,
 	                             mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
@@ -80,7 +79,8 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 
 VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex) {
 	if (mSyncPrimitives.ppInFlightImages[*imageIndex] != VK_NULL_HANDLE) {
-		VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightImages[*imageIndex], VK_TRUE, UINT64_MAX));
+		VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightImages[*imageIndex], VK_TRUE,
+		                         UINT64_MAX));
 	}
 
 	mSyncPrimitives.ppInFlightImages[*imageIndex] = mSyncPrimitives.ppInFlightFences[mCurrentFrame];
@@ -100,7 +100,8 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
-	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
+	VK_CHECK(
+	    vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
 	const VkPresentInfoKHR presentInfo{
 	    .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -164,7 +165,8 @@ void VkEngineSwapChain::createSwapChain() {
 	VK_CHECK(vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, nullptr));
 
 	mSwapChainImages.ppImages = new VkImage[imageCount]{};
-	VK_CHECK(vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages));
+	VK_CHECK(
+	    vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages));
 
 	mSwapChainImageFormat = chooseSwapSurfaceFormat(mDevice.getSwapChainSupport().mFormats).format;
 	mSwapChainExtent = extent;
@@ -279,7 +281,6 @@ void VkEngineSwapChain::createDepthResources() {
 	mDepthImages.ppImageMemorys = new Alloc[imageCount()]{};
 	mDepthImages.ppImageViews = new VkImageView[imageCount()]{};
 
-
 	for (size_t i = 0; i < imageCount(); i++) {
 		VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -358,9 +359,10 @@ void VkEngineSwapChain::createSyncObjects() {
 	};
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-
-		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppImageAvailableSemaphores[i]));
-		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppRenderFinishedSemaphores[i]));
+		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
+		                           &mSyncPrimitives.ppImageAvailableSemaphores[i]));
+		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
+		                           &mSyncPrimitives.ppRenderFinishedSemaphores[i]));
 		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences[i]));
 	}
 }
@@ -383,28 +385,29 @@ void VkEngineSwapChain::createBuffer(const VkDeviceSize size, const VkBufferUsag
 
 	vmaDestroyBuffer(mDevice.getAllocator(), buffer, bufferMemory);
 #else
-	VK_CHECK(vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer));
+	VK_CHECK(vkCreateBuffer(mDevice.getDevice(), &bufferInfo, nullptr, &buffer));
 
 	VkMemoryRequirements memRequirements{};
-	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
+	vkGetBufferMemoryRequirements(mDevice.getDevice(), buffer, &memRequirements);
 
 	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
+	                                     .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
-	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory));
+	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &bufferMemory));
 
-	VK_CHECK(vkBindBufferMemory(pDevice, buffer, bufferMemory, 0));
+	VK_CHECK(vkBindBufferMemory(mDevice.getDevice(), buffer, bufferMemory, 0));
 
 	// clear memory
-	vkDestroyBuffer(pDevice, buffer, nullptr);
-	vkFreeMemory(pDevice, bufferMemory, nullptr);
+	vkDestroyBuffer(mDevice.getDevice(), buffer, nullptr);
+	vkFreeMemory(mDevice.getDevice(), bufferMemory, nullptr);
 #endif
 }
 
 void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image,
                                           const uint32_t width, const uint32_t height, const uint32_t layerCount) {
-	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame));
+	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
+	                                     mFrameData.at(mCurrentFrame).pCommandBuffer);
 
 	const VkBufferImageCopy region{.bufferOffset = 0,
 	                               .bufferRowLength = 0,
@@ -421,7 +424,8 @@ void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const Vk
 	vkCmdCopyBufferToImage(mFrameData.at(mCurrentFrame).pCommandBuffer, *buffer, *image,
 	                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame), mDevice.getGraphicsQueue());
+	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
+	                                   mFrameData.at(mCurrentFrame).pCommandBuffer, mDevice.getGraphicsQueue());
 }
 
 void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
@@ -435,23 +439,20 @@ void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, 
 
 #else
 
-	VK_CHECK(vkCreateImage(pDevice, &imageInfo, nullptr, &image));
+	VK_CHECK(vkCreateImage(mDevice.getDevice(), &imageInfo, nullptr, &image));
 
 	VkMemoryRequirements memRequirements{};
-	vkGetImageMemoryRequirements(pDevice, image, &memRequirements);
+	vkGetImageMemoryRequirements(mDevice.getDevice(), image, &memRequirements);
 
 	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
 	                                     .allocationSize = memRequirements.size,
-	                                     .memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties)};
+	                                     .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
-	VK_CHECK(vkAllocateMemory(pDevice, &allocInfo, nullptr, &imageMemory));
+	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &imageMemory));
 
-	VK_CHECK(vkBindImageMemory(pDevice, image, imageMemory, 0));
+	VK_CHECK(vkBindImageMemory(mDevice.getDevice(), image, imageMemory, 0));
 #endif
 }
-
-
-
 
 VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 	if (const auto it = std::ranges::find_if(availableFormats.begin(), availableFormats.end(),

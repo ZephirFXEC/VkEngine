@@ -4,7 +4,9 @@
 
 #include "vkEngineModel.hpp"
 
+
 #include "utils/bufferUtils.hpp"
+
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device,const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, const uint32_t vCount,
@@ -141,34 +143,12 @@ void VkEngineModel::createBuffer(const VkDeviceSize size, const VkBufferUsageFla
 void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
                                const VkDeviceSize size) {
 
-	const VkCommandBufferAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .commandPool = mSwapChain->getCommandPool(),
-	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	    .commandBufferCount = 1,
-	};
-
-	VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &pCommandBuffer));
-
-	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-	                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
-
-	VK_CHECK(vkBeginCommandBuffer(pCommandBuffer, &beginInfo));
+	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer);
 
 	const VkBufferCopy copyRegion{.size = size};
 	vkCmdCopyBuffer(pCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
-	VK_CHECK(vkEndCommandBuffer(pCommandBuffer));
-
-	const VkSubmitInfo submitInfo{
-	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	    .commandBufferCount = 1,
-	    .pCommandBuffers = &pCommandBuffer,
-	};
-
-	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
-	VK_CHECK(vkQueueWaitIdle(mDevice.getGraphicsQueue()));
-
-	vkFreeCommandBuffers(mDevice.getDevice(), mSwapChain->getCommandPool(), 1, &pCommandBuffer);
+	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer,
+	                                   mDevice.getGraphicsQueue());
 }
 }  // namespace vke
