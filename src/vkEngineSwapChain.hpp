@@ -20,7 +20,6 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-
 	NDC_INLINE const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
 		return ppSwapChainFramebuffers[index];
 	}
@@ -79,13 +78,13 @@ class VkEngineSwapChain {
 
 	// Buffer Helper Functions
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-					  Alloc& bufferMemory) const;
+	                  Alloc& bufferMemory) const;
 
 	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
-						   uint32_t layerCount);
+	                       uint32_t layerCount);
 
 	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
-							 Alloc& imageMemory) const;
+	                         Alloc& imageMemory) const;
 
 	struct SyncPrimitives {
 		VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability

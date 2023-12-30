@@ -295,9 +295,9 @@ void VkEngineSwapChain::createDepthResources() {
 		    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
-		//constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+		// constexpr VkMemoryPropertyFlags properties = VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
 		createImageWithInfo(imageInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mDepthImages.ppImages[i],
-		                            mDepthImages.ppImageMemorys[i]);
+		                    mDepthImages.ppImageMemorys[i]);
 
 		VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -318,9 +318,9 @@ void VkEngineSwapChain::createDepthResources() {
 
 void VkEngineSwapChain::createCommandPools() {
 	const VkCommandPoolCreateInfo poolInfo = {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		.queueFamilyIndex = mDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+	    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	    .queueFamilyIndex = mDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};
 
@@ -329,17 +329,16 @@ void VkEngineSwapChain::createCommandPools() {
 
 		// allocate the default command buffer that we will use for rendering
 		VkCommandBufferAllocateInfo cmdAllocInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.pNext = nullptr,
-			.commandPool = mFrameData.at(i).pCommandPool,
-			.commandBufferCount = 1,
-			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		    .pNext = nullptr,
+		    .commandPool = mFrameData.at(i).pCommandPool,
+		    .commandBufferCount = 1,
+		    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		};
 
 		VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &cmdAllocInfo, &mFrameData.at(i).pCommandBuffer));
 	}
 }
-
 
 void VkEngineSwapChain::createSyncObjects() {
 	mSyncPrimitives.ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
@@ -363,12 +362,12 @@ void VkEngineSwapChain::createSyncObjects() {
 		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppImageAvailableSemaphores[i]));
 		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr, &mSyncPrimitives.ppRenderFinishedSemaphores[i]));
 		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences[i]));
-
 	}
 }
 
 void VkEngineSwapChain::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
-                                  const VkMemoryPropertyFlags properties, VkBuffer& buffer, Alloc& bufferMemory) const {
+                                     const VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                                     Alloc& bufferMemory) const {
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 	                                    .size = size,
 	                                    .usage = usage,
@@ -403,9 +402,8 @@ void VkEngineSwapChain::createBuffer(const VkDeviceSize size, const VkBufferUsag
 #endif
 }
 
-void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
-                                       const uint32_t height, const uint32_t layerCount) {
-
+void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image,
+                                          const uint32_t width, const uint32_t height, const uint32_t layerCount) {
 	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame));
 
 	const VkBufferImageCopy region{.bufferOffset = 0,
@@ -427,7 +425,7 @@ void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const Vk
 }
 
 void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, const VkMemoryPropertyFlags properties,
-                                         VkImage& image, Alloc& imageMemory) const {
+                                            VkImage& image, Alloc& imageMemory) const {
 #ifdef USE_VMA
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
 	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
