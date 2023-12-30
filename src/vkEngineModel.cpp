@@ -21,14 +21,17 @@ VkEngineModel::~VkEngineModel() {
 	destroyBuffer(mIndexBuffer);
 }
 
+
 void VkEngineModel::destroyBuffer(const DataBuffer& buffer) const {
 	vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
 }
+
 
 std::unique_ptr<std::array<VkVertexInputBindingDescription, 1>> VkEngineModel::Vertex::getBindingDescriptions() {
 	return std::make_unique<std::array<VkVertexInputBindingDescription, 1>>(std::array{VkVertexInputBindingDescription{
 	    .binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}});
 }
+
 
 std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> VkEngineModel::Vertex::getAttributeDescriptions() {
 	return std::make_unique<std::array<VkVertexInputAttributeDescription, 2>>(std::array{
@@ -38,6 +41,7 @@ std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> VkEngineModel:
 	        .binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}});
 }
 
+
 void VkEngineModel::bind(const VkCommandBuffer* const commandBuffer) const {
 	const std::array buffers{mVertexBuffer.pDataBuffer};
 	constexpr std::array<VkDeviceSize, 1> offsets{0};
@@ -46,9 +50,11 @@ void VkEngineModel::bind(const VkCommandBuffer* const commandBuffer) const {
 	vkCmdBindIndexBuffer(*commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
+
 void VkEngineModel::draw(const VkCommandBuffer* const commandBuffer) const {
 	vkCmdDrawIndexed(*commandBuffer, mIndexCount, 1, 0, 0, 0);
 }
+
 
 template <typename T>
 void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const VkBufferUsageFlags usage,
@@ -74,15 +80,18 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 	vmaDestroyBuffer(mDevice.getAllocator(), stagingBuffer, stagingBufferMemory);
 }
 
+
 void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t vertexCount) {
 	createVkBuffer(vertices, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer.pDataBuffer,
 	               mVertexBuffer.pDataBufferMemory);
 }
 
+
 void VkEngineModel::createIndexBuffers(const uint32_t* indices, const size_t indexCount) {
 	createVkBuffer(indices, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
 	               mIndexBuffer.pDataBufferMemory);
 }
+
 
 void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
                                const VkDeviceSize size) {

@@ -25,10 +25,10 @@ void App::loadModels() {
 	constexpr uint32_t vCount = 4;
 
 	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
-	    VkEngineModel::Vertex{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
-	    VkEngineModel::Vertex{{0.5f, -0.5}, {0.0f, 1.0f, 0.0f}},    // 1
-	    VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},    // 2
-	    VkEngineModel::Vertex{{-0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}},   // 3
+	    VkEngineModel::Vertex{{-1.f, -1.0f}, {0.0f, 0.0f, 0.0f}},  // 0
+	    VkEngineModel::Vertex{{1.f, -1.f}, {0.0f, 0.0f, 0.0f}},    // 1
+	    VkEngineModel::Vertex{{1.f, 1.f}, {0.0f, 0.0f, 0.0f}},    // 2
+	    VkEngineModel::Vertex{{-1.f, 1.f}, {0.0f, 0.0f, 0.0f}},   // 3
 	};
 
 	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};

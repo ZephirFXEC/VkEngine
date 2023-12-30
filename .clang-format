@@ -7,3 +7,4 @@ TabWidth: 4
 
 # length of line
 ColumnLimit: 120
+MaxEmptyLinesToKeep: 2

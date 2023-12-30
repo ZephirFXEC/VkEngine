@@ -12,11 +12,13 @@ class BufferUtils {
 	static void beginSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,
 	                                    VkCommandBuffer& commandBuffer);
 
+
 	static void endSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,
 	                                  VkCommandBuffer& commandBuffer, const VkQueue& graphicsQueue);
 
+
 	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
-	                              VkBuffer& buffer, VmaAllocation& bufferMemory,VmaMemoryUsage memoryUsage);
+	                              VkBuffer& buffer, VmaAllocation& bufferMemory, VmaMemoryUsage memoryUsage);
 };
 
 }  // namespace vke

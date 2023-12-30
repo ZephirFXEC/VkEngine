@@ -22,6 +22,7 @@ void BufferUtils::beginSingleTimeCommands(const VkDevice& device, const VkComman
 	VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo));
 }
 
+
 void BufferUtils::endSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,
                                         VkCommandBuffer& commandBuffer, const VkQueue& graphicsQueue) {
 	VK_CHECK(vkEndCommandBuffer(commandBuffer));

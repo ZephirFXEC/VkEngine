@@ -50,15 +50,19 @@ struct DeletionQueue {
 	}
 };
 
+
 struct DataBuffer {
 	VkBuffer pDataBuffer = VK_NULL_HANDLE;
 	VmaAllocation pDataBufferMemory = VK_NULL_HANDLE;
 };
 
+
 struct Shader {
 	VkShaderModule pVertShaderModule = VK_NULL_HANDLE;
 	VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
 };
+
+
 
 struct NO_COPY_NOR_MOVE {
 	NO_COPY_NOR_MOVE() = default;
@@ -68,10 +72,12 @@ struct NO_COPY_NOR_MOVE {
 	NO_COPY_NOR_MOVE& operator=(NO_COPY_NOR_MOVE&&) = delete;
 };
 
+
 struct FrameData : NO_COPY_NOR_MOVE {
 	VkCommandPool pCommandPool = VK_NULL_HANDLE;
 	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
 };
+
 
 struct SyncPrimitives : NO_COPY_NOR_MOVE {
 	VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability
@@ -80,11 +86,13 @@ struct SyncPrimitives : NO_COPY_NOR_MOVE {
 	VkFence* ppInFlightImages = nullptr;                // Fences for in-flight images
 };
 
+
 struct VkImageRessource : NO_COPY_NOR_MOVE {
 	VkImage* ppImages = nullptr;
 	VkImageView* ppImageViews = nullptr;
 	VmaAllocation* ppImageMemorys = nullptr;
 };
+
 
 struct SwapChainSupportDetails {
 	VkSurfaceCapabilitiesKHR mCapabilities{};
@@ -92,12 +100,14 @@ struct SwapChainSupportDetails {
 	std::vector<VkPresentModeKHR> mPresentModes{};
 };
 
+
 struct QueueFamilyIndices {
 	std::optional<uint32_t> mGraphicsFamily;
 	std::optional<uint32_t> mPresentFamily;
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
 };
+
 
 struct AllocatedImage {
 	VkImage pImage;
