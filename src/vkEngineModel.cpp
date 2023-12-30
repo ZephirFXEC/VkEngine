@@ -7,8 +7,9 @@
 #include "utils/bufferUtils.hpp"
 
 namespace vke {
-VkEngineModel::VkEngineModel(const VkEngineDevice& device,const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, const uint32_t vCount,
-                             const uint32_t* indices, const uint32_t iCount)
+VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
+                             const Vertex* vertices, const uint32_t vCount, const uint32_t* indices,
+                             const uint32_t iCount)
 
     : mIndexCount{iCount}, mDevice{device}, mSwapChain{swapchain} {
 	createIndexBuffers(indices, iCount);
@@ -59,61 +60,23 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
                                    VkBuffer& buffer, Alloc& bufferMemory) {
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
-	auto createBuffer = [&](VkBufferUsageFlags additionalUsage, Alloc& memory, VkBuffer& buf) {
-#ifdef USE_VMA
-		BufferUtils::createModelBuffer(mDevice, bufferSize, usage | additionalUsage, buf, memory);
-#else
-		BufferUtils::createModelBuffer(mDevice, bufferSize, usage | additionalUsage,
-									   VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-									   buf, memory);
-#endif
-	};
-
-	auto mapBufferMemory = [&](Alloc& memory, void** dataPtr) {
-#ifdef USE_VMA
-		VK_CHECK(vmaMapMemory(mDevice.getAllocator(), memory, dataPtr));
-#else
-		VK_CHECK(vkMapMemory(mDevice.getDevice(), memory, 0, bufferSize, 0, dataPtr));
-#endif
-	};
-
-	auto unmapBufferMemory = [&](Alloc& memory) {
-#ifdef USE_VMA
-		vmaUnmapMemory(mDevice.getAllocator(), memory);
-#else
-		vkUnmapMemory(mDevice.getDevice(), memory);
-#endif
-	};
-
-	auto destroyBuffer = [&](VkBuffer& buf, Alloc& memory) {
-#ifdef USE_VMA
-		vmaDestroyBuffer(mDevice.getAllocator(), buf, memory);
-#else
-		vkDestroyBuffer(mDevice.getDevice(), buf, nullptr);
-		vkFreeMemory(mDevice.getDevice(), memory, nullptr);
-#endif
-	};
-
-	 // todo : refactor this shit
-
 	VkBuffer stagingBuffer = nullptr;
 	Alloc stagingBufferMemory = nullptr;
 
-	createBuffer(VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBufferMemory, stagingBuffer);
+	createModelBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer, stagingBufferMemory);
 
 	void* mappedData = nullptr;
-	mapBufferMemory(stagingBufferMemory, &mappedData);
+	mapBufferMemory(stagingBufferMemory, bufferSize, &mappedData);
 
 	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
 
 	unmapBufferMemory(stagingBufferMemory);
 
-	createBuffer(VK_BUFFER_USAGE_TRANSFER_DST_BIT, bufferMemory, buffer);
+	createModelBuffer(bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, buffer, bufferMemory);
 
 	copyBuffer(&stagingBuffer, &buffer, bufferSize);
 
 	destroyBuffer(stagingBuffer, stagingBufferMemory);
-
 }
 
 void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t vertexCount) {
@@ -135,5 +98,41 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 
 	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer,
 	                                   mDevice.getGraphicsQueue());
+}
+
+void VkEngineModel::createModelBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer& buffer,
+                                      Alloc& bufferMemory) const {
+#ifdef USE_VMA
+	BufferUtils::createModelBuffer(mDevice, size, usage, buffer, bufferMemory);
+#else
+	BufferUtils::createModelBuffer(mDevice, size, usage,
+	                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer,
+	                               bufferMemory);
+#endif
+}
+
+void VkEngineModel::mapBufferMemory(Alloc& memory, VkDeviceSize size, void** dataPtr) const {
+#ifdef USE_VMA
+	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), memory, dataPtr));
+#else
+	VK_CHECK(vkMapMemory(mDevice.getDevice(), memory, 0, size, 0, dataPtr));
+#endif
+}
+
+void VkEngineModel::unmapBufferMemory(Alloc& memory) const {
+#ifdef USE_VMA
+	vmaUnmapMemory(mDevice.getAllocator(), memory);
+#else
+	vkUnmapMemory(mDevice.getDevice(), memory);
+#endif
+}
+
+void VkEngineModel::destroyBuffer(VkBuffer& buffer, Alloc& memory) const {
+#ifdef USE_VMA
+	vmaDestroyBuffer(mDevice.getAllocator(), buffer, memory);
+#else
+	vkDestroyBuffer(mDevice.getDevice(), buffer, nullptr);
+	vkFreeMemory(mDevice.getDevice(), memory, nullptr);
+#endif
 }
 }  // namespace vke

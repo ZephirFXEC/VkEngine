@@ -8,14 +8,9 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vulkan.h>
 
-#include <array>
 #include <deque>
 #include <functional>
-#include <memory>
-#include <optional>
-#include <span>
-#include <string>
-#include <vector>
+#include <ranges>
 #include <set>
 
 #ifndef NDEBUG
@@ -31,14 +26,15 @@
 #define VK_CHECK(x) x
 #endif
 
+#define GETTERS(type, name, var) \
+	NDC_INLINE const type& get##name() const { return var; }
+
 #define NDC_FINLINE [[nodiscard]] __attribute__((always_inline)) inline
 #define NDC_INLINE [[nodiscard]] inline
 
 // User defined types
-//#define VMA
+#define VMA
 static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
-
-
 
 // Definitions
 #ifdef VMA
@@ -47,6 +43,20 @@ using Alloc = VmaAllocation;
 #else
 using Alloc = VkDeviceMemory;
 #endif
+
+struct DeletionQueue {
+	std::deque<std::function<void()>> mQueue{};
+	void push_function(std::function<void()>&& function) { mQueue.push_back(std::move(function)); }
+
+	void flush() {
+		// reverse iterate the deletion queue to execute all the functions
+		for (const auto& it : std::ranges::reverse_view(mQueue)) {
+			it();
+		}
+
+		mQueue.clear();
+	}
+};
 
 struct DataBuffer {
 	VkBuffer pDataBuffer = VK_NULL_HANDLE;
@@ -58,7 +68,42 @@ struct Shader {
 	VkShaderModule pFragShaderModule = VK_NULL_HANDLE;
 };
 
-struct FrameData {
+struct NO_COPY_NOR_MOVE {
+	NO_COPY_NOR_MOVE() = default;
+	NO_COPY_NOR_MOVE(const NO_COPY_NOR_MOVE&) = delete;
+	NO_COPY_NOR_MOVE& operator=(const NO_COPY_NOR_MOVE&) = delete;
+	NO_COPY_NOR_MOVE(NO_COPY_NOR_MOVE&&) = delete;
+	NO_COPY_NOR_MOVE& operator=(NO_COPY_NOR_MOVE&&) = delete;
+};
+
+struct FrameData : NO_COPY_NOR_MOVE {
 	VkCommandPool pCommandPool = VK_NULL_HANDLE;
 	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
+	DeletionQueue mDeletionQueue{};
+};
+
+struct SyncPrimitives : NO_COPY_NOR_MOVE {
+	VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability
+	VkSemaphore* ppRenderFinishedSemaphores = nullptr;  // Semaphores for render finishing
+	VkFence* ppInFlightFences = nullptr;                // Fences for in-flight operations
+	VkFence* ppInFlightImages = nullptr;                // Fences for in-flight images
+};
+
+struct VkImageRessource : NO_COPY_NOR_MOVE {
+	VkImage* ppImages = nullptr;
+	VkImageView* ppImageViews = nullptr;
+	Alloc* ppImageMemorys = nullptr;
+};
+
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR mCapabilities{};
+	std::vector<VkSurfaceFormatKHR> mFormats{};
+	std::vector<VkPresentModeKHR> mPresentModes{};
+};
+
+struct QueueFamilyIndices {
+	std::optional<uint32_t> mGraphicsFamily;
+	std::optional<uint32_t> mPresentFamily;
+
+	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
 };

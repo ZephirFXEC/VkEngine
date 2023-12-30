@@ -33,7 +33,8 @@ void App::loadModels() {
 
 	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};
 
-	pVkModel = std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
+	pVkModel =
+	    std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
 }
 
 void App::createPipelineLayout() {
@@ -61,9 +62,8 @@ void App::createPipeline() {
 	                                       "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
-
 void App::createCommandBuffers() {
-	mCommandBuffer.mSize = mVkSwapChain->imageCount();
+	mCommandBuffer.mSize = mVkSwapChain->getImageCount();
 	mCommandBuffer.ppVkCommandBuffers = new VkCommandBuffer[mCommandBuffer.mSize];
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -91,8 +91,8 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	    .renderPass = mVkSwapChain->getRenderPass(),
 	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
 	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
-		.clearValueCount = static_cast<uint32_t>(clearValues.size()),
-		.pClearValues = clearValues.data(),
+	    .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+	    .pClearValues = clearValues.data(),
 	};
 
 	const VkViewport viewport{
@@ -123,7 +123,8 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 }
 
 void App::freeCommandBuffers() const {
-	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize, mCommandBuffer.ppVkCommandBuffers);
+	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
+	                     mCommandBuffer.ppVkCommandBuffers);
 	delete[] mCommandBuffer.ppVkCommandBuffers;
 }
 
@@ -142,7 +143,7 @@ void App::recreateSwapChain() {
 	} else {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
 
-		if (mVkSwapChain->imageCount() != mCommandBuffer.mSize) {
+		if (mVkSwapChain->getImageCount() != mCommandBuffer.mSize) {
 			freeCommandBuffers();
 			createCommandBuffers();
 		}

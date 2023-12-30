@@ -1,7 +1,6 @@
 #pragma once
 
 #include "utils/utility.hpp"
-
 #include "vkEngineWindow.hpp"
 
 #ifdef NDEBUG
@@ -11,19 +10,6 @@ static constexpr bool enableValidationLayers = true;
 #endif
 
 namespace vke {
-struct SwapChainSupportDetails {
-	VkSurfaceCapabilitiesKHR mCapabilities{};
-	std::vector<VkSurfaceFormatKHR> mFormats{};
-	std::vector<VkPresentModeKHR> mPresentModes{};
-};
-
-struct QueueFamilyIndices {
-	std::optional<uint32_t> mGraphicsFamily;
-	std::optional<uint32_t> mPresentFamily;
-
-	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
-};
-
 class VkEngineDevice {
    public:
 	explicit VkEngineDevice() = delete;
@@ -41,15 +27,14 @@ class VkEngineDevice {
 
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
-	NDC_INLINE const VkDevice& getDevice() const { return pDevice; }
-
-	NDC_INLINE const VmaAllocator& getAllocator() const { return pAllocator; }
-
-	NDC_INLINE const VkSurfaceKHR& getSurface() const { return pSurface; }
-
-	NDC_INLINE const VkQueue& getGraphicsQueue() const { return pGraphicsQueue; }
-
-	NDC_INLINE const VkQueue& getPresentQueue() const { return pPresentQueue; }
+	// TYPE				NAME			VARIABLE //
+	GETTERS(VkPhysicalDevice, PhysicalDevice, pPhysicalDevice)
+	GETTERS(VkInstance, Instance, pInstance)
+	GETTERS(VkSurfaceKHR, Surface, pSurface)
+	GETTERS(VkQueue, GraphicsQueue, pGraphicsQueue)
+	GETTERS(VkQueue, PresentQueue, pPresentQueue)
+	GETTERS(VkDevice, Device, pDevice)
+	GETTERS(VmaAllocator, Allocator, pAllocator)
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);
@@ -63,7 +48,6 @@ class VkEngineDevice {
 	                                           VkFormatFeatureFlags features) const;
 
 	VkPhysicalDeviceProperties mProperties{};
-
 
    private:
 	void createInstance();

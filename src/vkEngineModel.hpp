@@ -25,8 +25,8 @@ class VkEngineModel {
 		static std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> getAttributeDescriptions();
 	};
 
-	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain, const Vertex* vertices, uint32_t vCount, const uint32_t* indices,
-	              uint32_t iCount);
+	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
+	              const Vertex* vertices, uint32_t vCount, const uint32_t* indices, uint32_t iCount);
 
 	~VkEngineModel();
 
@@ -54,6 +54,12 @@ class VkEngineModel {
 
 	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
 
+	void createModelBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkBuffer& buffer, Alloc& bufferMemory) const;
+	void mapBufferMemory(Alloc& memory, VkDeviceSize size, void** dataPtr) const;
+
+	void unmapBufferMemory(Alloc& memory) const;
+
+	void destroyBuffer(VkBuffer& buffer, Alloc& memory) const;
 
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};

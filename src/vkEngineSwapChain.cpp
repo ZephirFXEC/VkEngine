@@ -32,7 +32,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
 	}
 
-	for (size_t i = 0; i < imageCount(); ++i) {
+	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
 
@@ -41,17 +41,17 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 		pSwapChain = nullptr;
 	}
 
-	for (size_t i = 0; i < imageCount(); ++i) {
+	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mDepthImages.ppImageViews[i], nullptr);
-		vkDestroyImage(mDevice.getDevice(), mDepthImages.ppImages[i], nullptr);
 #ifdef USE_VMA
-		vmaFreeMemory(mDevice.getAllocator(), mDepthImages.ppImageMemorys[i]);
+		vmaDestroyImage(mDevice.getAllocator(), mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
 #else
+		vkDestroyImage(mDevice.getDevice(), mDepthImages.ppImages[i], nullptr);
 		vkFreeMemory(mDevice.getDevice(), mDepthImages.ppImageMemorys[i], nullptr);
 #endif
 	}
 
-	for (size_t i = 0; i < imageCount(); ++i) {
+	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyFramebuffer(mDevice.getDevice(), ppSwapChainFramebuffers[i], nullptr);
 	}
 
@@ -173,9 +173,9 @@ void VkEngineSwapChain::createSwapChain() {
 }
 
 void VkEngineSwapChain::createImageViews() {
-	mSwapChainImages.ppImageViews = new VkImageView[imageCount()]{};
+	mSwapChainImages.ppImageViews = new VkImageView[getImageCount()]{};
 
-	for (size_t i = 0; i < imageCount(); i++) {
+	for (size_t i = 0; i < getImageCount(); ++i) {
 		VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		    .image = mSwapChainImages.ppImages[i],
@@ -257,9 +257,9 @@ void VkEngineSwapChain::createRenderPass() {
 }
 
 void VkEngineSwapChain::createFramebuffers() {
-	ppSwapChainFramebuffers = new VkFramebuffer[imageCount()]{};
+	ppSwapChainFramebuffers = new VkFramebuffer[getImageCount()]{};
 
-	for (size_t i = 0; i < imageCount(); i++) {
+	for (size_t i = 0; i < getImageCount(); ++i) {
 		std::array attachments = {mSwapChainImages.ppImageViews[i], mDepthImages.ppImageViews[i]};
 
 		VkFramebufferCreateInfo framebufferInfo{
@@ -277,11 +277,11 @@ void VkEngineSwapChain::createFramebuffers() {
 }
 
 void VkEngineSwapChain::createDepthResources() {
-	mDepthImages.ppImages = new VkImage[imageCount()]{};
-	mDepthImages.ppImageMemorys = new Alloc[imageCount()]{};
-	mDepthImages.ppImageViews = new VkImageView[imageCount()]{};
+	mDepthImages.ppImages = new VkImage[getImageCount()]{};
+	mDepthImages.ppImageMemorys = new Alloc[getImageCount()]{};
+	mDepthImages.ppImageViews = new VkImageView[getImageCount()]{};
 
-	for (size_t i = 0; i < imageCount(); i++) {
+	for (size_t i = 0; i < getImageCount(); i++) {
 		VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		    .imageType = VK_IMAGE_TYPE_2D,
@@ -310,7 +310,6 @@ void VkEngineSwapChain::createDepthResources() {
 		                         .levelCount = 1,
 		                         .baseArrayLayer = 0,
 		                         .layerCount = 1},
-
 		};
 
 		VK_CHECK(vkCreateImageView(mDevice.getDevice(), &viewInfo, nullptr, &mDepthImages.ppImageViews[i]));
@@ -346,8 +345,8 @@ void VkEngineSwapChain::createSyncObjects() {
 	mSyncPrimitives.ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
 	mSyncPrimitives.ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT]{};
 
-	mSyncPrimitives.ppInFlightImages = new VkFence[imageCount()]{};
-	memset(mSyncPrimitives.ppInFlightImages, 0, sizeof(VkFence) * imageCount());
+	mSyncPrimitives.ppInFlightImages = new VkFence[getImageCount()]{};
+	memset(mSyncPrimitives.ppInFlightImages, 0, sizeof(VkFence) * getImageCount());
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
 	    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
@@ -396,7 +395,8 @@ void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, 
 #ifdef USE_VMA
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
 	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-	    .requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)};
+	    .requiredFlags = static_cast<VkMemoryPropertyFlags>(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT),
+	};
 
 	vmaCreateImage(mDevice.getAllocator(), &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
 
@@ -407,8 +407,9 @@ void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, 
 	VkMemoryRequirements memRequirements{};
 	vkGetImageMemoryRequirements(mDevice.getDevice(), image, &memRequirements);
 
-	const VkMemoryAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-	                                     .allocationSize = memRequirements.size,
+	const VkMemoryAllocateInfo allocInfo{
+	    .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+	    .allocationSize = memRequirements.size,
 	    .memoryTypeIndex = mDevice.findMemoryType(memRequirements.memoryTypeBits, properties)};
 
 	VK_CHECK(vkAllocateMemory(mDevice.getDevice(), &allocInfo, nullptr, &imageMemory));

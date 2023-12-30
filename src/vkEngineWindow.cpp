@@ -1,7 +1,7 @@
 #include "vkEngineWindow.hpp"
 
 namespace vke {
-VkEngineWindow::VkEngineWindow(const int width, const int height, std::string  name)
+VkEngineWindow::VkEngineWindow(const int width, const int height, std::string name)
     : mHeight(height), mWidth(width), mName(std::move(name)) {
 	initWindow();
 }

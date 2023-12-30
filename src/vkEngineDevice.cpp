@@ -206,7 +206,7 @@ void VkEngineDevice::createLogicalDevice() {
 	    .pNext = &features12,  // link the 1.2 features to the 1.3 features
 	};
 
-	VkPhysicalDeviceFeatures2 deviceFeatures = {
+	VkPhysicalDeviceFeatures2 deviceFeatures2 = {
 	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 	    .features =
 	        {
@@ -222,7 +222,7 @@ void VkEngineDevice::createLogicalDevice() {
 	    .pQueueCreateInfos = queueCreateInfos,
 	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
 	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
-	    .pNext = &deviceFeatures,  // link the 2.0 features to the device create info
+	    .pNext = &deviceFeatures2,  // link the 2.0 features to the device create info
 	};
 
 	// might not really be necessary anymore because device specific validation
@@ -268,8 +268,8 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 
 	bool swapChainAdequate = false;
 	if (extensionsSupported) {
-		const SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-		swapChainAdequate = !swapChainSupport.mFormats.empty() && !swapChainSupport.mPresentModes.empty();
+		swapChainAdequate =
+		    !querySwapChainSupport(device).mFormats.empty() && !querySwapChainSupport(device).mPresentModes.empty();
 	}
 
 	VkPhysicalDeviceFeatures supportedFeatures{};

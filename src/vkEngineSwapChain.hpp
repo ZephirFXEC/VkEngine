@@ -3,7 +3,6 @@
 #include "utils/utility.hpp"
 #include "vkEngineDevice.hpp"
 
-
 namespace vke {
 class VkEngineSwapChain {
    public:
@@ -24,23 +23,20 @@ class VkEngineSwapChain {
 		return ppSwapChainFramebuffers[index];
 	}
 
-	NDC_INLINE const VkRenderPass& getRenderPass() const { return pRenderPass; }
-
 	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const {
 		return mSwapChainImages.ppImageViews[index];
 	}
 
-	NDC_INLINE const VkCommandPool& getCommandPool() const { return mFrameData[mCurrentFrame].pCommandPool; };
-
-	NDC_INLINE const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
-
-	NDC_INLINE const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
-
-	NDC_INLINE uint32_t width() const { return mSwapChainExtent.width; }
-
-	NDC_INLINE uint32_t height() const { return mSwapChainExtent.height; }
-
-	NDC_INLINE uint32_t imageCount() const { return mSwapChainImageCount; }
+	// TYPE				NAME			VARIABLE //
+	GETTERS(VkSwapchainKHR, SwapChain, pSwapChain)
+	GETTERS(VkRenderPass, RenderPass, pRenderPass)
+	GETTERS(VkEngineDevice, EngineDevice, mDevice)
+	GETTERS(VkCommandPool, CommandPool, mFrameData[mCurrentFrame].pCommandPool)
+	GETTERS(VkFormat, SwapChainImageFormat, mSwapChainImageFormat)
+	GETTERS(VkExtent2D, SwapChainExtent, mSwapChainExtent)
+	GETTERS(uint32_t, Width, mSwapChainExtent.width)
+	GETTERS(uint32_t, Height, mSwapChainExtent.height)
+	GETTERS(uint32_t, ImageCount, mSwapChainImageCount)
 
 	NDC_INLINE float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
@@ -86,40 +82,6 @@ class VkEngineSwapChain {
 	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkMemoryPropertyFlags properties, VkImage& image,
 	                         Alloc& imageMemory) const;
 
-	struct SyncPrimitives {
-		VkSemaphore* ppImageAvailableSemaphores = nullptr;  // Semaphores for image availability
-		VkSemaphore* ppRenderFinishedSemaphores = nullptr;  // Semaphores for render finishing
-		VkFence* ppInFlightFences = nullptr;                // Fences for in-flight operations
-		VkFence* ppInFlightImages = nullptr;                // Fences for in-flight images
-
-		SyncPrimitives() = default;
-		SyncPrimitives(const SyncPrimitives&) = delete;
-		SyncPrimitives& operator=(const SyncPrimitives&) = delete;
-
-		~SyncPrimitives() {
-			delete[] ppImageAvailableSemaphores;
-			delete[] ppRenderFinishedSemaphores;
-			delete[] ppInFlightFences;
-			delete[] ppInFlightImages;
-		}
-	};
-
-	struct VkImageRessource {
-		VkImage* ppImages = nullptr;
-		VkImageView* ppImageViews = nullptr;
-		Alloc* ppImageMemorys = nullptr;
-
-		VkImageRessource() = default;
-		VkImageRessource(const VkImageRessource&) = delete;
-		VkImageRessource& operator=(const VkImageRessource&) = delete;
-
-		~VkImageRessource() {
-			delete[] ppImages;
-			delete[] ppImageViews;
-			delete[] ppImageMemorys;
-		}
-	};
-
 	const VkEngineDevice& mDevice;
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
@@ -131,6 +93,8 @@ class VkEngineSwapChain {
 	VkFormat mSwapChainImageFormat{};
 	VkExtent2D mSwapChainExtent{};
 	VkExtent2D mWindowExtent{};
+
+	DeletionQueue mMainDeletionQueue{};
 
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
 	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};

@@ -1,6 +1,5 @@
 #include "vkEnginePipeline.hpp"
 
-
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
                                    const PipelineConfigInfo& configInfo)
@@ -142,7 +141,6 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 
 void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
                                               const PipelineConfigInfo& configInfo) {
-
 	assert(configInfo.pipelineLayout != VK_NULL_HANDLE &&
 	       "Cannot create graphics pipeline: no pipelineLayout provided in "
 	       "configInfo");
@@ -209,13 +207,15 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	    .basePipelineHandle = VK_NULL_HANDLE,
 	};
 
-	VK_CHECK(vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
+	VK_CHECK(
+	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
 
 	delete[] vertShaderCode;
 	delete[] fragShaderCode;
 }
 
-void VkEnginePipeline::createShaderModule(const char* const code, const size_t codeSize, VkShaderModule* shaderModule) const {
+void VkEnginePipeline::createShaderModule(const char* const code, const size_t codeSize,
+                                          VkShaderModule* shaderModule) const {
 	const VkShaderModuleCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 	                                             .codeSize = codeSize,
 	                                             .pCode = reinterpret_cast<const uint32_t*>(code)};

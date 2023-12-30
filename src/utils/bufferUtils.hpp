@@ -6,7 +6,6 @@
 #include "utility.hpp"
 #include "vkEngineDevice.hpp"
 
-
 namespace vke {
 class BufferUtils {
    public:
@@ -16,14 +15,11 @@ class BufferUtils {
 	static void endSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,
 	                                  VkCommandBuffer& commandBuffer, const VkQueue& graphicsQueue);
 
-	static void createModelBuffer(const VkEngineDevice& device,  VkDeviceSize size,  VkBufferUsageFlags usage,
-								  VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
+	                              VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 
 	static void createModelBuffer(const VkEngineDevice& device, VkDeviceSize size, VkBufferUsageFlags usage,
-	                         VkBuffer& buffer, VmaAllocation& bufferMemory);
-
-
+	                              VkBuffer& buffer, VmaAllocation& bufferMemory);
 };
-
 
 }  // namespace vke

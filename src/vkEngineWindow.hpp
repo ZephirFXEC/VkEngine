@@ -9,15 +9,17 @@ namespace vke {
 class VkEngineWindow {
    public:
 	explicit VkEngineWindow() = default;                      // default constructor
-	VkEngineWindow(int width, int height, std::string  name);  // constructor
+	VkEngineWindow(int width, int height, std::string name);  // constructor
 	~VkEngineWindow();                                        // destructor
 
 	VkEngineWindow(const VkEngineWindow&) = delete;             // copy constructor
 	VkEngineWindow& operator=(const VkEngineWindow&) = delete;  // copy assignment operator
 
-	[[nodiscard]] bool shouldClose()  const { return glfwWindowShouldClose(pWindow) != 0; }
+	[[nodiscard]] bool shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
 
-	[[nodiscard]] VkExtent2D getExtent() const{ return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)}; }
+	[[nodiscard]] VkExtent2D getExtent() const {
+		return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)};
+	}
 
 	NDC_INLINE bool wasWindowResized() const { return mFramebufferResized; }
 
