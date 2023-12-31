@@ -26,7 +26,7 @@ struct PipelineConfigInfo {
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-	uint32_t subpass = 0;
+	u32 subpass = 0;
 
 	~PipelineConfigInfo() { delete[] pDynamicStateEnables; }
 };

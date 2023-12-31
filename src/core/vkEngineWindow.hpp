@@ -3,7 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include "utility.hpp"
+#include "types.hpp"
 
 namespace vke {
 class VkEngineWindow {
@@ -18,7 +18,7 @@ class VkEngineWindow {
 	[[nodiscard]] bool shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
 
 	[[nodiscard]] VkExtent2D getExtent() const {
-		return {static_cast<uint32_t>(mWidth), static_cast<uint32_t>(mHeight)};
+		return {static_cast<u32>(mWidth), static_cast<u32>(mHeight)};
 	}
 
 	NDC_INLINE bool wasWindowResized() const { return mFramebufferResized; }

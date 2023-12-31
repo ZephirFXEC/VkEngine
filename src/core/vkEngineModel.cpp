@@ -1,6 +1,7 @@
 //
 // Created by Enzo Crema on 21/12/2023.
 //
+#include <pch.hpp>
 
 #include "vkEngineModel.hpp"
 
@@ -8,8 +9,8 @@
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
-                             const Vertex* vertices, const uint32_t vCount, const uint32_t* indices,
-                             const uint32_t iCount)
+                             const Vertex* vertices, const u32 vCount, const u32* indices,
+                             const u32 iCount)
 
     : mIndexCount{iCount}, mDevice{device}, mSwapChain{swapchain} {
 	createIndexBuffers(indices, iCount);
@@ -87,7 +88,7 @@ void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t ver
 }
 
 
-void VkEngineModel::createIndexBuffers(const uint32_t* indices, const size_t indexCount) {
+void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCount) {
 	createVkBuffer(indices, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
 	               mIndexBuffer.pDataBufferMemory);
 }

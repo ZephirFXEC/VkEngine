@@ -1,35 +1,34 @@
 //
 // Created by Enzo Crema on 26/12/2023.
 //
+
 #pragma once
 
-#include <fmt/core.h>
-#include <vk_mem_alloc.h>
-#include <vulkan/vk_enum_string_helper.h>
-#include <vulkan/vulkan.h>
+#include "pch.hpp"
 
-#include <deque>
-#include <functional>
-#include <ranges>
-#include <set>
-#include <string>
-#include <vector>
-#include <unordered_set>
-#include <sstream>
-#include <fstream>
+using u8 = uint8_t;
+using i8 = int8_t;
+using u16 = uint16_t;
+using i16 = int16_t;
+using u32 = uint32_t;
+using i32 = int32_t;
+using u64 = uint64_t;
+using i64 = int64_t;
+using f32 = float;
+using f64 = double;
 
 #ifndef NDEBUG
-#define VK_CHECK(x)                                                          \
-	do {                                                                     \
-		VkResult err = x;                                                    \
-		if (err) {                                                           \
-			fmt::println("Detected Vulkan error: {}", string_VkResult(err)); \
-			abort();                                                         \
-		}                                                                    \
-	} while (0)
+constexpr void VK_CHECK(const VkResult result) {
+	if (result != VK_SUCCESS) {
+		fmt::print("Detected Vulkan error: {}\n", string_VkResult(result));
+		std::abort();
+	}
+}
+
 #else
-#define VK_CHECK(x) x
+constexpr void VK_CHECK(const VkResult result) {}
 #endif
+
 
 #define GETTERS(type, name, var) NDC_INLINE const type& get##name() const { return var; }
 
@@ -37,7 +36,7 @@
 #define NDC_INLINE [[nodiscard]] inline
 
 // User defined types
-static constexpr uint8_t MAX_FRAMES_IN_FLIGHT = 2;
+static constexpr u8 MAX_FRAMES_IN_FLIGHT = 2;
 
 
 struct DeletionQueue {
@@ -74,6 +73,7 @@ struct NO_COPY_NOR_MOVE {
 	NO_COPY_NOR_MOVE& operator=(const NO_COPY_NOR_MOVE&) = delete;
 	NO_COPY_NOR_MOVE(NO_COPY_NOR_MOVE&&) = delete;
 	NO_COPY_NOR_MOVE& operator=(NO_COPY_NOR_MOVE&&) = delete;
+	~NO_COPY_NOR_MOVE() = default;
 };
 
 
@@ -106,8 +106,8 @@ struct SwapChainSupportDetails {
 
 
 struct QueueFamilyIndices {
-	std::optional<uint32_t> mGraphicsFamily;
-	std::optional<uint32_t> mPresentFamily;
+	std::optional<u32> mGraphicsFamily;
+	std::optional<u32> mPresentFamily;
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
 };

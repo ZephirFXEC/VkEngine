@@ -1,3 +1,5 @@
+#include <pch.hpp>
+
 #include "vkEngineSwapChain.hpp"
 
 #include "bufferUtils.hpp"
@@ -60,7 +62,7 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	}
 }
 
-VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
+VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
 	VK_CHECK(
 	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
@@ -70,7 +72,7 @@ VkResult VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const {
 	                             VK_NULL_HANDLE, imageIndex);
 }
 
-VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex) {
+VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers, const u32* imageIndex) {
 	if (mSyncPrimitives.ppInFlightImages[*imageIndex] != VK_NULL_HANDLE) {
 		VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightImages[*imageIndex], VK_TRUE,
 		                         UINT64_MAX));
@@ -114,7 +116,7 @@ void VkEngineSwapChain::createSwapChain() {
 	const VkPresentModeKHR presentMode = chooseSwapPresentMode(mDevice.getSwapChainSupport().mPresentModes);
 	const VkExtent2D extent = chooseSwapExtent(mDevice.getSwapChainSupport().mCapabilities);
 
-	uint32_t imageCount = mDevice.getSwapChainSupport().mCapabilities.minImageCount + 1;
+	u32 imageCount = mDevice.getSwapChainSupport().mCapabilities.minImageCount + 1;
 
 	if (mDevice.getSwapChainSupport().mCapabilities.maxImageCount > 0 &&
 	    imageCount > mDevice.getSwapChainSupport().mCapabilities.maxImageCount) {
@@ -169,7 +171,7 @@ void VkEngineSwapChain::createImageViews() {
 	mSwapChainImages.ppImageViews = new VkImageView[getImageCount()]{};
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
-		VkImageViewCreateInfo viewInfo{
+		const VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		    .image = mSwapChainImages.ppImages[i],
 		    .viewType = VK_IMAGE_VIEW_TYPE_2D,
@@ -238,7 +240,7 @@ void VkEngineSwapChain::createRenderPass() {
 
 	const VkRenderPassCreateInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-	    .attachmentCount = static_cast<uint32_t>(attachments.size()),
+	    .attachmentCount = static_cast<u32>(attachments.size()),
 	    .pAttachments = attachments.data(),
 	    .subpassCount = 1,
 	    .dependencyCount = 1,
@@ -255,10 +257,10 @@ void VkEngineSwapChain::createFramebuffers() {
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		std::array attachments = {mSwapChainImages.ppImageViews[i], mDepthImages.ppImageViews[i]};
 
-		VkFramebufferCreateInfo framebufferInfo{
+		const VkFramebufferCreateInfo framebufferInfo{
 		    .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 		    .renderPass = pRenderPass,
-		    .attachmentCount = static_cast<uint32_t>(attachments.size()),
+		    .attachmentCount = static_cast<u32>(attachments.size()),
 		    .pAttachments = attachments.data(),
 		    .width = getSwapChainExtent().width,
 		    .height = getSwapChainExtent().height,
@@ -275,7 +277,7 @@ void VkEngineSwapChain::createDepthResources() {
 	mDepthImages.ppImageViews = new VkImageView[getImageCount()]{};
 
 	for (size_t i = 0; i < getImageCount(); i++) {
-		VkImageCreateInfo imageInfo{
+		const VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		    .imageType = VK_IMAGE_TYPE_2D,
 		    .format = findDepthFormat(),
@@ -291,7 +293,7 @@ void VkEngineSwapChain::createDepthResources() {
 
 		createImageWithInfo(imageInfo, mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
 
-		VkImageViewCreateInfo viewInfo{
+		const VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		    .image = mDepthImages.ppImages[i],
 		    .viewType = VK_IMAGE_VIEW_TYPE_2D,
@@ -319,7 +321,7 @@ void VkEngineSwapChain::createCommandPools() {
 		VK_CHECK(vkCreateCommandPool(mDevice.getDevice(), &poolInfo, nullptr, &mFrameData.at(i).pCommandPool));
 
 		// allocate the default command buffer that we will use for rendering
-		VkCommandBufferAllocateInfo cmdAllocInfo{
+		const VkCommandBufferAllocateInfo cmdAllocInfo{
 		    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		    .pNext = nullptr,
 		    .commandPool = mFrameData.at(i).pCommandPool,
@@ -358,7 +360,7 @@ void VkEngineSwapChain::createSyncObjects() {
 }
 
 void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image,
-                                          const uint32_t width, const uint32_t height, const uint32_t layerCount) {
+                                          const u32 width, const u32 height, const u32 layerCount) {
 	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
 	                                     mFrameData.at(mCurrentFrame).pCommandBuffer);
 

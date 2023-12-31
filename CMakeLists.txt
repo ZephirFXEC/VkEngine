@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.0)
 project(vkEngine
         VERSION 0.1.0
         DESCRIPTION "A Vulkan Engine"
-        LANGUAGES CXX
+        LANGUAGES CXX C
         )
 
 

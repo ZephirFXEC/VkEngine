@@ -1,3 +1,5 @@
+#include <pch.hpp>
+
 #include "vkEnginePipeline.hpp"
 
 namespace vke {
@@ -108,7 +110,7 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 	    // Optional
 	};
 
-	constexpr uint32_t dynamicStateCount = 2;
+	constexpr u32 dynamicStateCount = 2;
 	configInfo.pDynamicStateEnables = new VkDynamicState[dynamicStateCount]{
 	    VK_DYNAMIC_STATE_VIEWPORT,
 	    VK_DYNAMIC_STATE_SCISSOR,
@@ -133,7 +135,7 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 	auto* const buffer = new char[bufferSize];
 
 	file.seekg(0);
-	file.read(buffer, static_cast<uint32_t>(bufferSize));
+	file.read(buffer, static_cast<u32>(bufferSize));
 	file.close();
 
 	return buffer;
@@ -177,8 +179,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
 	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
 
-	constexpr uint32_t bindingDescriptionCount = 1;
-	constexpr uint32_t attributeDescriptionCount = 2;
+	constexpr u32 bindingDescriptionCount = 1;
+	constexpr u32 attributeDescriptionCount = 2;
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -218,7 +220,7 @@ void VkEnginePipeline::createShaderModule(const char* const code, const size_t c
                                           VkShaderModule* shaderModule) const {
 	const VkShaderModuleCreateInfo createInfo = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 	                                             .codeSize = codeSize,
-	                                             .pCode = reinterpret_cast<const uint32_t*>(code)};
+	                                             .pCode = reinterpret_cast<const u32*>(code)};
 
 	VK_CHECK(vkCreateShaderModule(mDevice.getDevice(), &createInfo, nullptr, shaderModule));
 }

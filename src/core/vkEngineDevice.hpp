@@ -1,6 +1,5 @@
 #pragma once
 
-#include "utility.hpp"
 #include "vkEngineWindow.hpp"
 
 #ifdef NDEBUG
@@ -40,7 +39,7 @@ class VkEngineDevice {
 		return querySwapChainSupport(&pPhysicalDevice);
 	}
 
-	[[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+	[[nodiscard]] u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties) const;
 
 	[[nodiscard]] QueueFamilyIndices findPhysicalQueueFamilies() const { return findQueueFamilies(&pPhysicalDevice); }
 
@@ -65,7 +64,7 @@ class VkEngineDevice {
 	// helper functions
 	[[nodiscard]] bool isDeviceSuitable(const VkPhysicalDevice* device) const;
 
-	[[nodiscard]] static const char** getRequiredExtensions(uint32_t* extensionCount);
+	[[nodiscard]] static const char** getRequiredExtensions(u32* extensionCount);
 
 	[[nodiscard]] bool checkValidationLayerSupport() const;
 

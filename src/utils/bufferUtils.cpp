@@ -3,6 +3,7 @@
 //
 
 #include "bufferUtils.hpp"
+
 namespace vke {
 
 void BufferUtils::beginSingleTimeCommands(const VkDevice& device, const VkCommandPool& commandPool,

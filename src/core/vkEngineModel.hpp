@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "utility.hpp"
 // engine
 #include "vkEngineDevice.hpp"
 
@@ -26,7 +25,7 @@ class VkEngineModel {
 	};
 
 	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
-	              const Vertex* vertices, uint32_t vCount, const uint32_t* indices, uint32_t iCount);
+	              const Vertex* vertices, u32 vCount, const u32* indices, u32 iCount);
 
 	~VkEngineModel();
 
@@ -52,14 +51,14 @@ class VkEngineModel {
 
 	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
-	void createIndexBuffers(const uint32_t* indices, size_t indexCount);
+	void createIndexBuffers(const u32* indices, size_t indexCount);
 
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};
 
 	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
 
-	uint32_t mIndexCount = 0;
+	u32 mIndexCount = 0;
 
 	const VkEngineDevice& mDevice;
 

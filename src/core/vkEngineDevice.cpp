@@ -1,4 +1,8 @@
+
+
 #define VMA_IMPLEMENTATION
+#include <pch.hpp>
+
 #include "vkEngineDevice.hpp"
 
 namespace vke {
@@ -19,19 +23,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 	        << "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message << std::string("\t") << "Queue Labels:\n";
-		for (uint32_t i = 0; i < pCallbackData->queueLabelCount; i++) {
+		for (u32 i = 0; i < pCallbackData->queueLabelCount; i++) {
 			message << std::string("\t\t") << "labelName = <" << pCallbackData->pQueueLabels[i].pLabelName << ">\n";
 		}
 	}
 	if (0 < pCallbackData->cmdBufLabelCount) {
 		message << std::string("\t") << "CommandBuffer Labels:\n";
-		for (uint32_t i = 0; i < pCallbackData->cmdBufLabelCount; i++) {
+		for (u32 i = 0; i < pCallbackData->cmdBufLabelCount; i++) {
 			message << std::string("\t\t") << "labelName = <" << pCallbackData->pCmdBufLabels[i].pLabelName << ">\n";
 		}
 	}
 	if (0 < pCallbackData->objectCount) {
 		message << std::string("\t") << "Objects:\n";
-		for (uint32_t i = 0; i < pCallbackData->objectCount; i++) {
+		for (u32 i = 0; i < pCallbackData->objectCount; i++) {
 			message << std::string("\t\t") << "Object " << i << "\n";
 			message << std::string("\t\t\t")
 			        << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
@@ -119,7 +123,7 @@ void VkEngineDevice::createInstance() {
 	    .apiVersion = VK_API_VERSION_1_3,
 	};
 
-	uint32_t extensionCount = 0;
+	u32 extensionCount = 0;
 	auto* const extensions = getRequiredExtensions(&extensionCount);
 
 	VkInstanceCreateInfo createInfo = {
@@ -132,7 +136,7 @@ void VkEngineDevice::createInstance() {
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayer.size());
+		createInfo.enabledLayerCount = static_cast<u32>(mValidationLayer.size());
 		createInfo.ppEnabledLayerNames = mValidationLayer.data();
 
 		populateDebugMessengerCreateInfo(debugCreateInfo);
@@ -149,7 +153,7 @@ void VkEngineDevice::createInstance() {
 }
 
 void VkEngineDevice::pickPhysicalDevice() {
-	uint32_t deviceCount = 0;
+	u32 deviceCount = 0;
 	VK_CHECK(vkEnumeratePhysicalDevices(pInstance, &deviceCount, nullptr));
 
 	fmt::println("device count: {}", deviceCount);
@@ -157,7 +161,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 	auto* devices = new VkPhysicalDevice[deviceCount]{};
 	VK_CHECK(vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices));
 
-	for (uint32_t i = 0; i < deviceCount; ++i) {
+	for (u32 i = 0; i < deviceCount; ++i) {
 		if (isDeviceSuitable(&devices[i])) {
 			pPhysicalDevice = devices[i];
 			break;
@@ -218,9 +222,9 @@ void VkEngineDevice::createLogicalDevice() {
 
 	VkDeviceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-	    .queueCreateInfoCount = static_cast<uint32_t>(uniqueQueueFamilies.size()),
+	    .queueCreateInfoCount = static_cast<u32>(uniqueQueueFamilies.size()),
 	    .pQueueCreateInfos = queueCreateInfos,
-	    .enabledExtensionCount = static_cast<uint32_t>(mDeviceExtensions.size()),
+	    .enabledExtensionCount = static_cast<u32>(mDeviceExtensions.size()),
 	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
 	    .pNext = &deviceFeatures2,  // link the 2.0 features to the device create info
 	};
@@ -228,7 +232,7 @@ void VkEngineDevice::createLogicalDevice() {
 	// might not really be necessary anymore because device specific validation
 	// layers have been deprecated
 	if (enableValidationLayers) {
-		createInfo.enabledLayerCount = static_cast<uint32_t>(mValidationLayer.size()),
+		createInfo.enabledLayerCount = static_cast<u32>(mValidationLayer.size()),
 		createInfo.ppEnabledLayerNames = mValidationLayer.data();
 	} else {
 		createInfo.enabledLayerCount = 0;
@@ -305,7 +309,7 @@ void VkEngineDevice::setupDebugMessenger() {
 }
 
 bool VkEngineDevice::checkValidationLayerSupport() const {
-	uint32_t layerCount = 0;
+	u32 layerCount = 0;
 	VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
 
 	if (layerCount == 0) {
@@ -335,11 +339,11 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 	return true;
 }
 
-const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
-	uint32_t glfwExtensionCount = 0;
+const char** VkEngineDevice::getRequiredExtensions(u32* extensionCount) {
+	u32 glfwExtensionCount = 0;
 	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-	uint32_t additionalExtensionCount = 0;
+	u32 additionalExtensionCount = 0;
 	if (enableValidationLayers) {
 		additionalExtensionCount++;
 	}
@@ -353,7 +357,7 @@ const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 	auto* const extensions = new const char*[*extensionCount];
 	memcpy(extensions, glfwExtensions, glfwExtensionCount * sizeof(const char*));
 
-	uint32_t index = glfwExtensionCount;
+	u32 index = glfwExtensionCount;
 	if (enableValidationLayers) {
 		extensions[index++] = VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
 	}
@@ -367,7 +371,7 @@ const char** VkEngineDevice::getRequiredExtensions(uint32_t* extensionCount) {
 }
 
 void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
-	uint32_t extensionCount = 0;
+	u32 extensionCount = 0;
 	VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
 
 	auto* extensions = new VkExtensionProperties[extensionCount]{};
@@ -375,16 +379,16 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 
 	fmt::println("available extensions:");
 	std::unordered_set<std::string> available{};
-	for (uint32_t i = 0; i < extensionCount; ++i) {
+	for (u32 i = 0; i < extensionCount; ++i) {
 		fmt::println("\t{}", extensions[i].extensionName);
 		available.insert(extensions[i].extensionName);
 	}
 
 	fmt::println("required extensions:");
 
-	uint32_t requiredExtensionCount = 0;
+	u32 requiredExtensionCount = 0;
 	const char** requiredExtensions = getRequiredExtensions(&requiredExtensionCount);
-	for (uint32_t i = 0; i < requiredExtensionCount; ++i) {
+	for (u32 i = 0; i < requiredExtensionCount; ++i) {
 		fmt::println("\t{}", requiredExtensions[i]);
 		if (!available.contains(requiredExtensions[i])) {
 			throw std::runtime_error("missing required extension");
@@ -396,7 +400,7 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 }
 
 bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const device) const {
-	uint32_t extensionCount = 0;
+	u32 extensionCount = 0;
 	VK_CHECK(vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, nullptr));
 
 	auto* availableExtensions = new VkExtensionProperties[extensionCount]{};
@@ -405,7 +409,7 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const d
 	std::set<std::string> requiredExtensions(mDeviceExtensions.data(),
 	                                         mDeviceExtensions.data() + mDeviceExtensions.size());
 
-	for (uint32_t i = 0; i < extensionCount; ++i) {
+	for (u32 i = 0; i < extensionCount; ++i) {
 		requiredExtensions.erase(availableExtensions[i].extensionName);
 	}
 
@@ -416,13 +420,13 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const d
 QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice* const device) const {
 	QueueFamilyIndices indices{};
 
-	uint32_t queueFamilyCount = 0;
+	u32 queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, nullptr);
 
 	auto* queueFamilies = new VkQueueFamilyProperties[queueFamilyCount]{};
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, queueFamilies);
 
-	for (uint32_t i = 0; i < queueFamilyCount; ++i) {
+	for (u32 i = 0; i < queueFamilyCount; ++i) {
 		if (queueFamilies[i].queueCount > 0 && (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0u) {
 			indices.mGraphicsFamily = i;
 		}
@@ -445,7 +449,7 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 	SwapChainSupportDetails details{};
 	VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(*device, pSurface, &details.mCapabilities));
 
-	uint32_t formatCount = 0;
+	u32 formatCount = 0;
 	VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(*device, pSurface, &formatCount, nullptr));
 
 	if (formatCount != 0) {
@@ -453,7 +457,7 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 		VK_CHECK(vkGetPhysicalDeviceSurfaceFormatsKHR(*device, pSurface, &formatCount, details.mFormats.data()));
 	}
 
-	uint32_t presentModeCount = 0;
+	u32 presentModeCount = 0;
 	VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount, nullptr));
 
 	if (presentModeCount != 0) {
@@ -481,11 +485,11 @@ VkFormat VkEngineDevice::findSupportedFormat(const std::vector<VkFormat>& candid
 	throw std::runtime_error("failed to find supported format!");
 }
 
-uint32_t VkEngineDevice::findMemoryType(const uint32_t typeFilter, const VkMemoryPropertyFlags properties) const {
+u32 VkEngineDevice::findMemoryType(const u32 typeFilter, const VkMemoryPropertyFlags properties) const {
 	VkPhysicalDeviceMemoryProperties memProperties{};
 	vkGetPhysicalDeviceMemoryProperties(pPhysicalDevice, &memProperties);
 
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+	for (u32 i = 0; i < memProperties.memoryTypeCount; i++) {
 		if ((typeFilter & 1 << i) != 0u && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
 			return i;
 		}

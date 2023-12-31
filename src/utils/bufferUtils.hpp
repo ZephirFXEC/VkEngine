@@ -3,7 +3,6 @@
 //
 #pragma once
 
-#include "utility.hpp"
 #include "vkEngineDevice.hpp"
 
 namespace vke {

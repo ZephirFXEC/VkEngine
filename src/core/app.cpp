@@ -1,3 +1,5 @@
+#include <pch.hpp>
+
 #include "app.hpp"
 
 namespace vke {
@@ -21,8 +23,8 @@ void App::run() {
 }
 
 void App::loadModels() {
-	constexpr uint32_t iCount = 6;
-	constexpr uint32_t vCount = 4;
+	constexpr u32 iCount = 6;
+	constexpr u32 vCount = 4;
 
 	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
 	    VkEngineModel::Vertex{{-1.f, -1.0f}, {0.0f, 0.0f, 0.0f}},  // 0
@@ -31,7 +33,7 @@ void App::loadModels() {
 	    VkEngineModel::Vertex{{-1.f, 1.f}, {0.0f, 0.0f, 0.0f}},   // 3
 	};
 
-	constexpr std::array<uint32_t, iCount> indices{0, 1, 2, 2, 3, 0};
+	constexpr std::array<u32, iCount> indices{0, 1, 2, 2, 3, 0};
 
 	pVkModel =
 	    std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
@@ -89,9 +91,9 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	const VkRenderPassBeginInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<uint32_t>(imageIndex)),
+	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(imageIndex)),
 	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
-	    .clearValueCount = static_cast<uint32_t>(clearValues.size()),
+	    .clearValueCount = static_cast<u32>(clearValues.size()),
 	    .pClearValues = clearValues.data(),
 	};
 
@@ -153,7 +155,7 @@ void App::recreateSwapChain() {
 }
 
 void App::drawFrame() {
-	uint32_t imageIndex = 0;
+	u32 imageIndex = 0;
 	VkResult result = mVkSwapChain->acquireNextImage(&imageIndex);
 
 	// Combining the check for VK_ERROR_OUT_OF_DATE_KHR with VK_SUBOPTIMAL_KHR.

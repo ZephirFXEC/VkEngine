@@ -51,7 +51,7 @@ class App {
 
 	struct CommandBuffer {
 		VkCommandBuffer* ppVkCommandBuffers{};
-		uint32_t mSize{};  // number of command buffers (could be uint8_t)
+		u32 mSize{};  // number of command buffers (could be uint8_t)
 	} mCommandBuffer{};
 };
 }  // namespace vke

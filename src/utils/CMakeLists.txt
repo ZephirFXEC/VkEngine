@@ -3,12 +3,15 @@ cmake_minimum_required(VERSION 3.5.0)
 file(GLOB_RECURSE SOURCES "*.cpp")
 file(GLOB_RECURSE HEADERS "*.hpp")
 
-add_library(utils STATIC ${SOURCES} ${HEADERS})
+set(PROJECT_NAME utils)
 
-set_property(TARGET utils PROPERTY CXX_STANDARD 20)
-target_compile_features(utils PUBLIC cxx_std_20)
+add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
 
-target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../core)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 
-target_link_libraries(utils GPUOpen::VulkanMemoryAllocator fmt::fmt)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../core)
+
+
+target_link_libraries(${PROJECT_NAME} GPUOpen::VulkanMemoryAllocator fmt::fmt)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "utility.hpp"
 #include "vkEngineDevice.hpp"
 
 namespace vke {
@@ -19,11 +18,11 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-	NDC_INLINE const VkFramebuffer& getFrameBuffer(const uint32_t index) const {
+	NDC_INLINE const VkFramebuffer& getFrameBuffer(const u32 index) const {
 		return ppSwapChainFramebuffers[index];
 	}
 
-	NDC_INLINE const VkImageView& getImageView(const uint32_t index) const {
+	NDC_INLINE const VkImageView& getImageView(const u32 index) const {
 		return mSwapChainImages.ppImageViews[index];
 	}
 
@@ -34,9 +33,9 @@ class VkEngineSwapChain {
 	GETTERS(VkCommandPool, CommandPool, mFrameData[mCurrentFrame].pCommandPool)
 	GETTERS(VkFormat, SwapChainImageFormat, mSwapChainImageFormat)
 	GETTERS(VkExtent2D, SwapChainExtent, mSwapChainExtent)
-	GETTERS(uint32_t, Width, mSwapChainExtent.width)
-	GETTERS(uint32_t, Height, mSwapChainExtent.height)
-	GETTERS(uint32_t, ImageCount, mSwapChainImageCount)
+	GETTERS(u32, Width, mSwapChainExtent.width)
+	GETTERS(u32, Height, mSwapChainExtent.height)
+	GETTERS(u32, ImageCount, mSwapChainImageCount)
 
 	NDC_INLINE float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
@@ -44,9 +43,9 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
-	VkResult acquireNextImage(uint32_t* imageIndex) const;
+	VkResult acquireNextImage(u32* imageIndex) const;
 
-	VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const uint32_t* imageIndex);
+	VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const u32* imageIndex);
 
    private:
 	void init();
@@ -76,11 +75,9 @@ class VkEngineSwapChain {
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
 	                  VmaAllocation& bufferMemory) const;
 
-	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
-	                       uint32_t layerCount);
+	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, u32 width, u32 height, u32 layerCount);
 
-	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
-	                         VmaAllocation& imageMemory) const;
+	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory) const;
 
 	const VkEngineDevice& mDevice;
 
@@ -98,7 +95,7 @@ class VkEngineSwapChain {
 	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
-	uint32_t mSwapChainImageCount = 0;
-	uint32_t mCurrentFrame = 0;
+	u32 mSwapChainImageCount = 0;
+	u32 mCurrentFrame = 0;
 };
 }  // namespace vke
