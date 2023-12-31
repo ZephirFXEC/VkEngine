@@ -4,7 +4,7 @@
 
 #include "vkEngineModel.hpp"
 
-#include "utils/bufferUtils.hpp"
+#include "bufferUtils.hpp"
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,

@@ -4,14 +4,14 @@
 
 #pragma once
 
-#include "utils/utility.hpp"
+#include "utility.hpp"
 // engine
 #include "vkEngineDevice.hpp"
 
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include <vkEngineSwapChain.hpp>
+#include "vkEngineSwapChain.hpp"
 
 namespace vke {
 class VkEngineModel {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/utility.hpp"
+#include "utility.hpp"
 #include "vkEngineDevice.hpp"
 
 namespace vke {

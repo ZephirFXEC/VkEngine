@@ -3,7 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <utils/utility.hpp>
+#include "utility.hpp"
 
 namespace vke {
 class VkEngineWindow {

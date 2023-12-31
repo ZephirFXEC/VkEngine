@@ -1,6 +1,6 @@
 #include "app.hpp"
 
-// std
+
 
 int main() {
 	vke::App app{};  // create app
@@ -10,7 +10,7 @@ int main() {
 		app.run();
 	} catch (const std::exception& e) {
 		// catch exceptions
-		std::cerr << e.what() << "\n";
+		fmt::print("Exception: {}\n", e.what());
 		return EXIT_FAILURE;
 	}
 

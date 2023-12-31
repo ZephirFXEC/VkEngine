@@ -13,7 +13,8 @@ find_package(Vulkan REQUIRED)
 find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-add_subdirectory(src)
+add_subdirectory(src/core)
+add_subdirectory(src/utils)
 
 
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin)

@@ -1,6 +1,6 @@
 #include "vkEngineSwapChain.hpp"
 
-#include "utils/bufferUtils.hpp"
+#include "bufferUtils.hpp"
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)

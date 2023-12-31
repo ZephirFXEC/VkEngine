@@ -12,6 +12,11 @@
 #include <functional>
 #include <ranges>
 #include <set>
+#include <string>
+#include <vector>
+#include <unordered_set>
+#include <sstream>
+#include <fstream>
 
 #ifndef NDEBUG
 #define VK_CHECK(x)                                                          \
@@ -26,8 +31,7 @@
 #define VK_CHECK(x) x
 #endif
 
-#define GETTERS(type, name, var) \
-	NDC_INLINE const type& get##name() const { return var; }
+#define GETTERS(type, name, var) NDC_INLINE const type& get##name() const { return var; }
 
 #define NDC_FINLINE [[nodiscard]] __attribute__((always_inline)) inline
 #define NDC_INLINE [[nodiscard]] inline
