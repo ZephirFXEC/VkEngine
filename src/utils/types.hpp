@@ -17,19 +17,6 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
-#ifndef NDEBUG
-constexpr void VK_CHECK(const VkResult result) {
-	if (result != VK_SUCCESS) {
-		fmt::print("Detected Vulkan error: {}\n", string_VkResult(result));
-		std::abort();
-	}
-}
-
-#else
-constexpr void VK_CHECK(const VkResult result) {}
-#endif
-
-
 #define GETTERS(type, name, var) NDC_INLINE const type& get##name() const { return var; }
 
 #define NDC_FINLINE [[nodiscard]] __attribute__((always_inline)) inline
@@ -106,8 +93,8 @@ struct SwapChainSupportDetails {
 
 
 struct QueueFamilyIndices {
-	std::optional<u32> mGraphicsFamily;
-	std::optional<u32> mPresentFamily;
+	std::optional<u32> mGraphicsFamily{};
+	std::optional<u32> mPresentFamily{};
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
 };

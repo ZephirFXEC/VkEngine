@@ -2,6 +2,8 @@
 
 #include "app.hpp"
 
+#include "logger.hpp"
+
 namespace vke {
 App::App() {
 	createPipelineLayout();
@@ -41,6 +43,7 @@ void App::loadModels() {
 
 void App::createPipelineLayout() {
 	constexpr VkPipelineLayoutCreateInfo pipelineLayoutInfo{.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+	                                                        .pNext = nullptr,
 	                                                        .setLayoutCount = 0,
 	                                                        .pSetLayouts = nullptr,
 	                                                        .pushConstantRangeCount = 0,

@@ -18,3 +18,6 @@
 #include <unordered_set>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
+#include <memory>
+#include <iostream>

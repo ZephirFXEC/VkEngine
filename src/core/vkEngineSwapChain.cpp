@@ -4,6 +4,8 @@
 
 #include "bufferUtils.hpp"
 
+#include "logger.hpp"
+
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
     : mDevice{deviceRef}, mWindowExtent{windowExtent} {
@@ -199,7 +201,7 @@ void VkEngineSwapChain::createRenderPass() {
 	    .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
 
-	VkAttachmentReference depthAttachmentRef{
+	const VkAttachmentReference depthAttachmentRef{
 	    .attachment = 1,
 	    .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
@@ -209,30 +211,30 @@ void VkEngineSwapChain::createRenderPass() {
 	    .samples = VK_SAMPLE_COUNT_1_BIT,
 	    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 	    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-	    .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 	    .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+	    .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 	    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 	    .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 	};
 
-	VkAttachmentReference colorAttachmentRef{
+	const VkAttachmentReference colorAttachmentRef{
 	    .attachment = 0,
 	    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 	};
 
-	VkSubpassDescription subpass{
+	const VkSubpassDescription subpass{
 	    .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
 	    .colorAttachmentCount = 1,
 	    .pColorAttachments = &colorAttachmentRef,
 	    .pDepthStencilAttachment = &depthAttachmentRef,
 	};
 
-	VkSubpassDependency dependency{
+	const VkSubpassDependency dependency{
 	    .srcSubpass = VK_SUBPASS_EXTERNAL,
-	    .srcAccessMask = 0,
-	    .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
 	    .dstSubpass = 0,
+	    .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
 	    .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+	    .srcAccessMask = 0,
 	    .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
 	};
 
@@ -243,8 +245,8 @@ void VkEngineSwapChain::createRenderPass() {
 	    .attachmentCount = static_cast<u32>(attachments.size()),
 	    .pAttachments = attachments.data(),
 	    .subpassCount = 1,
-	    .dependencyCount = 1,
 	    .pSubpasses = &subpass,
+	    .dependencyCount = 1,
 	    .pDependencies = &dependency,
 	};
 
@@ -325,8 +327,8 @@ void VkEngineSwapChain::createCommandPools() {
 		    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		    .pNext = nullptr,
 		    .commandPool = mFrameData.at(i).pCommandPool,
-		    .commandBufferCount = 1,
 		    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		    .commandBufferCount = 1,
 		};
 
 		VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &cmdAllocInfo, &mFrameData.at(i).pCommandBuffer));

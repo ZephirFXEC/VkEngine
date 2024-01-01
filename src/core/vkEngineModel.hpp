@@ -42,8 +42,6 @@ class VkEngineModel {
 	void createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage, VkBuffer& buffer,
 	                    VmaAllocation& bufferMemory);
 
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-	                  VmaAllocation& bufferMemory) const;
 
 	void destroyBuffer(const DataBuffer& buffer) const;
 

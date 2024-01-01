@@ -30,7 +30,7 @@ class VkEngineSwapChain {
 	GETTERS(VkSwapchainKHR, SwapChain, pSwapChain)
 	GETTERS(VkRenderPass, RenderPass, pRenderPass)
 	GETTERS(VkEngineDevice, EngineDevice, mDevice)
-	GETTERS(VkCommandPool, CommandPool, mFrameData[mCurrentFrame].pCommandPool)
+	GETTERS(VkCommandPool, CommandPool, mFrameData.at(mCurrentFrame).pCommandPool)
 	GETTERS(VkFormat, SwapChainImageFormat, mSwapChainImageFormat)
 	GETTERS(VkExtent2D, SwapChainExtent, mSwapChainExtent)
 	GETTERS(u32, Width, mSwapChainExtent.width)
@@ -71,9 +71,6 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
-	// Buffer Helper Functions
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-	                  VmaAllocation& bufferMemory) const;
 
 	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, u32 width, u32 height, u32 layerCount);
 

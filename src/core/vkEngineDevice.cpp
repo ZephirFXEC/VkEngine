@@ -5,6 +5,8 @@
 
 #include "vkEngineDevice.hpp"
 
+#include "logger.hpp"
+
 namespace vke {
 // local callback functions
 namespace {
@@ -184,7 +186,7 @@ void VkEngineDevice::createLogicalDevice() {
 
 	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()]{};
 
-	float queuePriority = 1.0f;
+	const float queuePriority = 1.0f;
 	for (const auto queueFamily : uniqueQueueFamilies) {
 		const VkDeviceQueueCreateInfo queueCreateInfo{
 		    .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -199,34 +201,33 @@ void VkEngineDevice::createLogicalDevice() {
 	// vulkan 1.2 features
 	VkPhysicalDeviceVulkan12Features features12{
 	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-	    .bufferDeviceAddress = VK_TRUE,
 	    .descriptorIndexing = VK_TRUE,
+	    .bufferDeviceAddress = VK_TRUE,
 	};
 
 	VkPhysicalDeviceVulkan13Features features13{
 	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-	    .dynamicRendering = VK_TRUE,
-	    .synchronization2 = VK_TRUE,
 	    .pNext = &features12,  // link the 1.2 features to the 1.3 features
+	    .synchronization2 = VK_TRUE,
+	    .dynamicRendering = VK_TRUE,
 	};
 
 	VkPhysicalDeviceFeatures2 deviceFeatures2 = {
 	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+	    .pNext = &features13,  // link the 1.3 features to the 2.0 features
 	    .features =
 	        {
 	            .samplerAnisotropy = VK_TRUE,
 	        },
-	    .pNext = &features13,  // link the 1.3 features to the 2.0 features
-
 	};
 
 	VkDeviceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+	    .pNext = &deviceFeatures2,  // link the 2.0 features to the device create info
 	    .queueCreateInfoCount = static_cast<u32>(uniqueQueueFamilies.size()),
 	    .pQueueCreateInfos = queueCreateInfos,
 	    .enabledExtensionCount = static_cast<u32>(mDeviceExtensions.size()),
 	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
-	    .pNext = &deviceFeatures2,  // link the 2.0 features to the device create info
 	};
 
 	// might not really be necessary anymore because device specific validation
@@ -247,7 +248,7 @@ void VkEngineDevice::createLogicalDevice() {
 }
 
 void VkEngineDevice::createAllocator() {
-	VmaVulkanFunctions vulkanFunctions{
+	const VmaVulkanFunctions vulkanFunctions{
 	    .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
 	    .vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
 	};

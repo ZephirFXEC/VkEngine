@@ -7,6 +7,8 @@
 
 #include "bufferUtils.hpp"
 
+#include "logger.hpp"
+
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
                              const Vertex* vertices, const u32 vCount, const u32* indices,
@@ -37,9 +39,9 @@ std::unique_ptr<std::array<VkVertexInputBindingDescription, 1>> VkEngineModel::V
 std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> VkEngineModel::Vertex::getAttributeDescriptions() {
 	return std::make_unique<std::array<VkVertexInputAttributeDescription, 2>>(std::array{
 	    VkVertexInputAttributeDescription{
-	        .binding = 0, .location = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
+	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
 	    VkVertexInputAttributeDescription{
-	        .binding = 0, .location = 1, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}});
+	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}});
 }
 
 

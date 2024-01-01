@@ -2,6 +2,8 @@
 
 #include "vkEnginePipeline.hpp"
 
+#include "logger.hpp"
+
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
                                    const PipelineConfigInfo& configInfo)
@@ -118,9 +120,9 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 
 	configInfo.dynamicStateInfo = {
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+	    .flags = 0,
 	    .dynamicStateCount = dynamicStateCount,
 	    .pDynamicStates = configInfo.pDynamicStateEnables,
-	    .flags = 0,
 	};
 }
 
@@ -182,7 +184,7 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	constexpr u32 bindingDescriptionCount = 1;
 	constexpr u32 attributeDescriptionCount = 2;
 
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{
+	const VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 	    .vertexBindingDescriptionCount = bindingDescriptionCount,
 	    .pVertexBindingDescriptions = bindingDescriptions->data(),
@@ -199,14 +201,14 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	    .pViewportState = &configInfo.viewportInfo,
 	    .pRasterizationState = &configInfo.rasterizationInfo,
 	    .pMultisampleState = &configInfo.multisampleInfo,
-	    .pColorBlendState = &configInfo.colorBlendInfo,
 	    .pDepthStencilState = &configInfo.depthStencilInfo,
+	    .pColorBlendState = &configInfo.colorBlendInfo,
 	    .pDynamicState = &configInfo.dynamicStateInfo,
 	    .layout = configInfo.pipelineLayout,
 	    .renderPass = configInfo.renderPass,
 	    .subpass = configInfo.subpass,
-	    .basePipelineIndex = -1,
 	    .basePipelineHandle = VK_NULL_HANDLE,
+	    .basePipelineIndex = -1,
 	};
 
 	VK_CHECK(

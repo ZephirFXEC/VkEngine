@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
 
+set(PROJECT_NAME utils)
+
 file(GLOB_RECURSE SOURCES "*.cpp")
 file(GLOB_RECURSE HEADERS "*.hpp")
 
-set(PROJECT_NAME utils)
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
 

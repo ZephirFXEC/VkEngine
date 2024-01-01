@@ -1,5 +1,6 @@
 #include <pch.hpp>
 #include "vkEngineWindow.hpp"
+#include "logger.hpp"
 
 namespace vke {
 VkEngineWindow::VkEngineWindow(const int width, const int height, std::string name)
