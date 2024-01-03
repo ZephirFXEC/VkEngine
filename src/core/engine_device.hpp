@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vkEngineWindow.hpp"
+#include "engine_window.hpp"
 
 #ifdef NDEBUG
 static constexpr bool enableValidationLayers = false;

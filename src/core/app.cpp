@@ -4,6 +4,8 @@
 
 #include "logger.hpp"
 
+#include "memory.hpp"
+
 namespace vke {
 App::App() {
 	createPipelineLayout();
@@ -17,21 +19,32 @@ App::~App() { vkDestroyPipelineLayout(mVkDevice.getDevice(), pVkPipelineLayout, 
 void App::run() {
 	while (!mVkWindow.shouldClose()) {
 		// while window is open
+
+		//if frame % 10 == 0 print memory usage
+		if (mCurrentFrame % 20 == 0) {
+			Memory::getMemoryUsage();
+		}
+
 		glfwPollEvents();  // poll for events
+
 		drawFrame();       // draw frame
+
+		++mCurrentFrame;
 	}
 
 	vkDeviceWaitIdle(mVkDevice.getDevice());
 }
 
 void App::loadModels() {
+	VKINFO("Loading models...");
+
 	constexpr u32 iCount = 6;
 	constexpr u32 vCount = 4;
 
 	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
-	    VkEngineModel::Vertex{{-1.f, -1.0f}, {0.0f, 0.0f, 0.0f}},  // 0
-	    VkEngineModel::Vertex{{1.f, -1.f}, {0.0f, 0.0f, 0.0f}},    // 1
-	    VkEngineModel::Vertex{{1.f, 1.f}, {0.0f, 0.0f, 0.0f}},    // 2
+	    VkEngineModel::Vertex{{-1.f, -1.0f}, {1.0f, 0.0f, 0.0f}},  // 0
+	    VkEngineModel::Vertex{{1.f, -1.f}, {0.0f, 1.0f, 0.0f}},    // 1
+	    VkEngineModel::Vertex{{1.f, 1.f}, {0.0f, 0.0f, 1.0f}},    // 2
 	    VkEngineModel::Vertex{{-1.f, 1.f}, {0.0f, 0.0f, 0.0f}},   // 3
 	};
 

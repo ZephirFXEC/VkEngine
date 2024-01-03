@@ -25,11 +25,9 @@ using LogLevel = enum LogLevel : u8 {
 	LOG_LEVEL_TRACE = 5,
 };
 
-bool initialize_logger();
-void shutdown_logger();
 
 template <typename... Args>
-void log_output(LogLevel level, const char* message, Args&&... args) {
+constexpr void log_output(LogLevel level, const char* message, Args&&... args) {
 	std::array<const char*, 6> level_string = {
 	    "[FATAL]: ",
 	    "[ERROR]: ",
@@ -39,7 +37,7 @@ void log_output(LogLevel level, const char* message, Args&&... args) {
 	    "[TRACE]: "
 	};
 
-	fmt::print("{}{}", level_string.at(level), fmt::format(fmt::runtime(message), std::forward<Args>(args)...));
+	fmt::print("{}{}\n", level_string.at(level), fmt::format(fmt::runtime(message), std::forward<Args>(args)...));
 }
 
 template <typename... Args>

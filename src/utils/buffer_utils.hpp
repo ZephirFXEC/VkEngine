@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "vkEngineDevice.hpp"
+#include "engine_device.hpp"
 
 namespace vke {
 class BufferUtils {

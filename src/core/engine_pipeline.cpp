@@ -1,6 +1,6 @@
-#include <pch.hpp>
+#include "engine_pipeline.hpp"
 
-#include "vkEnginePipeline.hpp"
+#include <pch.hpp>
 
 #include "logger.hpp"
 
@@ -12,6 +12,8 @@ VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& ve
 }
 
 VkEnginePipeline::~VkEnginePipeline() {
+	VKINFO("Destroyed pipeline");
+
 	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pVertShaderModule, nullptr);
 	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pFragShaderModule, nullptr);
 

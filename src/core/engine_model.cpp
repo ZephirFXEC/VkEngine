@@ -1,12 +1,11 @@
 //
 // Created by Enzo Crema on 21/12/2023.
 //
+#include "engine_model.hpp"
+
 #include <pch.hpp>
 
-#include "vkEngineModel.hpp"
-
-#include "bufferUtils.hpp"
-
+#include "buffer_utils.hpp"
 #include "logger.hpp"
 
 namespace vke {
@@ -22,6 +21,7 @@ VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr
 VkEngineModel::~VkEngineModel() {
 	destroyBuffer(mVertexBuffer);
 	destroyBuffer(mIndexBuffer);
+	VKINFO("Destroyed model");
 }
 
 

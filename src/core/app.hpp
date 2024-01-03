@@ -1,10 +1,10 @@
 #pragma once
 
-#include "vkEngineDevice.hpp"
-#include "vkEngineModel.hpp"
-#include "vkEnginePipeline.hpp"
-#include "vkEngineSwapChain.hpp"
-#include "vkEngineWindow.hpp"
+#include "engine_device.hpp"
+#include "engine_model.hpp"
+#include "engine_pipeline.hpp"
+#include "engine_swapchain.hpp"
+#include "engine_window.hpp"
 
 namespace vke {
 class App {
@@ -53,5 +53,7 @@ class App {
 		VkCommandBuffer* ppVkCommandBuffers{};
 		u32 mSize{};  // number of command buffers (could be uint8_t)
 	} mCommandBuffer{};
+
+	u64 mCurrentFrame = 0;
 };
 }  // namespace vke

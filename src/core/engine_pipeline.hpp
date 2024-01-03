@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "vkEngineDevice.hpp"
-#include "vkEngineModel.hpp"
+#include "engine_device.hpp"
+#include "engine_model.hpp"
 
 namespace vke {
 struct PipelineConfigInfo {

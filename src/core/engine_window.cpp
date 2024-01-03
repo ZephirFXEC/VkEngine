@@ -1,5 +1,7 @@
+#include "engine_window.hpp"
+
 #include <pch.hpp>
-#include "vkEngineWindow.hpp"
+
 #include "logger.hpp"
 
 namespace vke {
@@ -9,6 +11,7 @@ VkEngineWindow::VkEngineWindow(const int width, const int height, std::string na
 }
 
 VkEngineWindow::~VkEngineWindow() {
+	VKINFO("Destroyed window");
 	glfwDestroyWindow(pWindow);  // destroy window
 	glfwTerminate();             // terminate GLFW
 }

@@ -5,12 +5,13 @@
 #pragma once
 
 // engine
-#include "vkEngineDevice.hpp"
+#include "engine_device.hpp"
 
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-#include "vkEngineSwapChain.hpp"
+
+#include "engine_swapchain.hpp"
 
 namespace vke {
 class VkEngineModel {

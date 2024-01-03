@@ -1,9 +1,9 @@
 
 
 #define VMA_IMPLEMENTATION
-#include <pch.hpp>
+#include "engine_device.hpp"
 
-#include "vkEngineDevice.hpp"
+#include <pch.hpp>
 
 #include "logger.hpp"
 
@@ -93,6 +93,8 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 }
 
 VkEngineDevice::~VkEngineDevice() {
+	VKINFO("Destroyed device");
+
 	// 2. Destroy the allocator
 	vmaDestroyAllocator(pAllocator);
 

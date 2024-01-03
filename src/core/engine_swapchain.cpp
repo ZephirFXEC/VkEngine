@@ -1,9 +1,8 @@
+#include "engine_swapchain.hpp"
+
 #include <pch.hpp>
 
-#include "vkEngineSwapChain.hpp"
-
-#include "bufferUtils.hpp"
-
+#include "buffer_utils.hpp"
 #include "logger.hpp"
 
 namespace vke {
@@ -30,6 +29,9 @@ void VkEngineSwapChain::init() {
 }
 
 VkEngineSwapChain::~VkEngineSwapChain() {
+
+	VKINFO("Destroyed swapchain");
+
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
