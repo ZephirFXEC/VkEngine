@@ -4,6 +4,7 @@
 
 #include "buffer_utils.hpp"
 #include "logger.hpp"
+#include <memory.hpp>
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
@@ -28,6 +29,8 @@ void VkEngineSwapChain::init() {
 	createSyncObjects();
 }
 
+
+
 VkEngineSwapChain::~VkEngineSwapChain() {
 
 	VKINFO("Destroyed swapchain");
@@ -35,6 +38,8 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
+
+	Memory::freeMemory(mSwapChainImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
 
 	if (pSwapChain != nullptr) {
 		vkDestroySwapchainKHR(mDevice.getDevice(), pSwapChain, nullptr);
@@ -49,7 +54,6 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyFramebuffer(mDevice.getDevice(), ppSwapChainFramebuffers[i], nullptr);
 	}
-	delete[] ppSwapChainFramebuffers;
 
 	vkDestroyRenderPass(mDevice.getDevice(), pRenderPass, nullptr);
 
@@ -64,6 +68,22 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
 	}
+
+	/*
+	Memory::freeMemory(mSyncPrimitives.ppImageAvailableSemaphores, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
+
+	Memory::freeMemory(mSyncPrimitives.ppRenderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSyncPrimitives.ppInFlightFences, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSyncPrimitives.ppInFlightImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+
+	Memory::freeMemory(mSwapChainImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSwapChainImages.ppImageViews, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+
+	Memory::freeMemory(mDepthImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mDepthImages.ppImageMemorys, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mDepthImages.ppImageViews, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+	*/
+
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
@@ -203,7 +223,7 @@ void VkEngineSwapChain::createRenderPass() {
 	    .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
 
-	const VkAttachmentReference depthAttachmentRef{
+	constexpr  VkAttachmentReference depthAttachmentRef{
 	    .attachment = 1,
 	    .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
@@ -219,7 +239,7 @@ void VkEngineSwapChain::createRenderPass() {
 	    .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 	};
 
-	const VkAttachmentReference colorAttachmentRef{
+	constexpr VkAttachmentReference colorAttachmentRef{
 	    .attachment = 0,
 	    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 	};
@@ -231,7 +251,7 @@ void VkEngineSwapChain::createRenderPass() {
 	    .pDepthStencilAttachment = &depthAttachmentRef,
 	};
 
-	const VkSubpassDependency dependency{
+	constexpr  VkSubpassDependency dependency{
 	    .srcSubpass = VK_SUBPASS_EXTERNAL,
 	    .dstSubpass = 0,
 	    .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,

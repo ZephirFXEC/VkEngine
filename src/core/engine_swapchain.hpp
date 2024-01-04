@@ -2,6 +2,8 @@
 
 #include "engine_device.hpp"
 
+#include "structs_helper.hpp"
+
 namespace vke {
 class VkEngineSwapChain {
    public:

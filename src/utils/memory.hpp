@@ -4,10 +4,9 @@
 
 #pragma once
 
+#include "structs_helper.hpp"
 
-#include "types.hpp"
-
-class Memory : NO_COPY_NOR_MOVE {
+class Memory : vke::NO_COPY_NOR_MOVE {
    public:
 	using Tag = enum Tag : u8 {
 
@@ -24,18 +23,23 @@ class Memory : NO_COPY_NOR_MOVE {
 		MEMORY_TAG_COUNT
 	};
 
-	static constexpr std::array<const char*, Tag::MEMORY_TAG_COUNT> MEMORY_TAG_NAMES = {
+	static constexpr std::array<const char*, MEMORY_TAG_COUNT> MEMORY_TAG_NAMES = {
 	    "Unknown", "Array", "Vector", "Texture", "Buffer", "Renderer", "Engine", "Vulkan", "Window"};
 
-	struct MemoryStats {
+	struct MemoryStats : NO_COPY_NOR_MOVE{
 		u64 totalAllocated{};
-		std::array<u64, Tag::MEMORY_TAG_COUNT> tagAllocated{};
+		std::array<u64, MEMORY_TAG_COUNT> tagAllocated{};
 	};
 
 	static void initializeMemory();
 	static void shutdownMemory();
-	static void* allocMemory(u64 size, Tag tag);
-	static void* freeMemory(void* block, u64 size, Tag tag);
+
+	template<typename T>
+	static T* allocMemory(size_t number, Tag tag);
+
+	template<typename T>
+	static void freeMemory(T* block, size_t number, Tag tag);
+
 	static void* zeroMemory(void* block, u64 size);
 	static void* copyMemory(void* dest, const void* src, u64 size);
 	static void* setMemory(void* dest, i32 value, u64 size);
