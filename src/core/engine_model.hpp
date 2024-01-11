@@ -20,9 +20,9 @@ class VkEngineModel {
 		glm::vec2 mPosition{};
 		glm::vec3 mColor{};
 
-		static std::unique_ptr<std::array<VkVertexInputBindingDescription, 1>> getBindingDescriptions();
+		static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();
 
-		static std::unique_ptr<std::array<VkVertexInputAttributeDescription, 2>> getAttributeDescriptions();
+		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 	};
 
 	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,

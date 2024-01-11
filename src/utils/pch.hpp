@@ -6,8 +6,6 @@
 
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include <vk_mem_alloc.h>
-//#include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vulkan.h>
 
 #include <deque>

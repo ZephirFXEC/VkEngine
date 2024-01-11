@@ -4,7 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "types.hpp"
+#include "utils/types.hpp"
 
 namespace vke {
 class VkEngineWindow {

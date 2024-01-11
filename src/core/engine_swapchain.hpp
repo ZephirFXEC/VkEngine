@@ -1,7 +1,8 @@
 #pragma once
 
+#include <vk_mem_alloc.h>
 #include "engine_device.hpp"
-#include "types.hpp"
+#include "utils/types.hpp"
 
 namespace vke {
 class VkEngineSwapChain {

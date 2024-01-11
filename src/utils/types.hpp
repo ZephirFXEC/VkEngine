@@ -5,6 +5,7 @@
 #pragma once
 
 #include "pch.hpp"
+#include <vk_mem_alloc.h>
 
 using u8 = uint8_t;
 using i8 = int8_t;

@@ -1,9 +1,8 @@
+#include "utils/pch.hpp"
 #include "engine_pipeline.hpp"
 
-#include <memory.hpp>
-#include <pch.hpp>
-
-#include "logger.hpp"
+#include "utils/memory.hpp"
+#include "utils/logger.hpp"
 
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
@@ -137,7 +136,7 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 	}
 
 	bufferSize = static_cast<size_t>(file.tellg());
-	auto* buffer = static_cast<char*>(Memory::allocMemory(bufferSize*sizeof(char), Memory::MEMORY_TAG_TEXTURE));
+	char* buffer = Memory::allocMemory<char>(bufferSize, Memory::MEMORY_TAG_TEXTURE);
 
 	file.seekg(0);
 	file.read(buffer, static_cast<u32>(bufferSize));
@@ -190,9 +189,9 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	const VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 	    .vertexBindingDescriptionCount = bindingDescriptionCount,
-	    .pVertexBindingDescriptions = bindingDescriptions->data(),
+	    .pVertexBindingDescriptions = bindingDescriptions.data(),
 	    .vertexAttributeDescriptionCount = attributeDescriptionCount,
-	    .pVertexAttributeDescriptions = attributeDescriptions->data(),
+	    .pVertexAttributeDescriptions = attributeDescriptions.data(),
 	};
 
 	const VkGraphicsPipelineCreateInfo pipelineInfo{

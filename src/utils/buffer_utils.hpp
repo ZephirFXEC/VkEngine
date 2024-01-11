@@ -3,7 +3,8 @@
 //
 #pragma once
 
-#include "engine_device.hpp"
+#include <vk_mem_alloc.h>
+#include "core/engine_device.hpp"
 
 namespace vke {
 class BufferUtils {

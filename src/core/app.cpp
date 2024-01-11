@@ -1,10 +1,8 @@
-#include <pch.hpp>
-
 #include "app.hpp"
 
-#include "logger.hpp"
+#include "utils/logger.hpp"
 
-#include "memory.hpp"
+#include "utils/memory.hpp"
 
 namespace vke {
 App::App() {
@@ -81,10 +79,7 @@ void App::createPipeline() {
 
 void App::createCommandBuffers() {
 	mCommandBuffer.mSize = mVkSwapChain->getImageCount();
-	mCommandBuffer.ppVkCommandBuffers = static_cast<VkCommandBuffer*>(
-	    Memory::allocMemory(mCommandBuffer.mSize * sizeof(VkCommandBuffer), Memory::MEMORY_TAG_VULKAN));
-	mCommandBuffer.ppVkCommandBuffers = static_cast<VkCommandBuffer*>(
-	    Memory::allocMemory(mCommandBuffer.mSize * sizeof(VkCommandBuffer), Memory::MEMORY_TAG_VULKAN));
+	mCommandBuffer.ppVkCommandBuffers = Memory::allocMemory<VkCommandBuffer>(mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	                                            .commandPool = mVkSwapChain->getCommandPool(),
@@ -146,7 +141,7 @@ void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
 	                     mCommandBuffer.ppVkCommandBuffers);
 
-	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory<VkCommandBuffer>(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
 }
 
 void App::recreateSwapChain() {
