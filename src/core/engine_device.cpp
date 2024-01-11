@@ -3,6 +3,7 @@
 #define VMA_IMPLEMENTATION
 #include "engine_device.hpp"
 
+#include <memory.hpp>
 #include <pch.hpp>
 
 #include "logger.hpp"
@@ -50,7 +51,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 	}
 
 #ifdef _WIN32
-	MessageBox(NULL, message.str().c_str(), "Alert", MB_OK);
+	fmt::println("{}", message.str().c_str());
 #else
 	fmt::println("{}", message.str());
 #endif
@@ -132,7 +133,9 @@ void VkEngineDevice::createInstance() {
 
 	VkInstanceCreateInfo createInfo = {
 	    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+#if __APPLE__
 	    .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
+#endif
 	    .pApplicationInfo = &appInfo,
 	    .enabledExtensionCount = extensionCount,
 	    .ppEnabledExtensionNames = extensions,
@@ -162,7 +165,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 
 	fmt::println("device count: {}", deviceCount);
 
-	auto* devices = new VkPhysicalDevice[deviceCount]{};
+	auto* devices = static_cast<VkPhysicalDevice*>(Memory::allocMemory(deviceCount * sizeof(VkPhysicalDevice), Memory::MEMORY_TAG_VULKAN));
 	VK_CHECK(vkEnumeratePhysicalDevices(pInstance, &deviceCount, devices));
 
 	for (u32 i = 0; i < deviceCount; ++i) {
@@ -172,7 +175,7 @@ void VkEngineDevice::pickPhysicalDevice() {
 		}
 	}
 
-	delete[] devices;
+	Memory::freeMemory(devices, deviceCount * sizeof(VkPhysicalDevice), Memory::MEMORY_TAG_VULKAN);
 
 	if (pPhysicalDevice == VK_NULL_HANDLE) {
 		throw std::runtime_error("failed to find a suitable GPU!");
@@ -186,9 +189,10 @@ void VkEngineDevice::createLogicalDevice() {
 	const std::set uniqueQueueFamilies = {findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(),
 	                                      findQueueFamilies(&pPhysicalDevice).mPresentFamily.value()};
 
-	auto* queueCreateInfos = new VkDeviceQueueCreateInfo[uniqueQueueFamilies.size()]{};
+	auto* queueCreateInfos = static_cast<VkDeviceQueueCreateInfo*>(Memory::allocMemory(uniqueQueueFamilies.size() * sizeof(VkDeviceQueueCreateInfo),
+	                                             Memory::MEMORY_TAG_VULKAN));
 
-	const float queuePriority = 1.0f;
+	constexpr float queuePriority = 1.0f;
 	for (const auto queueFamily : uniqueQueueFamilies) {
 		const VkDeviceQueueCreateInfo queueCreateInfo{
 		    .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -246,11 +250,11 @@ void VkEngineDevice::createLogicalDevice() {
 	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
 	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
 
-	delete[] queueCreateInfos;
+	Memory::freeMemory(queueCreateInfos, uniqueQueueFamilies.size() * sizeof(VkDeviceQueueCreateInfo), Memory::MEMORY_TAG_VULKAN);
 }
 
 void VkEngineDevice::createAllocator() {
-	const VmaVulkanFunctions vulkanFunctions{
+	constexpr VmaVulkanFunctions vulkanFunctions{
 	    .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
 	    .vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
 	};
@@ -319,7 +323,8 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 		throw std::runtime_error("No layers found");
 	}
 
-	auto* availableLayers = new VkLayerProperties[layerCount]{};
+	auto* availableLayers = static_cast<VkLayerProperties*>(Memory::allocMemory(layerCount * sizeof(VkLayerProperties), Memory::MEMORY_TAG_VULKAN));
+
 	VK_CHECK(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers));
 
 	for (const auto* const i : mValidationLayer) {
@@ -338,7 +343,8 @@ bool VkEngineDevice::checkValidationLayerSupport() const {
 		}
 	}
 
-	delete[] availableLayers;
+	Memory::freeMemory(availableLayers, layerCount * sizeof(VkLayerProperties), Memory::MEMORY_TAG_VULKAN);
+
 	return true;
 }
 
@@ -357,7 +363,7 @@ const char** VkEngineDevice::getRequiredExtensions(u32* extensionCount) {
 
 	*extensionCount = glfwExtensionCount + additionalExtensionCount;
 
-	auto* const extensions = new const char*[*extensionCount];
+	auto* const extensions = static_cast<const char**>(Memory::allocMemory(*extensionCount * sizeof(const char*), Memory::MEMORY_TAG_VULKAN));
 	memcpy(extensions, glfwExtensions, glfwExtensionCount * sizeof(const char*));
 
 	u32 index = glfwExtensionCount;
@@ -377,7 +383,7 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 	u32 extensionCount = 0;
 	VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
 
-	auto* extensions = new VkExtensionProperties[extensionCount]{};
+	auto* extensions = static_cast<VkExtensionProperties*>(Memory::allocMemory(extensionCount * sizeof(VkExtensionProperties), Memory::MEMORY_TAG_VULKAN));
 	VK_CHECK(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions));
 
 	fmt::println("available extensions:");
@@ -398,15 +404,15 @@ void VkEngineDevice::hasGflwRequiredInstanceExtensions() {
 		}
 	}
 
-	delete[] extensions;
-	delete[] requiredExtensions;
+	Memory::freeMemory(extensions, extensionCount * sizeof(VkExtensionProperties), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(requiredExtensions, requiredExtensionCount * sizeof(const char*), Memory::MEMORY_TAG_VULKAN);
 }
 
 bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const device) const {
 	u32 extensionCount = 0;
 	VK_CHECK(vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, nullptr));
 
-	auto* availableExtensions = new VkExtensionProperties[extensionCount]{};
+	auto* availableExtensions = static_cast<VkExtensionProperties*>(Memory::allocMemory(extensionCount * sizeof(VkExtensionProperties), Memory::MEMORY_TAG_VULKAN));
 	VK_CHECK(vkEnumerateDeviceExtensionProperties(*device, nullptr, &extensionCount, availableExtensions));
 
 	std::set<std::string> requiredExtensions(mDeviceExtensions.data(),
@@ -416,7 +422,7 @@ bool VkEngineDevice::checkDeviceExtensionSupport(const VkPhysicalDevice* const d
 		requiredExtensions.erase(availableExtensions[i].extensionName);
 	}
 
-	delete[] availableExtensions;
+	Memory::freeMemory(availableExtensions, extensionCount * sizeof(VkExtensionProperties), Memory::MEMORY_TAG_VULKAN);
 	return requiredExtensions.empty();
 }
 
@@ -426,7 +432,7 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice* con
 	u32 queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, nullptr);
 
-	auto* queueFamilies = new VkQueueFamilyProperties[queueFamilyCount]{};
+	auto* queueFamilies = static_cast<VkQueueFamilyProperties*>(Memory::allocMemory(queueFamilyCount * sizeof(VkQueueFamilyProperties), Memory::MEMORY_TAG_VULKAN));
 	vkGetPhysicalDeviceQueueFamilyProperties(*device, &queueFamilyCount, queueFamilies);
 
 	for (u32 i = 0; i < queueFamilyCount; ++i) {
@@ -443,7 +449,7 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice* con
 		}
 	}
 
-	delete[] queueFamilies;
+ 	Memory::freeMemory(queueFamilies, queueFamilyCount * sizeof(VkQueueFamilyProperties), Memory::MEMORY_TAG_VULKAN);
 
 	return indices;
 }

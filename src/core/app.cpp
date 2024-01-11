@@ -20,8 +20,7 @@ void App::run() {
 	while (!mVkWindow.shouldClose()) {
 		// while window is open
 
-		//if frame % 10 == 0 print memory usage
-		if (mCurrentFrame % 20 == 0) {
+		if (mCurrentFrame % 1000 == 0) {
 			Memory::getMemoryUsage();
 		}
 
@@ -76,13 +75,16 @@ void App::createPipeline() {
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
 	pVkPipeline =
-	    std::make_unique<VkEnginePipeline>(mVkDevice, "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
-	                                       "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv", pipelineConfig);
+	    std::make_unique<VkEnginePipeline>(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
+	                                       "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {
 	mCommandBuffer.mSize = mVkSwapChain->getImageCount();
-	mCommandBuffer.ppVkCommandBuffers = new VkCommandBuffer[mCommandBuffer.mSize];
+	mCommandBuffer.ppVkCommandBuffers = static_cast<VkCommandBuffer*>(
+	    Memory::allocMemory(mCommandBuffer.mSize * sizeof(VkCommandBuffer), Memory::MEMORY_TAG_VULKAN));
+	mCommandBuffer.ppVkCommandBuffers = static_cast<VkCommandBuffer*>(
+	    Memory::allocMemory(mCommandBuffer.mSize * sizeof(VkCommandBuffer), Memory::MEMORY_TAG_VULKAN));
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	                                            .commandPool = mVkSwapChain->getCommandPool(),
@@ -143,7 +145,8 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
 	                     mCommandBuffer.ppVkCommandBuffers);
-	delete[] mCommandBuffer.ppVkCommandBuffers;
+
+	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
 }
 
 void App::recreateSwapChain() {

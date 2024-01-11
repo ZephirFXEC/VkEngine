@@ -92,7 +92,9 @@ class VkEngineDevice {
 	VkQueue pPresentQueue = VK_NULL_HANDLE;
 
 	const std::array<const char*, 1> mValidationLayer{"VK_LAYER_KHRONOS_validation"};
-	const std::array<const char*, 3> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME
+
+	//TODO: make it more bullet proof for cross platform
+	const std::array<const char*, 1> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME
 #ifdef __APPLE__
 	                                                   ,
 	                                                   "VK_KHR_portability_subset", "VK_KHR_buffer_device_address"

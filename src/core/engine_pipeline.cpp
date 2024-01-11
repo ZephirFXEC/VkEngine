@@ -1,5 +1,6 @@
 #include "engine_pipeline.hpp"
 
+#include <memory.hpp>
 #include <pch.hpp>
 
 #include "logger.hpp"
@@ -136,7 +137,7 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 	}
 
 	bufferSize = static_cast<size_t>(file.tellg());
-	auto* const buffer = new char[bufferSize];
+	auto* buffer = static_cast<char*>(Memory::allocMemory(bufferSize*sizeof(char), Memory::MEMORY_TAG_TEXTURE));
 
 	file.seekg(0);
 	file.read(buffer, static_cast<u32>(bufferSize));
@@ -156,8 +157,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 
 	size_t vertShaderSize = 0;
 	size_t fragShaderSize = 0;
-	const auto* const vertShaderCode = readFile(vertShader, vertShaderSize);
-	const auto* const fragShaderCode = readFile(fragShader, fragShaderSize);
+	char* vertShaderCode = readFile(vertShader, vertShaderSize);
+	char* fragShaderCode = readFile(fragShader, fragShaderSize);
 
 	createShaderModule(vertShaderCode, vertShaderSize, &mShaders.pVertShaderModule);
 	createShaderModule(fragShaderCode, fragShaderSize, &mShaders.pFragShaderModule);
@@ -216,8 +217,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	VK_CHECK(
 	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
 
-	delete[] vertShaderCode;
-	delete[] fragShaderCode;
+	Memory::freeMemory(vertShaderCode, vertShaderSize, Memory::MEMORY_TAG_TEXTURE);
+	Memory::freeMemory(fragShaderCode, fragShaderSize, Memory::MEMORY_TAG_TEXTURE);
 }
 
 void VkEnginePipeline::createShaderModule(const char* const code, const size_t codeSize,

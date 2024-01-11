@@ -227,28 +227,30 @@ void VkEngineSwapChain::createRenderPass() {
 	    .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
 
-	constexpr  VkAttachmentReference depthAttachmentRef{
+	const VkAttachmentDescription colorAttachment{
+		.format = getSwapChainImageFormat(),
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+	};
+
+
+	static constexpr VkAttachmentReference depthAttachmentRef{
 	    .attachment = 1,
 	    .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 	};
 
-	const VkAttachmentDescription colorAttachment{
-	    .format = getSwapChainImageFormat(),
-	    .samples = VK_SAMPLE_COUNT_1_BIT,
-	    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-	    .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-	    .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-	    .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-	    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-	    .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-	};
 
-	constexpr VkAttachmentReference colorAttachmentRef{
+	static constexpr VkAttachmentReference colorAttachmentRef{
 	    .attachment = 0,
 	    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 	};
 
-	const VkSubpassDescription subpass{
+	constexpr VkSubpassDescription subpass{
 	    .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
 	    .colorAttachmentCount = 1,
 	    .pColorAttachments = &colorAttachmentRef,

@@ -3,6 +3,7 @@
 //
 #include "engine_model.hpp"
 
+#include <memory.hpp>
 #include <pch.hpp>
 
 #include "buffer_utils.hpp"
@@ -72,7 +73,7 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 	void* mappedData = nullptr;
 	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
 
-	memcpy(mappedData, data, static_cast<size_t>(bufferSize));
+	Memory::copyMemory(mappedData, data, static_cast<size_t>(bufferSize));
 
 	vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
 
