@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "structs_helper.hpp"
+#include "types.hpp"
 
-class Memory : vke::NO_COPY_NOR_MOVE {
+class Memory : NO_COPY_NOR_MOVE {
    public:
 	using Tag = enum Tag : u8 {
 
@@ -31,20 +31,19 @@ class Memory : vke::NO_COPY_NOR_MOVE {
 		std::array<u64, MEMORY_TAG_COUNT> tagAllocated{};
 	};
 
-	static void initializeMemory();
-	static void shutdownMemory();
 
-	template<typename T>
-	static T* allocMemory(size_t number, Tag tag);
+	static void* allocMemory(size_t size,  Tag tag);
 
-	template<typename T>
-	static void freeMemory(T* block, size_t number, Tag tag);
+	static void freeMemory(void* block, size_t size, Tag tag);
 
 	static void* zeroMemory(void* block, u64 size);
 	static void* copyMemory(void* dest, const void* src, u64 size);
 	static void* setMemory(void* dest, i32 value, u64 size);
 
+	static void initializeMemory();
+	static void shutdownMemory();
 	static void getMemoryUsage();
+
 	static MemoryStats mMemoryStats;
 
 };

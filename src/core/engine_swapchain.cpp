@@ -1,10 +1,10 @@
 #include "engine_swapchain.hpp"
 
+#include <memory.hpp>
 #include <pch.hpp>
 
 #include "buffer_utils.hpp"
 #include "logger.hpp"
-#include <memory.hpp>
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
@@ -35,54 +35,56 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 
 	VKINFO("Destroyed swapchain");
 
+	vkDeviceWaitIdle(mDevice.getDevice());
+
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}
 
-	Memory::freeMemory(mSwapChainImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSwapChainImages.ppImageViews, getImageCount() * sizeof(VkImageView), Memory::MEMORY_TAG_VULKAN);
 
 	if (pSwapChain != nullptr) {
 		vkDestroySwapchainKHR(mDevice.getDevice(), pSwapChain, nullptr);
+		// images are destroyed with the swapchain, we still need to manually free
+		Memory::freeMemory(mSwapChainImages.ppImages, getImageCount() * sizeof(VkImage), Memory::MEMORY_TAG_VULKAN);
 		pSwapChain = nullptr;
 	}
+
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mDepthImages.ppImageViews[i], nullptr);
 		vmaDestroyImage(mDevice.getAllocator(), mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
 	}
+	Memory::freeMemory(mDepthImages.ppImages, getImageCount() * sizeof(VkImage), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mDepthImages.ppImageViews, getImageCount() * sizeof(VkImageView), Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mDepthImages.ppImageMemorys, getImageCount() * sizeof(VmaAllocation), Memory::MEMORY_TAG_VULKAN);
+
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyFramebuffer(mDevice.getDevice(), ppSwapChainFramebuffers[i], nullptr);
 	}
+	Memory::freeMemory(ppSwapChainFramebuffers, getImageCount() * sizeof(VkFramebuffer), Memory::MEMORY_TAG_VULKAN);
 
 	vkDestroyRenderPass(mDevice.getDevice(), pRenderPass, nullptr);
 
 
-	// cleanup synchronization objects
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppRenderFinishedSemaphores[i], nullptr);
 		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores[i], nullptr);
 		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences[i], nullptr);
 	}
+	Memory::freeMemory(mSyncPrimitives.ppImageAvailableSemaphores, MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore),
+	                   Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSyncPrimitives.ppRenderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore),
+	                   Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSyncPrimitives.ppInFlightFences, MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore),
+	                   Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mSyncPrimitives.ppInFlightImages, getImageCount() * sizeof(VkFence), Memory::MEMORY_TAG_VULKAN);
+
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
 	}
-
-	/*
-	Memory::freeMemory(mSyncPrimitives.ppImageAvailableSemaphores, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
-
-	Memory::freeMemory(mSyncPrimitives.ppRenderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mSyncPrimitives.ppInFlightFences, MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mSyncPrimitives.ppInFlightImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-
-	Memory::freeMemory(mSwapChainImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mSwapChainImages.ppImageViews, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-
-	Memory::freeMemory(mDepthImages.ppImages, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mDepthImages.ppImageMemorys, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mDepthImages.ppImageViews, getImageCount(), Memory::MEMORY_TAG_VULKAN);
-	*/
 
 }
 
@@ -183,7 +185,9 @@ void VkEngineSwapChain::createSwapChain() {
 	// again to retrieve the handles.
 	VK_CHECK(vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, nullptr));
 
-	mSwapChainImages.ppImages = new VkImage[imageCount]{};
+	mSwapChainImages.ppImages =
+	    static_cast<VkImage*>(Memory::allocMemory(getImageCount() * sizeof(VkImage), Memory::MEMORY_TAG_VULKAN));
+
 	VK_CHECK(
 	    vkGetSwapchainImagesKHR(mDevice.getDevice(), pSwapChain, &mSwapChainImageCount, mSwapChainImages.ppImages));
 
@@ -192,7 +196,7 @@ void VkEngineSwapChain::createSwapChain() {
 }
 
 void VkEngineSwapChain::createImageViews() {
-	mSwapChainImages.ppImageViews = new VkImageView[getImageCount()]{};
+	mSwapChainImages.ppImageViews = static_cast<VkImageView*>(Memory::allocMemory(getImageCount()*sizeof(VkImageView), Memory::MEMORY_TAG_VULKAN));
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		const VkImageViewCreateInfo viewInfo{
@@ -276,7 +280,7 @@ void VkEngineSwapChain::createRenderPass() {
 }
 
 void VkEngineSwapChain::createFramebuffers() {
-	ppSwapChainFramebuffers = new VkFramebuffer[getImageCount()]{};
+	ppSwapChainFramebuffers = static_cast<VkFramebuffer*>(Memory::allocMemory(getImageCount()*sizeof(VkFramebuffer), Memory::MEMORY_TAG_VULKAN));
 
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		std::array attachments = {mSwapChainImages.ppImageViews[i], mDepthImages.ppImageViews[i]};
@@ -296,9 +300,11 @@ void VkEngineSwapChain::createFramebuffers() {
 }
 
 void VkEngineSwapChain::createDepthResources() {
-	mDepthImages.ppImages = new VkImage[getImageCount()]{};
-	mDepthImages.ppImageMemorys = new VmaAllocation[getImageCount()]{};
-	mDepthImages.ppImageViews = new VkImageView[getImageCount()]{};
+	mDepthImages.ppImages =
+	    static_cast<VkImage*>(Memory::allocMemory(getImageCount() * sizeof(VkImage), Memory::MEMORY_TAG_VULKAN));
+	mDepthImages.ppImageMemorys = static_cast<VmaAllocation*>(
+	    Memory::allocMemory(getImageCount() * sizeof(VmaAllocation), Memory::MEMORY_TAG_VULKAN));
+	mDepthImages.ppImageViews = static_cast<VkImageView*>(Memory::allocMemory(getImageCount()*sizeof(VkImageView), Memory::MEMORY_TAG_VULKAN));
 
 	for (size_t i = 0; i < getImageCount(); i++) {
 		const VkImageCreateInfo imageInfo{
@@ -358,12 +364,13 @@ void VkEngineSwapChain::createCommandPools() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-	mSyncPrimitives.ppImageAvailableSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
-	mSyncPrimitives.ppRenderFinishedSemaphores = new VkSemaphore[MAX_FRAMES_IN_FLIGHT]{};
-	mSyncPrimitives.ppInFlightFences = new VkFence[MAX_FRAMES_IN_FLIGHT]{};
-
-	mSyncPrimitives.ppInFlightImages = new VkFence[getImageCount()]{};
-	memset(mSyncPrimitives.ppInFlightImages, 0, sizeof(VkFence) * getImageCount());
+	mSyncPrimitives.ppImageAvailableSemaphores = static_cast<VkSemaphore*>(
+	    Memory::allocMemory(MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore), Memory::MEMORY_TAG_VULKAN));
+	mSyncPrimitives.ppRenderFinishedSemaphores = static_cast<VkSemaphore*>(
+	    Memory::allocMemory(MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore), Memory::MEMORY_TAG_VULKAN));
+	mSyncPrimitives.ppInFlightFences = static_cast<VkFence*>(
+	    Memory::allocMemory(MAX_FRAMES_IN_FLIGHT * sizeof(VkSemaphore), Memory::MEMORY_TAG_VULKAN));
+	mSyncPrimitives.ppInFlightImages = static_cast<VkFence*>(Memory::allocMemory(getImageCount()*sizeof(VkFence), Memory::MEMORY_TAG_VULKAN));
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
 	    .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,

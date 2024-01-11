@@ -17,31 +17,35 @@ void Memory::shutdownMemory() {
 	}
 }
 
-template<typename T>
-T* Memory::allocMemory(const size_t number, const Tag tag) {
+void* Memory::allocMemory(const size_t size, const Tag tag) {
 	if (tag == MEMORY_TAG_UNKNOWN) {
 		VKWARN("Allocating memory with MEMORY_TAG_UNKNOWN. Re-classify it!");
 	}
 
-	const size_t size = sizeof(T) * number;
 	mMemoryStats.totalAllocated += size;
 	mMemoryStats.tagAllocated.at(tag) += size;
 
-	T* block = new T[number];
+	void* block = malloc(size);
+
+	zeroMemory(block, size);
+
 	return block;
 }
 
-template<typename T>
-void Memory::freeMemory(T* block, const size_t number, const Tag tag) {
+void Memory::freeMemory(void* block, const size_t size, const Tag tag) {
 	if (tag == MEMORY_TAG_UNKNOWN) {
 		VKWARN("Freeing memory with MEMORY_TAG_UNKNOWN. Re-classify it!");
 	}
 
-	const size_t size = sizeof(T) * number;
+	if (block == nullptr) {
+		VKWARN("Trying to free nullptr!");
+		return;
+	}
+
 	mMemoryStats.totalAllocated -= size;
 	mMemoryStats.tagAllocated.at(tag) -= size;
 
-	delete[] block;
+	free(block);
 }
 
 void* Memory::zeroMemory(void* block, const u64 size) { return memset(block, 0, size); }
@@ -51,9 +55,9 @@ void* Memory::copyMemory(void* dest, const void* src, const u64 size) { return m
 void* Memory::setMemory(void* dest, const i32 value, const u64 size) { return memset(dest, value, size); }
 
 void Memory::getMemoryUsage() {
-	constexpr u64 gib = 1024 * 1024 * 1024;
-	constexpr u64 mib = 1024 * 1024;
-	constexpr f64 kib = 1024;
+	constexpr u64 gib = 1024ul * 1024ul * 1024ul;
+	constexpr u64 mib = 1024ul * 1024ul;
+	constexpr f64 kib = 1024ul;
 
 	std::string memoryUsage = fmt::format("Total allocated: {} bytes\n", mMemoryStats.totalAllocated);
 
@@ -61,9 +65,9 @@ void Memory::getMemoryUsage() {
 		if (const u64 bytes = mMemoryStats.tagAllocated.at(i); bytes > 0) {
 			std::string tag = MEMORY_TAG_NAMES.at(i);
 			std::string bytesStr{ fmt::format("{} bytes", bytes) };
-			std::string gibStr{ fmt::format("{:.2f} GiB", (f32)bytes / (f32)gib) };
-			std::string mibStr{ fmt::format("{:.2f} MiB", (f32)bytes / (f32)mib) };
-			std::string kibStr{ fmt::format("{:.2f} KiB", (f32)bytes / (f32)kib) };
+			std::string gibStr{fmt::format("{:.2f} GiB", S_CAST(f32, bytes) / S_CAST(f32, gib))};
+			std::string mibStr{fmt::format("{:.2f} MiB", S_CAST(f32, bytes) / S_CAST(f32, mib))};
+			std::string kibStr{fmt::format("{:.2f} KiB", S_CAST(f32, bytes) / S_CAST(f32, kib))};
 
 			memoryUsage += fmt::format("{}: {} ({}, {}, {})\n", tag, bytesStr, gibStr, mibStr, kibStr);
 		}

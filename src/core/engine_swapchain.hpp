@@ -1,8 +1,7 @@
 #pragma once
 
 #include "engine_device.hpp"
-
-#include "structs_helper.hpp"
+#include "types.hpp"
 
 namespace vke {
 class VkEngineSwapChain {

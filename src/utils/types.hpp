@@ -18,6 +18,7 @@ using f32 = float;
 using f64 = double;
 
 #define GETTERS(type, name, var) NDC_INLINE const type& get##name() const { return var; }
+#define S_CAST(type, var) static_cast<type>(var)
 
 #define NDC_FINLINE [[nodiscard]] __attribute__((always_inline)) inline
 #define NDC_INLINE [[nodiscard]] inline
