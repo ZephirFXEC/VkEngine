@@ -8,12 +8,11 @@
 #include "utils/logger.hpp"
 
 namespace vke {
-VkEngineModel::VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
+VkEngineModel::VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
                              const Vertex* vertices, const u32 vCount, const u32* indices,
                              const u32 iCount)
 
-    : mIndexCount{iCount}, mDevice{device}, mSwapChain{swapchain} {
-
+	: mIndexCount{iCount}, mDevice{device}, mSwapChain{std::move(swapchain)} {
 	VKINFO("Creating model");
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);

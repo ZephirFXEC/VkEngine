@@ -62,6 +62,12 @@ public:
 			return;
 		}
 
+		if(!std::is_trivially_destructible_v<T>) {
+			for (size_t i = 0; i < size; ++i) {
+				block[i].~T();
+			}
+        }
+
 		const size_t totalSize = size * sizeof(T);
 		mMemoryStats.totalAllocated -= totalSize;
 		mMemoryStats.tagAllocated.at(tag) -= totalSize;

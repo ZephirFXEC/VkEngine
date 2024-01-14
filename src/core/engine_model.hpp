@@ -25,17 +25,16 @@ class VkEngineModel {
 		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 	};
 
-	VkEngineModel(const VkEngineDevice& device, const std::shared_ptr<VkEngineSwapChain>& swapchain,
+	VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
 	              const Vertex* vertices, u32 vCount, const u32* indices, u32 iCount);
 
 	~VkEngineModel();
 
 	VkEngineModel(const VkEngineModel&) = delete;
-
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
+	VkEngineModel(VkEngineModel&&) = default;  // Enable move semantics
 
 	void bind(const VkCommandBuffer* commandBuffer) const;
-
 	void draw(const VkCommandBuffer* commandBuffer) const;
 
    private:

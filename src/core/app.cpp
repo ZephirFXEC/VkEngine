@@ -45,15 +45,15 @@ void App::loadModels() {
 	constexpr u32 vCount = 4;
 
 	constexpr std::array vertices{
-	    VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
-	    VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},    // 1
-	    VkEngineModel::Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},    // 2
+		VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
+		VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},  // 1
+		VkEngineModel::Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, // 2
 	};
 
 	constexpr std::array<u32, iCount> indices{0, 1, 2, 0};
 
 	pVkModel =
-	    std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
+		std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
 }
 
 void App::createPipelineLayout() {
@@ -150,8 +150,8 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 		};
 
 		vkCmdPushConstants(mCommandBuffer.ppVkCommandBuffers[imageIndex], pVkPipelineLayout,
-						   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
-						   &pushConstants);
+		                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
+		                   &pushConstants);
 
 		pVkModel->draw(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 	}
@@ -163,7 +163,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 
 void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
-		mCommandBuffer.ppVkCommandBuffers);
+	                     mCommandBuffer.ppVkCommandBuffers);
 
 	//vkResetCommandBuffer(mCommandBuffer.ppVkCommandBuffers[0], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 

@@ -114,17 +114,13 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 	    // Optional
 	};
 
-	constexpr u32 dynamicStateCount = 2;
-	configInfo.pDynamicStateEnables = new VkDynamicState[dynamicStateCount]{
-	    VK_DYNAMIC_STATE_VIEWPORT,
-	    VK_DYNAMIC_STATE_SCISSOR,
-	};
+	configInfo.pDynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
 	configInfo.dynamicStateInfo = {
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 	    .flags = 0,
-	    .dynamicStateCount = dynamicStateCount,
-	    .pDynamicStates = configInfo.pDynamicStateEnables,
+	    .dynamicStateCount = static_cast<uint32_t>(configInfo.pDynamicStateEnables.size()),
+	    .pDynamicStates = configInfo.pDynamicStateEnables.data(),
 	};
 }
 
@@ -183,14 +179,11 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
 	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
 
-	constexpr u32 bindingDescriptionCount = 1;
-	constexpr u32 attributeDescriptionCount = 2;
-
 	const VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-	    .vertexBindingDescriptionCount = bindingDescriptionCount,
+	    .vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size()),
 	    .pVertexBindingDescriptions = bindingDescriptions.data(),
-	    .vertexAttributeDescriptionCount = attributeDescriptionCount,
+	    .vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size()),
 	    .pVertexAttributeDescriptions = attributeDescriptions.data(),
 	};
 

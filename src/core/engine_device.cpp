@@ -46,23 +46,19 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 		}
 	}
 
-#ifdef _WIN32
-	fmt::println("{}", message.str().c_str());
-#else
 	fmt::println("{}", message.str());
-#endif
 
-	return 0u;
+	return VK_FALSE;
 }
-}  // namespace
+} // namespace
 
 VkResult CreateDebugUtilsMessengerEXT(const VkInstance* const instance,
                                       const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                       const VkAllocationCallbacks* pAllocator,
                                       VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	if (const auto func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-	        vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
-	    func != nullptr) {
+			vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT"));
+		func != nullptr) {
 		return func(*instance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
 
@@ -73,14 +69,15 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
                                    const VkDebugUtilsMessengerEXT* const debugMessenger,
                                    const VkAllocationCallbacks* pAllocator) {
 	if (const auto func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-	        vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
-	    func != nullptr) {
+			vkGetInstanceProcAddr(*instance, "vkDestroyDebugUtilsMessengerEXT"));
+		func != nullptr) {
 		func(*instance, *debugMessenger, pAllocator);
 	}
 }
 
 // class member functions
-VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
+VkEngineDevice::VkEngineDevice(VkEngineWindow& window)
+	: mWindow{window} {
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -116,25 +113,25 @@ void VkEngineDevice::createInstance() {
 	}
 
 	constexpr VkApplicationInfo appInfo = {
-	    .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
-	    .pApplicationName = "VkEngine",
-	    .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
-	    .pEngineName = "No Engine",
-	    .engineVersion = VK_MAKE_VERSION(1, 0, 0),
-	    .apiVersion = VK_API_VERSION_1_3,
+		.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+		.pApplicationName = "VkEngine",
+		.applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+		.pEngineName = "No Engine",
+		.engineVersion = VK_MAKE_VERSION(1, 0, 0),
+		.apiVersion = VK_API_VERSION_1_3,
 	};
 
 	u32 extensionCount = 0;
 	auto* const extensions = getRequiredExtensions(&extensionCount);
 
 	VkInstanceCreateInfo createInfo = {
-	    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+		.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 #if __APPLE__
 	    .flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR,
 #endif
-	    .pApplicationInfo = &appInfo,
-	    .enabledExtensionCount = extensionCount,
-	    .ppEnabledExtensionNames = extensions,
+		.pApplicationInfo = &appInfo,
+		.enabledExtensionCount = extensionCount,
+		.ppEnabledExtensionNames = extensions,
 	};
 
 	VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
@@ -152,7 +149,7 @@ void VkEngineDevice::createInstance() {
 	VK_CHECK(vkCreateInstance(&createInfo, nullptr, &pInstance));
 
 	hasGflwRequiredInstanceExtensions();
-	delete[] extensions;
+	Memory::freeMemory(extensions, extensionCount, Memory::MEMORY_TAG_VULKAN);
 }
 
 void VkEngineDevice::pickPhysicalDevice() {
@@ -185,15 +182,16 @@ void VkEngineDevice::createLogicalDevice() {
 	const std::set uniqueQueueFamilies = {findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(),
 	                                      findQueueFamilies(&pPhysicalDevice).mPresentFamily.value()};
 
-	auto* queueCreateInfos = Memory::allocMemory<VkDeviceQueueCreateInfo>(uniqueQueueFamilies.size(), Memory::MEMORY_TAG_VULKAN);
+	auto* queueCreateInfos = Memory::allocMemory<VkDeviceQueueCreateInfo>(
+		uniqueQueueFamilies.size(), Memory::MEMORY_TAG_VULKAN);
 
 	constexpr float queuePriority = 1.0f;
 	for (const auto queueFamily : uniqueQueueFamilies) {
 		const VkDeviceQueueCreateInfo queueCreateInfo{
-		    .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-		    .queueFamilyIndex = queueFamily,
-		    .queueCount = 1,
-		    .pQueuePriorities = &queuePriority,
+			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.queueFamilyIndex = queueFamily,
+			.queueCount = 1,
+			.pQueuePriorities = &queuePriority,
 		};
 
 		queueCreateInfos[queueFamily] = queueCreateInfo;
@@ -201,41 +199,41 @@ void VkEngineDevice::createLogicalDevice() {
 
 	// vulkan 1.2 features
 	VkPhysicalDeviceVulkan12Features features12{
-	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-	    .descriptorIndexing = VK_TRUE,
-	    .bufferDeviceAddress = VK_TRUE,
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+		.descriptorIndexing = VK_TRUE,
+		.bufferDeviceAddress = VK_TRUE,
 	};
 
 	VkPhysicalDeviceVulkan13Features features13{
-	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-	    .pNext = &features12,  // link the 1.2 features to the 1.3 features
-	    .synchronization2 = VK_TRUE,
-	    .dynamicRendering = VK_TRUE,
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+		.pNext = &features12, // link the 1.2 features to the 1.3 features
+		.synchronization2 = VK_TRUE,
+		.dynamicRendering = VK_TRUE,
 	};
 
 	VkPhysicalDeviceFeatures2 deviceFeatures2 = {
-	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-	    .pNext = &features13,  // link the 1.3 features to the 2.0 features
-	    .features =
-	        {
-	            .samplerAnisotropy = VK_TRUE,
-	        },
+		.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+		.pNext = &features13, // link the 1.3 features to the 2.0 features
+		.features =
+		{
+			.samplerAnisotropy = VK_TRUE,
+		},
 	};
 
 	VkDeviceCreateInfo createInfo = {
-	    .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-	    .pNext = &deviceFeatures2,  // link the 2.0 features to the device create info
-	    .queueCreateInfoCount = static_cast<u32>(uniqueQueueFamilies.size()),
-	    .pQueueCreateInfos = queueCreateInfos,
-	    .enabledExtensionCount = static_cast<u32>(mDeviceExtensions.size()),
-	    .ppEnabledExtensionNames = mDeviceExtensions.data(),
+		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+		.pNext = &deviceFeatures2, // link the 2.0 features to the device create info
+		.queueCreateInfoCount = static_cast<u32>(uniqueQueueFamilies.size()),
+		.pQueueCreateInfos = queueCreateInfos,
+		.enabledExtensionCount = static_cast<u32>(mDeviceExtensions.size()),
+		.ppEnabledExtensionNames = mDeviceExtensions.data(),
 	};
 
 	// might not really be necessary anymore because device specific validation
 	// layers have been deprecated
 	if (enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<u32>(mValidationLayer.size()),
-		createInfo.ppEnabledLayerNames = mValidationLayer.data();
+			createInfo.ppEnabledLayerNames = mValidationLayer.data();
 	} else {
 		createInfo.enabledLayerCount = 0;
 	}
@@ -250,17 +248,17 @@ void VkEngineDevice::createLogicalDevice() {
 
 void VkEngineDevice::createAllocator() {
 	constexpr VmaVulkanFunctions vulkanFunctions{
-	    .vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
-	    .vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
+		.vkGetInstanceProcAddr = &vkGetInstanceProcAddr,
+		.vkGetDeviceProcAddr = &vkGetDeviceProcAddr,
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
-	    .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-	    .physicalDevice = pPhysicalDevice,
-	    .device = pDevice,
-	    .pVulkanFunctions = &vulkanFunctions,
-	    .instance = pInstance,
-	    .vulkanApiVersion = VK_API_VERSION_1_3,
+		.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+		.physicalDevice = pPhysicalDevice,
+		.device = pDevice,
+		.pVulkanFunctions = &vulkanFunctions,
+		.instance = pInstance,
+		.vulkanApiVersion = VK_API_VERSION_1_3,
 	};
 
 	VK_CHECK(vmaCreateAllocator(&allocatorInfo, &pAllocator));
@@ -275,7 +273,7 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 	bool swapChainAdequate = false;
 	if (extensionsSupported) {
 		swapChainAdequate =
-		    !querySwapChainSupport(device).mFormats.empty() && !querySwapChainSupport(device).mPresentModes.empty();
+			!querySwapChainSupport(device).mFormats.empty() && !querySwapChainSupport(device).mPresentModes.empty();
 	}
 
 	VkPhysicalDeviceFeatures supportedFeatures{};
@@ -290,13 +288,13 @@ bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) cons
 
 void VkEngineDevice::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
 	createInfo = {
-	    .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-	    .messageSeverity =
-	        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-	    .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-	                   VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-	    .pfnUserCallback = debugCallback,
-	    .pUserData = nullptr  // Optional
+		.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+		.messageSeverity =
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+		.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+		               VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+		.pfnUserCallback = debugCallback,
+		.pUserData = nullptr // Optional
 	};
 }
 
@@ -444,7 +442,7 @@ QueueFamilyIndices VkEngineDevice::findQueueFamilies(const VkPhysicalDevice* con
 		}
 	}
 
- 	Memory::freeMemory(queueFamilies, queueFamilyCount, Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(queueFamilies, queueFamilyCount, Memory::MEMORY_TAG_VULKAN);
 
 	return indices;
 }
@@ -467,7 +465,7 @@ SwapChainSupportDetails VkEngineDevice::querySwapChainSupport(const VkPhysicalDe
 	if (presentModeCount != 0) {
 		details.mPresentModes.resize(presentModeCount);
 		VK_CHECK(vkGetPhysicalDeviceSurfacePresentModesKHR(*device, pSurface, &presentModeCount,
-		                                                   details.mPresentModes.data()));
+			details.mPresentModes.data()));
 	}
 	return details;
 }
@@ -501,4 +499,4 @@ u32 VkEngineDevice::findMemoryType(const u32 typeFilter, const VkMemoryPropertyF
 
 	throw std::runtime_error("failed to find suitable memory type!");
 }
-}  // namespace vke
+} // namespace vke

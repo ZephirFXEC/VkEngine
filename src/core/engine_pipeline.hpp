@@ -22,13 +22,11 @@ struct PipelineConfigInfo {
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-	VkDynamicState* pDynamicStateEnables = nullptr;
+	std::array<VkDynamicState,2> pDynamicStateEnables{};
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	u32 subpass = 0;
-
-	~PipelineConfigInfo() { delete[] pDynamicStateEnables; }
 };
 
 class VkEnginePipeline {

@@ -210,8 +210,8 @@ void VkEngineSwapChain::createImageViews() {
 }
 
 void VkEngineSwapChain::createRenderPass() {
-	const VkAttachmentDescription depthAttachment{
-	    .format = findDepthFormat(),
+	constexpr VkAttachmentDescription depthAttachment{
+	    .format = VK_FORMAT_D24_UNORM_S8_UINT,
 	    .samples = VK_SAMPLE_COUNT_1_BIT,
 	    .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 	    .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -304,7 +304,7 @@ void VkEngineSwapChain::createDepthResources() {
 		const VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		    .imageType = VK_IMAGE_TYPE_2D,
-		    .format = findDepthFormat(),
+		    .format = VK_FORMAT_D24_UNORM_S8_UINT,
 		    .extent = {.width = getSwapChainExtent().width, .height = getSwapChainExtent().height, .depth = 1},
 		    .mipLevels = 1,
 		    .arrayLayers = 1,
@@ -321,7 +321,7 @@ void VkEngineSwapChain::createDepthResources() {
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		    .image = mDepthImages.ppImages[i],
 		    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-		    .format = findDepthFormat(),
+		    .format = VK_FORMAT_D24_UNORM_S8_UINT,
 		    .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
 		                         .baseMipLevel = 0,
 		                         .levelCount = 1,
@@ -341,7 +341,7 @@ void VkEngineSwapChain::createCommandPools() {
 
 	};
 
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		VK_CHECK(vkCreateCommandPool(mDevice.getDevice(), &poolInfo, nullptr, &mFrameData.at(i).pCommandPool));
 
 		// allocate the default command buffer that we will use for rendering
@@ -358,10 +358,8 @@ void VkEngineSwapChain::createCommandPools() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-	mSyncPrimitives.ppImageAvailableSemaphores = Memory::allocMemory<VkSemaphore>(
-		MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
-	mSyncPrimitives.ppRenderFinishedSemaphores = Memory::allocMemory<VkSemaphore>(
-		MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
+	mSyncPrimitives.ppImageAvailableSemaphores = Memory::allocMemory<VkSemaphore>(MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
+	mSyncPrimitives.ppRenderFinishedSemaphores = Memory::allocMemory<VkSemaphore>(MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
 	mSyncPrimitives.ppInFlightFences = Memory::allocMemory<VkFence>(MAX_FRAMES_IN_FLIGHT, Memory::MEMORY_TAG_VULKAN);
 	mSyncPrimitives.ppInFlightImages = Memory::allocMemory<VkFence>(getImageCount(), Memory::MEMORY_TAG_VULKAN);
 
@@ -433,10 +431,10 @@ VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<
 VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	if (const auto it = std::ranges::find_if(availablePresentModes.begin(), availablePresentModes.end(),
 	                                         [](const VkPresentModeKHR& availablePresentMode) {
-		                                         return availablePresentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
-		fmt::println("Present mode: FIFO Relaxed");
+		fmt::println("Present mode: Immediate");
 		return *it;
 	}
 
