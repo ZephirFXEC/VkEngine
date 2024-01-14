@@ -14,7 +14,6 @@ class App {
 	~App();
 
 	App(const App&) = delete;
-
 	App& operator=(const App&) = delete;
 
 	static constexpr int HEIGHT = 600;
@@ -51,9 +50,9 @@ class App {
 
 	struct CommandBuffer {
 		VkCommandBuffer* ppVkCommandBuffers{};
-		u32 mSize{};  // number of command buffers (could be uint8_t)
+		u8 mSize{};  // number of command buffers (could be uint8_t)
 	} mCommandBuffer{};
 
-	u64 mCurrentFrame = 0;
+	static inline u64 mCurrentFrame = 0;
 };
 }  // namespace vke

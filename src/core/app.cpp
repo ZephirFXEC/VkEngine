@@ -5,6 +5,12 @@
 #include "utils/memory.hpp"
 
 namespace vke {
+struct PushConstants {
+	glm::mat2 transform{1.f};
+	glm::vec2 offset{};
+	alignas(16) glm::vec3 color{};
+};
+
 App::App() {
 	createPipelineLayout();
 	recreateSwapChain();
@@ -38,26 +44,32 @@ void App::loadModels() {
 	constexpr u32 iCount = 6;
 	constexpr u32 vCount = 4;
 
-	constexpr std::array<VkEngineModel::Vertex, vCount> vertices{
-	    VkEngineModel::Vertex{{-1.f, -1.0f}, {1.0f, 0.0f, 0.0f}},  // 0
-	    VkEngineModel::Vertex{{1.f, -1.f}, {0.0f, 1.0f, 0.0f}},    // 1
-	    VkEngineModel::Vertex{{1.f, 1.f}, {0.0f, 0.0f, 1.0f}},    // 2
-	    VkEngineModel::Vertex{{-1.f, 1.f}, {0.0f, 0.0f, 0.0f}},   // 3
+	constexpr std::array vertices{
+	    VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
+	    VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},    // 1
+	    VkEngineModel::Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},    // 2
 	};
 
-	constexpr std::array<u32, iCount> indices{0, 1, 2, 2, 3, 0};
+	constexpr std::array<u32, iCount> indices{0, 1, 2, 0};
 
 	pVkModel =
 	    std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
 }
 
 void App::createPipelineLayout() {
+
+	static constexpr VkPushConstantRange pushConstantRange{
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(PushConstants),
+	};
+
 	constexpr VkPipelineLayoutCreateInfo pipelineLayoutInfo{.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 	                                                        .pNext = nullptr,
 	                                                        .setLayoutCount = 0,
 	                                                        .pSetLayouts = nullptr,
-	                                                        .pushConstantRangeCount = 0,
-	                                                        .pPushConstantRanges = nullptr};
+	                                                        .pushConstantRangeCount = 1,
+	                                                        .pPushConstantRanges = &pushConstantRange};
 
 	VK_CHECK(vkCreatePipelineLayout(mVkDevice.getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout));
 }
@@ -130,7 +142,19 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 
 	pVkPipeline->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 	pVkModel->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
-	pVkModel->draw(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+
+	{
+		constexpr PushConstants pushConstants{
+			.offset = glm::vec2(0.0f, 0.0f),
+			.color = glm::vec3(1.0f, 0.0f, 0.0f)
+		};
+
+		vkCmdPushConstants(mCommandBuffer.ppVkCommandBuffers[imageIndex], pVkPipelineLayout,
+						   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
+						   &pushConstants);
+
+		pVkModel->draw(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+	}
 
 	vkCmdEndRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
@@ -139,9 +163,11 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 
 void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
-	                     mCommandBuffer.ppVkCommandBuffers);
+		mCommandBuffer.ppVkCommandBuffers);
 
-	Memory::freeMemory<VkCommandBuffer>(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
+	//vkResetCommandBuffer(mCommandBuffer.ppVkCommandBuffers[0], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
 }
 
 void App::recreateSwapChain() {
