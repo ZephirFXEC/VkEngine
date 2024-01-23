@@ -3,7 +3,6 @@
 // std
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 #include <vulkan/vulkan_structs.hpp>
 
@@ -42,11 +41,9 @@ PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(const uint32_t wi
 	configInfo.viewport.setMaxDepth(1.0f);
 	configInfo.scissor.setExtent({width, height});
 
-	configInfo.inputAssemblyInfo.sType = vk::StructureType::ePipelineInputAssemblyStateCreateInfo;
 	configInfo.inputAssemblyInfo.setTopology(vk::PrimitiveTopology::eTriangleList);
 	configInfo.inputAssemblyInfo.setPrimitiveRestartEnable(VK_FALSE);
 
-	configInfo.rasterizationInfo.sType = vk::StructureType::ePipelineRasterizationStateCreateInfo;
 	configInfo.rasterizationInfo.setDepthClampEnable(VK_FALSE);
 	configInfo.rasterizationInfo.setRasterizerDiscardEnable(VK_FALSE);
 	configInfo.rasterizationInfo.setPolygonMode(vk::PolygonMode::eFill);
@@ -55,42 +52,39 @@ PipelineConfigInfo VkEnginePipeline::defaultPipelineConfigInfo(const uint32_t wi
 	configInfo.rasterizationInfo.setFrontFace(vk::FrontFace::eCounterClockwise);
 	configInfo.rasterizationInfo.setDepthBiasEnable(VK_FALSE);
 
-	configInfo.multisampleInfo.sType = vk::StructureType::ePipelineMultisampleStateCreateInfo;
-	configInfo.multisampleInfo.sampleShadingEnable = VK_FALSE;
-	configInfo.multisampleInfo.rasterizationSamples = vk::SampleCountFlagBits::e1;
-	configInfo.multisampleInfo.minSampleShading = 1.0f; // Optional
-	configInfo.multisampleInfo.pSampleMask = nullptr; // Optional
-	configInfo.multisampleInfo.alphaToCoverageEnable = VK_FALSE; // Optional
-	configInfo.multisampleInfo.alphaToOneEnable = VK_FALSE; // Optional
+	configInfo.multisampleInfo.setSampleShadingEnable(VK_FALSE);
+	configInfo.multisampleInfo.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+	configInfo.multisampleInfo.setMinSampleShading(1.0f); // Optional
+	configInfo.multisampleInfo.setPSampleMask(nullptr); // Optional
+	configInfo.multisampleInfo.setAlphaToCoverageEnable(VK_FALSE); // Optional
+	configInfo.multisampleInfo.setAlphaToOneEnable(VK_FALSE); // Optional
 
-	configInfo.colorBlendAttachment.colorWriteMask =
+	configInfo.colorBlendAttachment.setColorWriteMask(
 		vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-		vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-	configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-	configInfo.colorBlendAttachment.srcColorBlendFactor = vk::BlendFactor::eOne; // Optional
-	configInfo.colorBlendAttachment.dstColorBlendFactor = vk::BlendFactor::eZero; // Optional
-	configInfo.colorBlendAttachment.colorBlendOp = vk::BlendOp::eAdd; // Optional
-	configInfo.colorBlendAttachment.srcAlphaBlendFactor = vk::BlendFactor::eOne; // Optional
-	configInfo.colorBlendAttachment.dstAlphaBlendFactor = vk::BlendFactor::eZero; // Optional
-	configInfo.colorBlendAttachment.alphaBlendOp = vk::BlendOp::eAdd; // Optional
+		vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
+	configInfo.colorBlendAttachment.setBlendEnable(VK_FALSE);
+	configInfo.colorBlendAttachment.setSrcColorBlendFactor(vk::BlendFactor::eOne); // Optional
+	configInfo.colorBlendAttachment.setDstColorBlendFactor(vk::BlendFactor::eZero); // Optional
+	configInfo.colorBlendAttachment.setColorBlendOp(vk::BlendOp::eAdd); // Optional
+	configInfo.colorBlendAttachment.setSrcAlphaBlendFactor(vk::BlendFactor::eOne); // Optional
+	configInfo.colorBlendAttachment.setDstAlphaBlendFactor(vk::BlendFactor::eZero); // Optional
+	configInfo.colorBlendAttachment.setAlphaBlendOp(vk::BlendOp::eAdd); // Optional
 
-	configInfo.colorBlendInfo.sType = vk::StructureType::ePipelineColorBlendStateCreateInfo;
-	configInfo.colorBlendInfo.logicOpEnable = VK_FALSE;
-	configInfo.colorBlendInfo.logicOp = vk::LogicOp::eCopy; // Optional
-	configInfo.colorBlendInfo.attachmentCount = 1;
-	configInfo.colorBlendInfo.pAttachments = &configInfo.colorBlendAttachment;
-	configInfo.colorBlendInfo.blendConstants = {{0.0f, 0.0f, 0.0f, 0.0f}}; // Optional
+	configInfo.colorBlendInfo.setLogicOpEnable(VK_FALSE);
+	configInfo.colorBlendInfo.setLogicOp(vk::LogicOp::eCopy); // Optional
+	configInfo.colorBlendInfo.setAttachmentCount(1);
+	configInfo.colorBlendInfo.setPAttachments(&configInfo.colorBlendAttachment);
+	configInfo.colorBlendInfo.setBlendConstants({0.0f, 0.0f, 0.0f, 0.0f}); // Optional
 
-	configInfo.depthStencilInfo.sType = vk::StructureType::ePipelineDepthStencilStateCreateInfo;
-	configInfo.depthStencilInfo.depthTestEnable = VK_TRUE;
-	configInfo.depthStencilInfo.depthWriteEnable = VK_TRUE;
-	configInfo.depthStencilInfo.depthCompareOp = vk::CompareOp::eLess;
-	configInfo.depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
-	configInfo.depthStencilInfo.stencilTestEnable = VK_FALSE;
-	configInfo.depthStencilInfo.front = vk::StencilOpState{}; // Optional
-	configInfo.depthStencilInfo.back = vk::StencilOpState{}; // Optional
-	configInfo.depthStencilInfo.minDepthBounds = 0.0f; // Optional
-	configInfo.depthStencilInfo.maxDepthBounds = 1.0f; // Optional
+	configInfo.depthStencilInfo.setDepthTestEnable(VK_TRUE);
+	configInfo.depthStencilInfo.setDepthWriteEnable(VK_TRUE);
+	configInfo.depthStencilInfo.setDepthCompareOp(vk::CompareOp::eLess);
+	configInfo.depthStencilInfo.setDepthBoundsTestEnable(VK_FALSE);
+	configInfo.depthStencilInfo.setMinDepthBounds(0.0f); // Optional
+	configInfo.depthStencilInfo.setMaxDepthBounds(1.0f); // Optional
+	configInfo.depthStencilInfo.setStencilTestEnable(VK_FALSE);
+	configInfo.depthStencilInfo.setFront({}); // Optional
+	configInfo.depthStencilInfo.setBack({}); // Optional
 
 	return configInfo;
 }

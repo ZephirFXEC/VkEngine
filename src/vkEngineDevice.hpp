@@ -2,6 +2,7 @@
 #define VKDEVICE_H
 
 #include "vkWindow.hpp"
+#include <vulkan/vulkan.hpp>
 
 namespace vke
 {
@@ -134,8 +135,7 @@ private:
 	vk::Queue pPresentQueue{};
 
 	const std::vector<const char*> mValidationLayers = {"VK_LAYER_KHRONOS_validation"};
-	const std::vector<const char*> mDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-														"VK_KHR_portability_subset"};
+	const std::vector<const char*> mDeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 };
 
 } // namespace vke

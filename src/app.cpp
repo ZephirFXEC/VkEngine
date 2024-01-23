@@ -1,6 +1,10 @@
 #include "app.hpp"
+#include "vkEnginePipeline.hpp"
 
+#include <memory>
 #include <stdexcept>
+#include <vulkan/vulkan_structs.hpp>
+#include <vulkan/vulkan_enums.hpp>
 
 namespace vke
 {
@@ -51,8 +55,8 @@ void App::createPipeline()
 
 	pVkPipeline =
 		std::make_unique<VkEnginePipeline>(mVkDevice,
-										   "/Users/ecrema/Desktop/VkEngine/shaders/simple.vert.spv",
-										   "/Users/ecrema/Desktop/VkEngine/shaders/simple.frag.spv",
+										   "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
+										   "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv",
 										   pipelineConfig);
 }
 

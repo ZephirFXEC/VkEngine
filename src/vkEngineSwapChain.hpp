@@ -17,9 +17,9 @@ class VkEngineSwapChain
 public:
 	static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
-	VkEngineSwapChain(VkEngineDevice& deviceRef, vk::Extent2D windowExtent);
+	VkEngineSwapChain(VkEngineDevice& deviceRef, vk::Extent2D extent);
 	VkEngineSwapChain(VkEngineDevice& deviceRef,
-					  vk::Extent2D windowExtent,
+					  vk::Extent2D extent,
 					  std::shared_ptr<VkEngineSwapChain> previous);
 	~VkEngineSwapChain();
 

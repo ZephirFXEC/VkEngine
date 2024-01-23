@@ -4,25 +4,24 @@
 #include <array>
 #include <iostream>
 #include <limits>
-#include <set>
 #include <stdexcept>
 
 namespace vke
 {
 
-VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, vk::Extent2D extent)
+VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const vk::Extent2D extent)
 	: device{deviceRef}
-	, windowExtent{extent}
+	  , windowExtent{extent}
 {
 	init();
 }
 
 VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef,
-									 vk::Extent2D extent,
-									 std::shared_ptr<VkEngineSwapChain> previous)
+                                     const vk::Extent2D extent,
+                                     std::shared_ptr<VkEngineSwapChain> previous)
 	: device{deviceRef}
-	, windowExtent{extent}
-	, oldSwapChain{std::move(std::move(previous))}
+	  , windowExtent{extent}
+	  , oldSwapChain{std::move(std::move(previous))}
 {
 	init();
 	oldSwapChain = nullptr;
@@ -79,16 +78,21 @@ VkEngineSwapChain::~VkEngineSwapChain()
 vk::Result VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 {
 
-	auto r = device.device().waitForFences(1, &ppInFlightFences[currentFrame], VK_TRUE,
-								  std::numeric_limits<uint64_t>::max());
+	auto r = device.device().waitForFences(1,
+	                                       &ppInFlightFences[currentFrame],
+	                                       VK_TRUE,
+	                                       ~0ull);
 
-	if(r != vk::Result::eSuccess) { throw std::runtime_error("failed to wait for fences!"); }
+	if(r != vk::Result::eSuccess)
+	{
+		throw std::runtime_error("failed to wait for fences!");
+	}
 
 	r = device.device().acquireNextImageKHR(swapChain,
-													   std::numeric_limits<uint64_t>::max(),
-													   ppImageAvailableSemaphores[currentFrame],
-													   VK_NULL_HANDLE,
-													   imageIndex);
+	                                        ~0ull,
+	                                        ppImageAvailableSemaphores[currentFrame],
+	                                        VK_NULL_HANDLE,
+	                                        imageIndex);
 
 	if(r != vk::Result::eSuccess && r != vk::Result::eSuboptimalKHR)
 	{
@@ -99,13 +103,16 @@ vk::Result VkEngineSwapChain::acquireNextImage(uint32_t* imageIndex) const
 }
 
 vk::Result VkEngineSwapChain::submitCommandBuffers(const vk::CommandBuffer* buffers,
-												   const uint32_t* imageIndex)
+                                                   const uint32_t* imageIndex)
 {
 	if(ppImagesInFlight[*imageIndex] != VK_NULL_HANDLE)
 	{
 		if(const vk::Result r = device.device().waitForFences(
-			   1, &ppImagesInFlight[*imageIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
-		   r != vk::Result::eSuccess)
+				1,
+				&ppImagesInFlight[*imageIndex],
+				VK_TRUE,
+				std::numeric_limits<uint64_t>::max());
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to wait for fences!");
 		}
@@ -119,17 +126,23 @@ vk::Result VkEngineSwapChain::submitCommandBuffers(const vk::CommandBuffer* buff
 		vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
 	const vk::SubmitInfo submitInfo(
-		1, waitSemaphores.data(), waitStages.data(), 1, buffers, 1, signalSemaphores.data());
+		1,
+		waitSemaphores.data(),
+		waitStages.data(),
+		1,
+		buffers,
+		1,
+		signalSemaphores.data());
 
 	if(const vk::Result r = device.device().resetFences(1, &ppInFlightFences[currentFrame]);
-	   r != vk::Result::eSuccess)
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to reset fences!");
 	}
 
 	if(const vk::Result r =
-		   device.graphicsQueue().submit(1, &submitInfo, ppInFlightFences[currentFrame]);
-	   r != vk::Result::eSuccess)
+			device.graphicsQueue().submit(1, &submitInfo, ppInFlightFences[currentFrame]);
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
@@ -137,7 +150,12 @@ vk::Result VkEngineSwapChain::submitCommandBuffers(const vk::CommandBuffer* buff
 	const std::array swapChains = {swapChain};
 
 	const vk::PresentInfoKHR presentInfo(
-		1, signalSemaphores.data(), 1, swapChains.data(), imageIndex, nullptr);
+		1,
+		signalSemaphores.data(),
+		1,
+		swapChains.data(),
+		imageIndex,
+		nullptr);
 
 	const vk::Result result = device.presentQueue().presentKHR(&presentInfo);
 
@@ -166,7 +184,7 @@ void VkEngineSwapChain::createSwapChain()
 	const std::array queueFamilyIndices = {indices.mGraphicsFamily, indices.mPresentFamily};
 
 	const vk::SwapchainCreateInfoKHR createInfo(
-		vk::SwapchainCreateFlagsKHR{},
+		{},
 		device.surface(),
 		imageCount,
 		surfaceFormat.format,
@@ -184,7 +202,7 @@ void VkEngineSwapChain::createSwapChain()
 		oldSwapChain == nullptr ? VK_NULL_HANDLE : oldSwapChain->swapChain);
 
 	if(const vk::Result r = device.device().createSwapchainKHR(&createInfo, nullptr, &swapChain);
-	   r != vk::Result::eSuccess)
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to create swap chain!");
 	}
@@ -194,15 +212,15 @@ void VkEngineSwapChain::createSwapChain()
 	// images with vkGetSwapchainImagesKHR, then resize the container and finally call it again to
 	// retrieve the handles.
 	if(const vk::Result r = device.device().getSwapchainImagesKHR(swapChain, &imageCount, nullptr);
-	   r != vk::Result::eSuccess)
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to get swap chain images!");
 	}
 
 	swapChainImages.resize(imageCount);
 	if(const vk::Result r =
-		   device.device().getSwapchainImagesKHR(swapChain, &imageCount, swapChainImages.data());
-	   r != vk::Result::eSuccess)
+			device.device().getSwapchainImagesKHR(swapChain, &imageCount, swapChainImages.data());
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to get swap chain images!");
 	}
@@ -219,19 +237,19 @@ void VkEngineSwapChain::createImageViews()
 	{
 
 		vk::ImageViewCreateInfo viewInfo(
-			vk::ImageViewCreateFlags{},
+			{},
 			swapChainImages[i],
 			vk::ImageViewType::e2D,
 			mSwapChainImageFormat,
 			vk::ComponentMapping{vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity},
+			                     vk::ComponentSwizzle::eIdentity,
+			                     vk::ComponentSwizzle::eIdentity,
+			                     vk::ComponentSwizzle::eIdentity},
 			vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
 		if(const vk::Result r =
-			   device.device().createImageView(&viewInfo, nullptr, &ppSwapChainImageViews[i]);
-		   r != vk::Result::eSuccess)
+				device.device().createImageView(&viewInfo, nullptr, &ppSwapChainImageViews[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create image views!");
 		}
@@ -241,7 +259,7 @@ void VkEngineSwapChain::createImageViews()
 void VkEngineSwapChain::createRenderPass()
 {
 	const vk::AttachmentDescription depthAttachment(
-		vk::AttachmentDescriptionFlags{},
+		{},
 		findDepthFormat(),
 		vk::SampleCountFlagBits::e1,
 		vk::AttachmentLoadOp::eClear,
@@ -252,55 +270,56 @@ void VkEngineSwapChain::createRenderPass()
 		vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 	constexpr vk::AttachmentReference depthAttachmentRef(
-		1, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		1,
+		vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
-	const vk::AttachmentDescription colorAttachment(vk::AttachmentDescriptionFlags{},
-													mSwapChainImageFormat,
-													vk::SampleCountFlagBits::e1,
-													vk::AttachmentLoadOp::eClear,
-													vk::AttachmentStoreOp::eStore,
-													vk::AttachmentLoadOp::eDontCare,
-													vk::AttachmentStoreOp::eDontCare,
-													vk::ImageLayout::eUndefined,
-													vk::ImageLayout::ePresentSrcKHR);
+	const vk::AttachmentDescription colorAttachment({},
+	                                                mSwapChainImageFormat,
+	                                                vk::SampleCountFlagBits::e1,
+	                                                vk::AttachmentLoadOp::eClear,
+	                                                vk::AttachmentStoreOp::eStore,
+	                                                vk::AttachmentLoadOp::eDontCare,
+	                                                vk::AttachmentStoreOp::eDontCare,
+	                                                vk::ImageLayout::eUndefined,
+	                                                vk::ImageLayout::ePresentSrcKHR);
 
 	constexpr vk::AttachmentReference colorAttachmentRef(0,
-														 vk::ImageLayout::eColorAttachmentOptimal);
+	                                                     vk::ImageLayout::eColorAttachmentOptimal);
 
-	const vk::SubpassDescription subpass(vk::SubpassDescriptionFlags{},
-											 vk::PipelineBindPoint::eGraphics,
-											 0,
-											 nullptr,
-											 1,
-											 &colorAttachmentRef,
-											 nullptr,
-											 &depthAttachmentRef,
-											 0,
-											 nullptr);
+	const vk::SubpassDescription subpass({},
+	                                     vk::PipelineBindPoint::eGraphics,
+	                                     0,
+	                                     nullptr,
+	                                     1,
+	                                     &colorAttachmentRef,
+	                                     nullptr,
+	                                     &depthAttachmentRef,
+	                                     0,
+	                                     nullptr);
 
 	const vk::SubpassDependency dependency(VK_SUBPASS_EXTERNAL,
-										   0,
-										   vk::PipelineStageFlagBits::eColorAttachmentOutput |
-											   vk::PipelineStageFlagBits::eEarlyFragmentTests,
-										   vk::PipelineStageFlagBits::eColorAttachmentOutput |
-											   vk::PipelineStageFlagBits::eEarlyFragmentTests,
-										   vk::AccessFlagBits{},
-										   vk::AccessFlagBits::eColorAttachmentWrite |
-											   vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+	                                       0,
+	                                       vk::PipelineStageFlagBits::eColorAttachmentOutput |
+	                                       vk::PipelineStageFlagBits::eEarlyFragmentTests,
+	                                       vk::PipelineStageFlagBits::eColorAttachmentOutput |
+	                                       vk::PipelineStageFlagBits::eEarlyFragmentTests,
+	                                       vk::AccessFlagBits{},
+	                                       vk::AccessFlagBits::eColorAttachmentWrite |
+	                                       vk::AccessFlagBits::eDepthStencilAttachmentWrite);
 
 	const std::array attachments = {colorAttachment, depthAttachment};
 
-	const vk::RenderPassCreateInfo renderPassInfo(vk::RenderPassCreateFlags{},
-												  static_cast<uint32_t>(attachments.size()),
-												  attachments.data(),
-												  1,
-												  &subpass,
-												  1,
-												  &dependency);
+	const vk::RenderPassCreateInfo renderPassInfo({},
+	                                              static_cast<uint32_t>(attachments.size()),
+	                                              attachments.data(),
+	                                              1,
+	                                              &subpass,
+	                                              1,
+	                                              &dependency);
 
 	if(const vk::Result r =
-		   device.device().createRenderPass(&renderPassInfo, nullptr, &pRenderPass);
-	   r != vk::Result::eSuccess)
+			device.device().createRenderPass(&renderPassInfo, nullptr, &pRenderPass);
+		r != vk::Result::eSuccess)
 	{
 		throw std::runtime_error("failed to create render pass!");
 	}
@@ -315,17 +334,19 @@ void VkEngineSwapChain::createFramebuffers()
 
 		std::array attachments = {ppSwapChainImageViews[i], ppDepthImageViews[i]};
 
-		vk::FramebufferCreateInfo framebufferInfo(vk::FramebufferCreateFlags{},
-												  pRenderPass,
-												  static_cast<uint32_t>(attachments.size()),
-												  attachments.data(),
-												  getSwapChainExtent().width,
-												  getSwapChainExtent().height,
-												  1);
+		vk::FramebufferCreateInfo framebufferInfo({},
+		                                          pRenderPass,
+		                                          static_cast<uint32_t>(attachments.size()),
+		                                          attachments.data(),
+		                                          getSwapChainExtent().width,
+		                                          getSwapChainExtent().height,
+		                                          1);
 
 		if(const vk::Result r = device.device().createFramebuffer(
-			   &framebufferInfo, nullptr, &ppSwapChainFramebuffers[i]);
-		   r != vk::Result::eSuccess)
+				&framebufferInfo,
+				nullptr,
+				&ppSwapChainFramebuffers[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create framebuffer!");
 		}
@@ -341,39 +362,39 @@ void VkEngineSwapChain::createDepthResources()
 
 	for(size_t i = 0; i < depthImages.size(); i++)
 	{
-		vk::ImageCreateInfo imageInfo(vk::ImageCreateFlags{},
-									  vk::ImageType::e2D,
-									  findDepthFormat(),
-									  {getSwapChainExtent().width, getSwapChainExtent().height, 1},
-									  1,
-									  1,
-									  vk::SampleCountFlagBits::e1,
-									  vk::ImageTiling::eOptimal,
-									  vk::ImageUsageFlagBits::eDepthStencilAttachment,
-									  vk::SharingMode::eExclusive,
-									  0,
-									  nullptr,
-									  vk::ImageLayout::eUndefined);
+		vk::ImageCreateInfo imageInfo({},
+		                              vk::ImageType::e2D,
+		                              findDepthFormat(),
+		                              {getSwapChainExtent().width, getSwapChainExtent().height, 1},
+		                              1,
+		                              1,
+		                              vk::SampleCountFlagBits::e1,
+		                              vk::ImageTiling::eOptimal,
+		                              vk::ImageUsageFlagBits::eDepthStencilAttachment,
+		                              vk::SharingMode::eExclusive,
+		                              0,
+		                              nullptr,
+		                              vk::ImageLayout::eUndefined);
 
 		device.createImageWithInfo(imageInfo,
-								   vk::MemoryPropertyFlagBits::eDeviceLocal,
-								   depthImages[i],
-								   ppDepthImageMemorys[i]);
+		                           vk::MemoryPropertyFlagBits::eDeviceLocal,
+		                           depthImages[i],
+		                           ppDepthImageMemorys[i]);
 
 		vk::ImageViewCreateInfo viewInfo(
-			vk::ImageViewCreateFlags{},
+			{},
 			depthImages[i],
 			vk::ImageViewType::e2D,
 			findDepthFormat(),
 			vk::ComponentMapping{vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity,
-								 vk::ComponentSwizzle::eIdentity},
+			                     vk::ComponentSwizzle::eIdentity,
+			                     vk::ComponentSwizzle::eIdentity,
+			                     vk::ComponentSwizzle::eIdentity},
 			vk::ImageSubresourceRange{vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1});
 
 		if(const vk::Result r =
-			   device.device().createImageView(&viewInfo, nullptr, &ppDepthImageViews[i]);
-		   r != vk::Result::eSuccess)
+				device.device().createImageView(&viewInfo, nullptr, &ppDepthImageViews[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create texture image view!");
 		}
@@ -393,20 +414,24 @@ void VkEngineSwapChain::createSyncObjects()
 	for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 	{
 		if(const vk::Result r = device.device().createSemaphore(
-			   &semaphoreInfo, nullptr, &ppImageAvailableSemaphores[i]);
-		   r != vk::Result::eSuccess)
+				&semaphoreInfo,
+				nullptr,
+				&ppImageAvailableSemaphores[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
 		if(const vk::Result r = device.device().createSemaphore(
-			   &semaphoreInfo, nullptr, &ppRenderFinishedSemaphores[i]);
-		   r != vk::Result::eSuccess)
+				&semaphoreInfo,
+				nullptr,
+				&ppRenderFinishedSemaphores[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
 		if(const vk::Result r =
-			   device.device().createFence(&fenceInfo, nullptr, &ppInFlightFences[i]);
-		   r != vk::Result::eSuccess)
+				device.device().createFence(&fenceInfo, nullptr, &ppInFlightFences[i]);
+			r != vk::Result::eSuccess)
 		{
 			throw std::runtime_error("failed to create synchronization objects for a frame!");
 		}
@@ -461,10 +486,10 @@ VkEngineSwapChain::chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabiliti
 
 	vk::Extent2D actualExtent = windowExtent;
 	actualExtent.width = std::max(capabilities.minImageExtent.width,
-								  std::min(capabilities.maxImageExtent.width, actualExtent.width));
+	                              std::min(capabilities.maxImageExtent.width, actualExtent.width));
 	actualExtent.height =
 		std::max(capabilities.minImageExtent.height,
-				 std::min(capabilities.maxImageExtent.height, actualExtent.height));
+		         std::min(capabilities.maxImageExtent.height, actualExtent.height));
 
 	return actualExtent;
 }
