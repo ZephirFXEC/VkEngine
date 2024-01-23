@@ -4,6 +4,8 @@
 
 #include "utils/memory.hpp"
 
+#include <glm/gtc/constants.hpp>
+
 namespace vke {
 struct PushConstants {
 	glm::mat2 transform{1.f};
@@ -14,7 +16,7 @@ struct PushConstants {
 App::App() {
 	createPipelineLayout();
 	recreateSwapChain();
-	loadModels();
+	loadGameObjects();
 	createCommandBuffers();
 }
 
@@ -38,7 +40,7 @@ void App::run() {
 	vkDeviceWaitIdle(mVkDevice.getDevice());
 }
 
-void App::loadModels() {
+void App::loadGameObjects() {
 	VKINFO("Loading models...");
 
 	constexpr u32 iCount = 6;
@@ -52,8 +54,16 @@ void App::loadModels() {
 
 	constexpr std::array<u32, iCount> indices{0, 1, 2, 0};
 
-	pVkModel =
-		std::make_unique<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
+	const auto pVkModel =
+		std::make_shared<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
+
+	auto triangle = VkEngineGameObjects::createGameObject();
+	triangle.pModel = pVkModel;
+	triangle.mColor = {1.f, 0.f, 0.f};
+	triangle.mTransform.scale = {1.0f, 1.0f};
+	triangle.mTransform.rotation = glm::pi<f32>() / 2.0f;
+
+	mVkGameObjects.push_back(std::move(triangle));
 }
 
 void App::createPipelineLayout() {
@@ -110,7 +120,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	VK_CHECK(vkBeginCommandBuffer(mCommandBuffer.ppVkCommandBuffers[imageIndex], &beginInfo));
 
 	std::array<VkClearValue, 2> clearValues{};
-	clearValues[0].color = {{0.1f, 0.1f, 0.1f, 1.0f}};
+	clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
 
 	const VkRenderPassBeginInfo renderPassInfo{
@@ -140,21 +150,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	vkCmdSetViewport(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
 	vkCmdSetScissor(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
-	pVkPipeline->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
-	pVkModel->bind(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
-
-	{
-		constexpr PushConstants pushConstants{
-			.offset = glm::vec2(0.0f, 0.0f),
-			.color = glm::vec3(1.0f, 0.0f, 0.0f)
-		};
-
-		vkCmdPushConstants(mCommandBuffer.ppVkCommandBuffers[imageIndex], pVkPipelineLayout,
-		                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
-		                   &pushConstants);
-
-		pVkModel->draw(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
-	}
+	renderGameObjects(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
 	vkCmdEndRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
@@ -164,8 +160,6 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 void App::freeCommandBuffers() const {
 	vkFreeCommandBuffers(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), mCommandBuffer.mSize,
 	                     mCommandBuffer.ppVkCommandBuffers);
-
-	//vkResetCommandBuffer(mCommandBuffer.ppVkCommandBuffers[0], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
 	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, MEMORY_TAG_VULKAN);
 }
@@ -193,6 +187,28 @@ void App::recreateSwapChain() {
 
 	createPipeline();
 }
+
+void App::renderGameObjects(const VkCommandBuffer commandBuffer) const {
+
+	pVkPipeline->bind(&commandBuffer);
+
+	for (const auto& gameObject : mVkGameObjects) {
+
+		const PushConstants pushConstants{
+			.transform = gameObject.mTransform.mat2(),
+			.offset = gameObject.mTransform.translation,
+			.color = gameObject.mColor,
+		};
+
+		vkCmdPushConstants(commandBuffer, pVkPipelineLayout,
+		                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
+		                   &pushConstants);
+
+		gameObject.pModel->bind(&commandBuffer);
+		gameObject.pModel->draw(&commandBuffer);
+	}
+}
+
 
 void App::drawFrame() {
 	u32 imageIndex = 0;

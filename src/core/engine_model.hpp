@@ -60,7 +60,8 @@ class VkEngineModel {
 
 	const VkEngineDevice& mDevice;
 
-	// note don't access mDevice using the swap chain, since it's a shared pointer
+	// note don't access mDevice using the swap chain, since it's a shared pointer it will be nullptr when resizing
+	// the window
 	const std::shared_ptr<VkEngineSwapChain> pSwapChain;
 };
 }  // namespace vke

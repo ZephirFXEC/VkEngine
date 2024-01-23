@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine_device.hpp"
-#include "engine_model.hpp"
+#include "engine_ecs.hpp"
 #include "engine_pipeline.hpp"
 #include "engine_swapchain.hpp"
 #include "engine_window.hpp"
@@ -22,7 +22,7 @@ class App {
 	void run();
 
    private:
-	void loadModels();
+	void loadGameObjects();
 
 	void createPipelineLayout();
 
@@ -36,6 +36,8 @@ class App {
 
 	void recordCommandsBuffers(size_t imageIndex) const;
 
+	void renderGameObjects(VkCommandBuffer commandBuffer) const;
+
 	void freeCommandBuffers() const;
 
 	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
@@ -44,7 +46,7 @@ class App {
 
 	std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
 	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
-	std::unique_ptr<VkEngineModel> pVkModel = nullptr;
+	std::vector<VkEngineGameObjects> mVkGameObjects{};
 
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
 
