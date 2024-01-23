@@ -132,7 +132,7 @@ char* VkEnginePipeline::readFile(const std::string& filename, size_t& bufferSize
 	}
 
 	bufferSize = static_cast<size_t>(file.tellg());
-	char* buffer = Memory::allocMemory<char>(bufferSize, Memory::MEMORY_TAG_TEXTURE);
+	char* buffer = Memory::allocMemory<char>(bufferSize, MEMORY_TAG_TEXTURE);
 
 	file.seekg(0);
 	file.read(buffer, static_cast<u32>(bufferSize));
@@ -209,8 +209,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	VK_CHECK(
 	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
 
-	Memory::freeMemory(vertShaderCode, vertShaderSize, Memory::MEMORY_TAG_TEXTURE);
-	Memory::freeMemory(fragShaderCode, fragShaderSize, Memory::MEMORY_TAG_TEXTURE);
+	Memory::freeMemory(vertShaderCode, vertShaderSize, MEMORY_TAG_TEXTURE);
+	Memory::freeMemory(fragShaderCode, fragShaderSize, MEMORY_TAG_TEXTURE);
 }
 
 void VkEnginePipeline::createShaderModule(const char* const code, const size_t codeSize,

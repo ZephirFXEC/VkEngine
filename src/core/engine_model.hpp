@@ -54,13 +54,13 @@ class VkEngineModel {
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};
 
-	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
+	VkCommandBuffer mCommandBuffer = VK_NULL_HANDLE;
 
 	u32 mIndexCount = 0;
 
 	const VkEngineDevice& mDevice;
 
-	// note don't access mDevice using the swap chain, since it's
-	const std::shared_ptr<VkEngineSwapChain> mSwapChain;
+	// note don't access mDevice using the swap chain, since it's a shared pointer
+	const std::shared_ptr<VkEngineSwapChain> pSwapChain;
 };
 }  // namespace vke

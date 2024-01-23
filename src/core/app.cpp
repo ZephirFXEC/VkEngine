@@ -91,7 +91,7 @@ void App::createPipeline() {
 
 void App::createCommandBuffers() {
 	mCommandBuffer.mSize = mVkSwapChain->getImageCount();
-	mCommandBuffer.ppVkCommandBuffers = Memory::allocMemory<VkCommandBuffer>(mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
+	mCommandBuffer.ppVkCommandBuffers = Memory::allocMemory<VkCommandBuffer>(mCommandBuffer.mSize, MEMORY_TAG_VULKAN);
 
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	                                            .commandPool = mVkSwapChain->getCommandPool(),
@@ -167,7 +167,7 @@ void App::freeCommandBuffers() const {
 
 	//vkResetCommandBuffer(mCommandBuffer.ppVkCommandBuffers[0], VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
-	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, Memory::MEMORY_TAG_VULKAN);
+	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, MEMORY_TAG_VULKAN);
 }
 
 void App::recreateSwapChain() {

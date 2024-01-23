@@ -12,7 +12,7 @@ VkEngineModel::VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEng
                              const Vertex* vertices, const u32 vCount, const u32* indices,
                              const u32 iCount)
 
-	: mIndexCount{iCount}, mDevice{device}, mSwapChain{std::move(swapchain)} {
+	: mIndexCount{iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
 	VKINFO("Creating model");
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);
@@ -113,12 +113,12 @@ void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCou
 
 void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
                                const VkDeviceSize size) {
-	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer);
+	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer);
 
 	const VkBufferCopy copyRegion{.size = size};
-	vkCmdCopyBuffer(pCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
+	vkCmdCopyBuffer(mCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
-	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mSwapChain->getCommandPool(), pCommandBuffer,
+	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer,
 	                                   mDevice.getGraphicsQueue());
 }
 }  // namespace vke
