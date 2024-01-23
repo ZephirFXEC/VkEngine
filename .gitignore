@@ -6,6 +6,7 @@
 *.lo
 *.o
 *.obj
+*.spv
 
 # Precompiled Headers
 *.gch
@@ -33,3 +34,4 @@
 
 /build
 /.vscode
+/shaders/*.spv
