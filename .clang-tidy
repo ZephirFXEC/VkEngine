@@ -28,7 +28,7 @@ Checks: "*,
         -cppcoreguidelines-pro-type-reinterpret-cast
         -cppcoreguidelines-special-member-functions
         -cppcoreguidelines-avoid-do-while
-        -misc-include-cleaner
+        -*-include-cleaner
 "
 FormatStyle: google
 

@@ -43,15 +43,15 @@ std::array<VkVertexInputBindingDescription, 1> VkEngineModel::Vertex::getBinding
 std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttributeDescriptions() {
 	return std::array{
 
-	    VkVertexInputAttributeDescription{
-	        .location = 0,
-	    	.binding = 0,
-	    	.format = VK_FORMAT_R32G32_SFLOAT,
-	    	.offset = offsetof(Vertex, mPosition)
-	    },
+		VkVertexInputAttributeDescription{
+			.location = 0,
+			.binding = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(Vertex, mPosition)
+		},
 
 		VkVertexInputAttributeDescription{
-	        .location = 1,
+			.location = 1,
 			.binding = 0,
 			.format = VK_FORMAT_R32G32B32_SFLOAT,
 			.offset = offsetof(Vertex, mColor)
@@ -61,7 +61,7 @@ std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttri
 
 
 void VkEngineModel::bind(const VkCommandBuffer* const commandBuffer) const {
-	auto *const buffer = mVertexBuffer.pDataBuffer;
+	auto* const buffer = mVertexBuffer.pDataBuffer;
 	constexpr std::array<VkDeviceSize, 1> offsets{0};
 
 	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &buffer, offsets.data());
@@ -82,7 +82,8 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 	VkBuffer stagingBuffer = nullptr;
 	VmaAllocation stagingBufferMemory = nullptr;
 
-	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer, stagingBufferMemory, VMA_MEMORY_USAGE_CPU_TO_GPU);
+	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer,
+	                               stagingBufferMemory, VMA_MEMORY_USAGE_CPU_TO_GPU);
 
 	void* mappedData = nullptr;
 	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
@@ -91,7 +92,8 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 
 	vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
 
-	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, buffer, bufferMemory, VMA_MEMORY_USAGE_GPU_ONLY);
+	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, buffer, bufferMemory,
+	                               VMA_MEMORY_USAGE_GPU_ONLY);
 
 	copyBuffer(&stagingBuffer, &buffer, bufferSize);
 
@@ -121,4 +123,4 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer,
 	                                   mDevice.getGraphicsQueue());
 }
-}  // namespace vke
+} // namespace vke

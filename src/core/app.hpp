@@ -7,54 +7,55 @@
 #include "engine_window.hpp"
 
 namespace vke {
-class App {
-   public:
-	App();
+    class App {
+    public:
+        App();
 
-	~App();
+        ~App();
 
-	App(const App&) = delete;
-	App& operator=(const App&) = delete;
+        App(const App&) = delete;
 
-	static constexpr int HEIGHT = 600;
-	static constexpr int WIDTH = 800;
+        App& operator=(const App&) = delete;
 
-	void run();
+        static constexpr int HEIGHT = 600;
+        static constexpr int WIDTH = 800;
 
-   private:
-	void loadGameObjects();
+        void run();
 
-	void createPipelineLayout();
+    private:
+        void loadGameObjects();
 
-	void createPipeline();
+        void createPipelineLayout();
 
-	void createCommandBuffers();
+        void createPipeline();
 
-	void drawFrame();
+        void createCommandBuffers();
 
-	void recreateSwapChain();
+        void drawFrame();
 
-	void recordCommandsBuffers(size_t imageIndex) const;
+        void recreateSwapChain();
 
-	void renderGameObjects(VkCommandBuffer commandBuffer) const;
+        void recordCommandsBuffers(size_t imageIndex) const;
 
-	void freeCommandBuffers() const;
+        void renderGameObjects(const VkCommandBuffer* commandBuffer) const;
 
-	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
+        void freeCommandBuffers() const;
 
-	VkEngineDevice mVkDevice{mVkWindow};
+        VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"}; // Vulkan window
 
-	std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
-	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
-	std::vector<VkEngineGameObjects> mVkGameObjects{};
+        VkEngineDevice mVkDevice{mVkWindow};
 
-	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
+        std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
+        std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+        std::vector<VkEngineGameObjects> mVkGameObjects{};
 
-	struct CommandBuffer {
-		VkCommandBuffer* ppVkCommandBuffers{};
-		u8 mSize{};  // number of command buffers (could be uint8_t)
-	} mCommandBuffer{};
+        VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
 
-	static inline u64 mCurrentFrame = 0;
-};
-}  // namespace vke
+        struct CommandBuffer {
+            VkCommandBuffer* ppVkCommandBuffers{};
+            u8 mSize{}; // number of command buffers (could be uint8_t)
+        } mCommandBuffer{};
+
+        static inline u64 mCurrentFrame = 0;
+    };
+} // namespace vke

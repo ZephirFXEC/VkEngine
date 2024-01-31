@@ -30,9 +30,9 @@ void App::run() {
 			Memory::getMemoryUsage();
 		}
 
-		glfwPollEvents();  // poll for events
+		glfwPollEvents(); // poll for events
 
-		drawFrame();       // draw frame
+		drawFrame(); // draw frame
 
 		++mCurrentFrame;
 	}
@@ -47,8 +47,8 @@ void App::loadGameObjects() {
 	constexpr u32 vCount = 4;
 
 	constexpr std::array vertices{
-		VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}},  // 0
-		VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},  // 1
+		VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}}, // 0
+		VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}}, // 1
 		VkEngineModel::Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, // 2
 	};
 
@@ -67,7 +67,6 @@ void App::loadGameObjects() {
 }
 
 void App::createPipelineLayout() {
-
 	static constexpr VkPushConstantRange pushConstantRange{
 		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
@@ -95,8 +94,8 @@ void App::createPipeline() {
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
 	pVkPipeline =
-	    std::make_unique<VkEnginePipeline>(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
-	                                       "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv", pipelineConfig);
+		std::make_unique<VkEnginePipeline>(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
+		                                   "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
 void App::createCommandBuffers() {
@@ -113,8 +112,8 @@ void App::createCommandBuffers() {
 
 void App::recordCommandsBuffers(const size_t imageIndex) const {
 	constexpr VkCommandBufferBeginInfo beginInfo{
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 	};
 
 	VK_CHECK(vkBeginCommandBuffer(mCommandBuffer.ppVkCommandBuffers[imageIndex], &beginInfo));
@@ -124,33 +123,33 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	clearValues[1].depthStencil = {1.0f, 0};
 
 	const VkRenderPassBeginInfo renderPassInfo{
-	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(imageIndex)),
-	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
-	    .clearValueCount = static_cast<u32>(clearValues.size()),
-	    .pClearValues = clearValues.data(),
+		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+		.renderPass = mVkSwapChain->getRenderPass(),
+		.framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(imageIndex)),
+		.renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
+		.clearValueCount = static_cast<u32>(clearValues.size()),
+		.pClearValues = clearValues.data(),
 	};
 
 	const VkViewport viewport{
-	    .x = 0.0f,
-	    .y = 0.0f,
-	    .width = static_cast<float>(mVkSwapChain->getSwapChainExtent().width),
-	    .height = static_cast<float>(mVkSwapChain->getSwapChainExtent().height),
-	    .minDepth = 0.0f,
-	    .maxDepth = 1.0f,
+		.x = 0.0f,
+		.y = 0.0f,
+		.width = static_cast<float>(mVkSwapChain->getSwapChainExtent().width),
+		.height = static_cast<float>(mVkSwapChain->getSwapChainExtent().height),
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f,
 	};
 
 	const VkRect2D scissor{
-	    .offset = {0, 0},
-	    .extent = mVkSwapChain->getSwapChainExtent(),
+		.offset = {0, 0},
+		.extent = mVkSwapChain->getSwapChainExtent(),
 	};
 
 	vkCmdBeginRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdSetViewport(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
 	vkCmdSetScissor(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
-	renderGameObjects(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+	renderGameObjects(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
 	vkCmdEndRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
@@ -188,24 +187,22 @@ void App::recreateSwapChain() {
 	createPipeline();
 }
 
-void App::renderGameObjects(const VkCommandBuffer commandBuffer) const {
-
-	pVkPipeline->bind(&commandBuffer);
+void App::renderGameObjects(const VkCommandBuffer* const commandBuffer) const {
+	pVkPipeline->bind(commandBuffer);
 
 	for (const auto& gameObject : mVkGameObjects) {
-
 		const PushConstants pushConstants{
 			.transform = gameObject.mTransform.mat2(),
 			.offset = gameObject.mTransform.translation,
 			.color = gameObject.mColor,
 		};
 
-		vkCmdPushConstants(commandBuffer, pVkPipelineLayout,
+		vkCmdPushConstants(*commandBuffer, pVkPipelineLayout,
 		                   VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PushConstants),
 		                   &pushConstants);
 
-		gameObject.pModel->bind(&commandBuffer);
-		gameObject.pModel->draw(&commandBuffer);
+		gameObject.pModel->bind(commandBuffer);
+		gameObject.pModel->draw(commandBuffer);
 	}
 }
 
@@ -219,7 +216,7 @@ void App::drawFrame() {
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || mVkWindow.wasWindowResized() || result == VK_SUBOPTIMAL_KHR) {
 		mVkWindow.resetWindowResizedFlag();
 		recreateSwapChain();
-		return;  // Early return to avoid further processing since swapchain needs recreation.
+		return; // Early return to avoid further processing since swapchain needs recreation.
 	}
 
 	// Consolidating error handling for acquisition failure into one check.
@@ -243,4 +240,4 @@ void App::drawFrame() {
 		throw std::runtime_error("Failed to present swap chain image!");
 	}
 }
-}  // namespace vke
+} // namespace vke

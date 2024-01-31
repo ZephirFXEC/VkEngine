@@ -15,11 +15,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 	message << std::to_string(messageSeverity) << ": " << std::to_string(messageTypes) << ":\n";
 
 	message << "\t"
-	        << "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
+		<< "messageIDName   = <" << pCallbackData->pMessageIdName << ">\n";
 	message << "\t"
-	        << "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
+		<< "messageIdNumber = " << pCallbackData->messageIdNumber << "\n";
 	message << "\t"
-	        << "message         = <" << pCallbackData->pMessage << ">\n";
+		<< "message         = <" << pCallbackData->pMessage << ">\n";
 	if (0 < pCallbackData->queueLabelCount) {
 		message << std::string("\t") << "Queue Labels:\n";
 		for (u32 i = 0; i < pCallbackData->queueLabelCount; i++) {
@@ -37,11 +37,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(const VkDebugUtilsMessageSeverityFl
 		for (u32 i = 0; i < pCallbackData->objectCount; i++) {
 			message << std::string("\t\t") << "Object " << i << "\n";
 			message << std::string("\t\t\t")
-			        << "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
+				<< "objectType   = " << std::to_string(pCallbackData->pObjects[i].objectType) << "\n";
 			message << std::string("\t\t\t") << "objectHandle = " << pCallbackData->pObjects[i].objectHandle << "\n";
 			if (pCallbackData->pObjects[i].pObjectName != nullptr) {
 				message << std::string("\t\t\t") << "objectName   = <" << pCallbackData->pObjects[i].pObjectName
-				        << ">\n";
+					<< ">\n";
 			}
 		}
 	}
