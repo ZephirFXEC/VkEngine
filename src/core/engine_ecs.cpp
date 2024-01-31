@@ -4,5 +4,4 @@
 
 #include "engine_ecs.hpp"
 
-namespace vke {
-} // vke
+namespace vke {}  // namespace vke

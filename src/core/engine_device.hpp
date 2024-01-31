@@ -2,6 +2,8 @@
 
 #include "engine_window.hpp"
 
+#include <array>
+
 #ifdef NDEBUG
 static constexpr bool enableValidationLayers = false;
 #else

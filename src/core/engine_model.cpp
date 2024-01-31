@@ -1,18 +1,17 @@
 //
 // Created by Enzo Crema on 21/12/2023.
 //
-#include "utils/pch.hpp"
 #include "engine_model.hpp"
-#include "utils/memory.hpp"
+
 #include "utils/buffer_utils.hpp"
 #include "utils/logger.hpp"
+#include "utils/memory.hpp"
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
-                             const Vertex* vertices, const u32 vCount, const u32* indices,
-                             const u32 iCount)
+                             const Vertex* vertices, const u32 vCount, const u32* indices, const u32 iCount)
 
-	: mIndexCount{iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
+    : mIndexCount{iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
 	VKINFO("Creating model");
 	createIndexBuffers(indices, iCount);
 	createVertexBuffers(vertices, vCount);
@@ -31,32 +30,19 @@ void VkEngineModel::destroyBuffer(const DataBuffer& buffer) const {
 
 
 std::array<VkVertexInputBindingDescription, 1> VkEngineModel::Vertex::getBindingDescriptions() {
-	return std::array{
-		VkVertexInputBindingDescription{
-			.binding = 0,
-			.stride = sizeof(Vertex),
-			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX}
-	};
+	return std::array{VkVertexInputBindingDescription{
+	    .binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
 }
 
 
 std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttributeDescriptions() {
 	return std::array{
 
-		VkVertexInputAttributeDescription{
-			.location = 0,
-			.binding = 0,
-			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(Vertex, mPosition)
-		},
+	    VkVertexInputAttributeDescription{
+	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
 
-		VkVertexInputAttributeDescription{
-			.location = 1,
-			.binding = 0,
-			.format = VK_FORMAT_R32G32B32_SFLOAT,
-			.offset = offsetof(Vertex, mColor)
-		}
-	};
+	    VkVertexInputAttributeDescription{
+	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
 }
 
 
@@ -123,4 +109,4 @@ void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* 
 	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer,
 	                                   mDevice.getGraphicsQueue());
 }
-} // namespace vke
+}  // namespace vke

@@ -4,9 +4,10 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "logger.hpp"
 #include "types.hpp"
-#include <atomic>
 
 using Tag = enum Tag : u8 {
 	MEMORY_TAG_UNKNOWN,
@@ -38,7 +39,7 @@ struct MemoryStats {
 
 	void reset() {
 		totalAllocated.store(0, std::memory_order::relaxed);
-		for (auto&t: tagAllocated) {
+		for (auto& t : tagAllocated) {
 			t.store(0, std::memory_order::relaxed);
 		}
 	}
@@ -46,7 +47,6 @@ struct MemoryStats {
 
 class Memory : NO_COPY_NOR_MOVE {
    public:
-
 	template <typename T>
 	static T* allocMemory(const size_t size, const Tag tag) {
 		if (tag == MEMORY_TAG_UNKNOWN) {
@@ -97,9 +97,7 @@ class Memory : NO_COPY_NOR_MOVE {
 
 	static void* setMemory(void* dest, const i32 value, const u64 size) { return memset(dest, value, size); }
 
-	static void initializeMemory() {
-		mMemoryStats.reset();
-	}
+	static void initializeMemory() { mMemoryStats.reset(); }
 
 
 	static void shutdownMemory() {
@@ -132,12 +130,9 @@ class Memory : NO_COPY_NOR_MOVE {
 		fmt::print("\r{}", memoryUsage);
 	}
 
-private:
-
+   private:
 	static constexpr std::array<const char*, MEMORY_TAG_COUNT> MEMORY_TAG_NAMES = {
-		"Unknown", "Array", "Vector", "Texture", "Buffer", "Renderer", "Engine", "Vulkan", "Window"};
+	    "Unknown", "Array", "Vector", "Texture", "Buffer", "Renderer", "Engine", "Vulkan", "Window"};
 
 	inline static MemoryStats mMemoryStats = {};
-
 };
-

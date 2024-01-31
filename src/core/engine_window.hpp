@@ -18,9 +18,7 @@ class VkEngineWindow {
 
 	[[nodiscard]] bool shouldClose() const { return glfwWindowShouldClose(pWindow) != 0; }
 
-	[[nodiscard]] VkExtent2D getExtent() const {
-		return {static_cast<u32>(mWidth), static_cast<u32>(mHeight)};
-	}
+	[[nodiscard]] VkExtent2D getExtent() const { return {static_cast<u32>(mWidth), static_cast<u32>(mHeight)}; }
 
 	NDC_INLINE bool wasWindowResized() const { return mFramebufferResized; }
 

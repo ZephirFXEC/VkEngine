@@ -5,7 +5,7 @@
 int main() {
 	Memory::initializeMemory();
 
-	vke::App app{}; // create app
+	vke::App app{};  // create app
 
 	try {
 		// try to run app
