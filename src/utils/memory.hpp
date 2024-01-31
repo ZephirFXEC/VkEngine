@@ -6,6 +6,7 @@
 
 #include "logger.hpp"
 #include "types.hpp"
+#include <atomic>
 
 using Tag = enum Tag : u8 {
 	MEMORY_TAG_UNKNOWN,
@@ -22,8 +23,25 @@ using Tag = enum Tag : u8 {
 };
 
 struct MemoryStats {
-	u64 totalAllocated{};
-	std::array<u64, MEMORY_TAG_COUNT> tagAllocated{};
+	std::atomic<u64> totalAllocated{};
+	std::array<std::atomic<u64>, MEMORY_TAG_COUNT> tagAllocated{};
+
+	void add(const u64 size, const Tag tag) {
+		totalAllocated.fetch_add(size, std::memory_order::relaxed);
+		tagAllocated.at(tag).fetch_add(size, std::memory_order::relaxed);
+	}
+
+	void remove(const u64 size, const Tag tag) {
+		totalAllocated.fetch_sub(size, std::memory_order::relaxed);
+		tagAllocated.at(tag).fetch_sub(size, std::memory_order::relaxed);
+	}
+
+	void reset() {
+		totalAllocated.store(0, std::memory_order::relaxed);
+		for (auto&t: tagAllocated) {
+			t.store(0, std::memory_order::relaxed);
+		}
+	}
 };
 
 class Memory : NO_COPY_NOR_MOVE {
@@ -36,8 +54,7 @@ class Memory : NO_COPY_NOR_MOVE {
 		}
 
 		const size_t totalSize = size * sizeof(T);
-		mMemoryStats.totalAllocated += totalSize;
-		mMemoryStats.tagAllocated.at(tag) += totalSize;
+		mMemoryStats.add(totalSize, tag);
 
 		T* block = new (std::nothrow) T[size];  // Using new instead of malloc
 
@@ -66,8 +83,7 @@ class Memory : NO_COPY_NOR_MOVE {
 		}
 
 		const size_t totalSize = size * sizeof(T);
-		mMemoryStats.totalAllocated -= totalSize;
-		mMemoryStats.tagAllocated.at(tag) -= totalSize;
+		mMemoryStats.remove(totalSize, tag);
 
 		delete[] block;  // Using delete[] instead of free
 	}
@@ -82,13 +98,12 @@ class Memory : NO_COPY_NOR_MOVE {
 	static void* setMemory(void* dest, const i32 value, const u64 size) { return memset(dest, value, size); }
 
 	static void initializeMemory() {
-		mMemoryStats.tagAllocated.fill(0);
-		mMemoryStats.totalAllocated = 0;
+		mMemoryStats.reset();
 	}
 
 
 	static void shutdownMemory() {
-		if (mMemoryStats.totalAllocated > 0) {
+		if (mMemoryStats.totalAllocated.load() > 0) {
 			VKWARN("Memory leak detected!");
 			getMemoryUsage();
 		}
@@ -100,10 +115,10 @@ class Memory : NO_COPY_NOR_MOVE {
 		constexpr u64 mib = 1024ul * 1024ul;
 		constexpr f64 kib = 1024ul;
 
-		std::string memoryUsage = fmt::format("Total allocated: {} bytes\n", mMemoryStats.totalAllocated);
+		std::string memoryUsage = fmt::format("Total allocated: {} bytes\n", mMemoryStats.totalAllocated.load());
 
 		for (u32 i = 0; i < MEMORY_TAG_COUNT; i++) {
-			if (const u64 bytes = mMemoryStats.tagAllocated.at(i); bytes > 0) {
+			if (const u64 bytes = mMemoryStats.tagAllocated.at(i).load(); bytes > 0) {
 				std::string tag = MEMORY_TAG_NAMES.at(i);
 				std::string bytesStr{fmt::format("{} bytes", bytes)};
 				std::string gibStr{fmt::format("{:.2f} GiB", S_CAST(f32, bytes) / S_CAST(f32, gib))};
