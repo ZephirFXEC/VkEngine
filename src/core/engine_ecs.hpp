@@ -6,20 +6,21 @@
 
 #include "engine_model.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 namespace vke {
-    struct Transform2DComponent {
-        glm::vec2 translation{};
-        glm::vec2 scale{1.f, 1.f};
-        f32 rotation = 0.f;
+    struct TransformComponent {
+        glm::vec3 translation{};
+        glm::vec3 rotation{};
+        glm::vec3 scale{1.f, 1.f, 1.f};
 
-        [[nodiscard]] glm::mat2 mat2() const {
-            const f32 s = glm::sin(rotation);
-            const f32 c = glm::cos(rotation);
-
-            const glm::mat2 rotationMatrix{{c, s}, {-s, c}};
-            const glm::mat2 scaleMatrix{{scale.x, 0.f}, {0.f, scale.y}};
-
-            return rotationMatrix * scaleMatrix;
+        [[nodiscard]] glm::mat4 mat4() const {
+            auto transform = glm::translate(glm::mat4{1.f}, translation);
+            transform = glm::rotate(transform, glm::radians(rotation.y), {0.f, 1.f, 0.f});
+            transform = glm::rotate(transform, glm::radians(rotation.x), {1.f, 0.f, 0.f});
+            transform = glm::rotate(transform, glm::radians(rotation.z), {0.f, 0.f, 1.f});
+            transform = glm::scale(transform, scale);
+            return transform;
         }
     };
 
@@ -50,7 +51,7 @@ namespace vke {
 
         std::shared_ptr<VkEngineModel> pModel = nullptr;
         glm::vec3 mColor = {1.f, 1.f, 1.f};
-        Transform2DComponent mTransform;
+        TransformComponent mTransform;
 
     private:
         explicit VkEngineGameObjects(const ObjectID id)

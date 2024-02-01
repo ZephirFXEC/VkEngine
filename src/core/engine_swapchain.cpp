@@ -1,11 +1,12 @@
 #include "engine_swapchain.hpp"
 
-#include <vulkan/vulkan_core.h>
-
 #include "engine_device.hpp"
 #include "utils/buffer_utils.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
+
+#include <vulkan/vulkan_core.h>
+
 
 namespace vke {
 VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
@@ -433,10 +434,10 @@ VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<
 VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	if (const auto it = std::ranges::find_if(availablePresentModes.begin(), availablePresentModes.end(),
 	                                         [](const VkPresentModeKHR& availablePresentMode) {
-		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
+		                                         return availablePresentMode == VK_PRESENT_MODE_FIFO_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
-		fmt::println("Present mode: Immediate");
+		fmt::println("Present mode: V-Sync");
 		return *it;
 	}
 

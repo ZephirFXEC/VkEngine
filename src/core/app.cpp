@@ -1,16 +1,14 @@
 #include "app.hpp"
 
-#include <glm/gtc/constants.hpp>
-
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 #include "utils/types.hpp"
 
+#include <glm/glm.hpp>
 
 namespace vke {
 struct PushConstants {
-	glm::mat2 transform{1.f};
-	glm::vec2 offset{};
+	glm::mat4 transform{1.f};
 	alignas(16) glm::vec3 color{};
 };
 
@@ -44,27 +42,13 @@ void App::run() {
 void App::loadGameObjects() {
 	VKINFO("Loading models...");
 
-	constexpr u32 iCount = 6;
-	constexpr u32 vCount = 4;
+	const std::shared_ptr pVkModel = createCubeModel(mVkDevice, mVkSwapChain, {0.f, 0.f, 0.f});
+	auto cube = VkEngineGameObjects::createGameObject();
+	cube.pModel = pVkModel;
+	cube.mTransform.translation = {0.f, 0.f, 0.5f};
+	cube.mTransform.scale = {0.5f, 0.5f, 0.5f};
 
-	constexpr std::array vertices{
-	    VkEngineModel::Vertex{{0.f, -0.5f}, {1.0f, 0.0f, 0.0f}},   // 0
-	    VkEngineModel::Vertex{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},   // 1
-	    VkEngineModel::Vertex{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},  // 2
-	};
-
-	constexpr std::array<u32, iCount> indices{0, 1, 2, 0};
-
-	const auto pVkModel =
-	    std::make_shared<VkEngineModel>(mVkDevice, mVkSwapChain, vertices.data(), vCount, indices.data(), iCount);
-
-	auto triangle = VkEngineGameObjects::createGameObject();
-	triangle.pModel = pVkModel;
-	triangle.mColor = {1.f, 0.f, 0.f};
-	triangle.mTransform.scale = {1.0f, 1.0f};
-	triangle.mTransform.rotation = glm::pi<f32>() / 2.0f;
-
-	mVkGameObjects.push_back(std::move(triangle));
+	mVkGameObjects.push_back(std::move(cube));
 }
 
 void App::createPipelineLayout() {
@@ -111,7 +95,7 @@ void App::createCommandBuffers() {
 	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, mCommandBuffer.ppVkCommandBuffers));
 }
 
-void App::recordCommandsBuffers(const size_t imageIndex) const {
+void App::recordCommandsBuffers(const size_t imageIndex) {
 	constexpr VkCommandBufferBeginInfo beginInfo{
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
@@ -150,7 +134,7 @@ void App::recordCommandsBuffers(const size_t imageIndex) const {
 	vkCmdSetViewport(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &viewport);
 	vkCmdSetScissor(mCommandBuffer.ppVkCommandBuffers[imageIndex], 0, 1, &scissor);
 
-	renderGameObjects(&mCommandBuffer.ppVkCommandBuffers[imageIndex]);
+	renderGameObjects(&mCommandBuffer.ppVkCommandBuffers[imageIndex], mVkGameObjects);
 
 	vkCmdEndRenderPass(mCommandBuffer.ppVkCommandBuffers[imageIndex]);
 
@@ -188,13 +172,17 @@ void App::recreateSwapChain() {
 	createPipeline();
 }
 
-void App::renderGameObjects(const VkCommandBuffer* const commandBuffer) const {
+void App::renderGameObjects(const VkCommandBuffer* const commandBuffer,
+                            std::vector<VkEngineGameObjects>& objects) const {
 	pVkPipeline->bind(commandBuffer);
 
-	for (const auto& gameObject : mVkGameObjects) {
+	for (auto& gameObject : objects) {
+
+		gameObject.mTransform.rotation.y += 0.01f;
+		gameObject.mTransform.rotation.x += 0.005f;
+
 		const PushConstants pushConstants{
-		    .transform = gameObject.mTransform.mat2(),
-		    .offset = gameObject.mTransform.translation,
+		    .transform = gameObject.mTransform.mat4(),
 		    .color = gameObject.mColor,
 		};
 
@@ -240,4 +228,7 @@ void App::drawFrame() {
 		throw std::runtime_error("Failed to present swap chain image!");
 	}
 }
+
+
+
 }  // namespace vke

@@ -3,8 +3,8 @@
 #include "engine_device.hpp"
 #include "utils/types.hpp"
 
-#include <memory>
 #include <vk_mem_alloc.h>
+#include <memory>
 
 namespace vke {
     class VkEngineSwapChain {

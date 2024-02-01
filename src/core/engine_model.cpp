@@ -1,6 +1,7 @@
 //
 // Created by Enzo Crema on 21/12/2023.
 //
+
 #include "engine_model.hpp"
 
 #include "utils/buffer_utils.hpp"
@@ -39,7 +40,7 @@ std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttri
 	return std::array{
 
 	    VkVertexInputAttributeDescription{
-	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
+	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
 
 	    VkVertexInputAttributeDescription{
 	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};

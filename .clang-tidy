@@ -24,11 +24,12 @@ Checks: "*,
         -cppcoreguidelines-owning-memory,
         -cppcoreguidelines-avoid-c-arrays,
         -cppcoreguidelines-avoid-magic-numbers,
-        -readability-uppercase-literal-suffix
-        -cppcoreguidelines-pro-type-reinterpret-cast
-        -cppcoreguidelines-special-member-functions
-        -cppcoreguidelines-avoid-do-while
-        -*-include-cleaner
+        -readability-uppercase-literal-suffix,
+        -cppcoreguidelines-pro-type-reinterpret-cast,
+        -cppcoreguidelines-special-member-functions,
+        -cppcoreguidelines-avoid-do-while,
+        -misc-include-cleaner,
+        -*-uppercase-literal-suffix,
 "
 FormatStyle: google
 

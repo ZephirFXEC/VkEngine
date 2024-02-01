@@ -6,18 +6,17 @@
 
 // engine
 #include "engine_device.hpp"
+#include "engine_swapchain.hpp"
 
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
-#include "engine_swapchain.hpp"
-
 namespace vke {
 class VkEngineModel {
    public:
 	struct Vertex {
-		glm::vec2 mPosition{};
+		glm::vec3 mPosition{};
 		glm::vec3 mColor{};
 
 		static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();

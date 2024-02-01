@@ -109,9 +109,9 @@ class Memory : NO_COPY_NOR_MOVE {
 
 
 	static void getMemoryUsage() {
-		constexpr u64 gib = 1024ul * 1024ul * 1024ul;
-		constexpr u64 mib = 1024ul * 1024ul;
-		constexpr f64 kib = 1024ul;
+		constexpr u64 kib = 1024ul;
+		constexpr u64 mib = 1024ul * kib;
+		constexpr u64 gib = 1024ul * mib;
 
 		std::string memoryUsage = fmt::format("Total allocated: {} bytes\n", mMemoryStats.totalAllocated.load());
 

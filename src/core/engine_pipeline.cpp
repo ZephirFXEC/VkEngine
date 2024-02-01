@@ -1,9 +1,12 @@
 #include "engine_pipeline.hpp"
 
-#include <fstream>
-
+#include "engine_device.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
+
+#include <fstream>
+#include <string>
+#include <vulkan/vulkan_core.h>
 
 namespace vke {
 VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
@@ -43,7 +46,7 @@ void VkEnginePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
 	    .depthClampEnable = VK_FALSE,
 	    .rasterizerDiscardEnable = VK_FALSE,
 	    .polygonMode = VK_POLYGON_MODE_FILL,
-	    .cullMode = VK_CULL_MODE_BACK_BIT,
+	    .cullMode = VK_CULL_MODE_NONE,
 	    .frontFace = VK_FRONT_FACE_CLOCKWISE,
 	    .depthBiasEnable = VK_FALSE,
 	    .depthBiasConstantFactor = 0.0f,
