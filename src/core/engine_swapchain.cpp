@@ -1,11 +1,11 @@
 #include "engine_swapchain.hpp"
 
+#include <vulkan/vulkan_core.h>
+
 #include "engine_device.hpp"
 #include "utils/buffer_utils.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
-
-#include <vulkan/vulkan_core.h>
 
 
 namespace vke {
@@ -117,8 +117,7 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
-	VK_CHECK(
-	    vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
+	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
 	const VkPresentInfoKHR presentInfo{
 	    .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -337,7 +336,7 @@ void VkEngineSwapChain::createDepthResources() {
 void VkEngineSwapChain::createCommandPools() {
 	const VkCommandPoolCreateInfo poolInfo = {
 	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-	    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	    .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
 	    .queueFamilyIndex = mDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
 
 	};

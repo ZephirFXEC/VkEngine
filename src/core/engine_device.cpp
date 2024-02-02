@@ -1,13 +1,14 @@
 #define VMA_IMPLEMENTATION
 #include "engine_device.hpp"
 
-#include "utils/logger.hpp"
-#include "utils/memory.hpp"
-
 #include <vulkan/vulkan_core.h>
+
 #include <set>
 #include <sstream>
 #include <unordered_set>
+
+#include "utils/logger.hpp"
+#include "utils/memory.hpp"
 
 
 namespace vke {
