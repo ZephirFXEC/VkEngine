@@ -7,6 +7,7 @@
 #include "core/engine_device.hpp"
 #include "core/engine_ecs.hpp"
 #include "core/engine_pipeline.hpp"
+#include "engine_camera.hpp"
 
 namespace vke {
 class VkEngineRenderSystem {
@@ -19,7 +20,7 @@ class VkEngineRenderSystem {
 
 	VkEngineRenderSystem& operator=(const VkEngineRenderSystem&) = delete;
 
-	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects) const;
+	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects, const VkEngineCamera& camera) const;
 
 
    private:

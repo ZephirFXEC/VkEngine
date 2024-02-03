@@ -22,6 +22,7 @@ class VkEngineRenderer {
 
 	bool isFrameInProgress() const { return isFrameStarted; }
 	const std::shared_ptr<VkEngineSwapChain>& getSwapChain() { return mVkSwapChain; }
+	float getAspectRatio() const { return mVkSwapChain->extentAspectRatio(); }
 
 	VkCommandBuffer getCurrentCommandBuffer() const {
 		assert(isFrameStarted && "Cannot get command buffer when frame not in progress.");

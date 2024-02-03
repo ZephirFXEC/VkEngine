@@ -59,7 +59,8 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass* const renderPass) 
 
 
 void VkEngineRenderSystem::renderGameObjects(const VkCommandBuffer* const commandBuffer,
-                                             std::vector<VkEngineGameObjects>& objects) const {
+                                             std::vector<VkEngineGameObjects>& objects,
+                                             const VkEngineCamera& camera) const {
 	pVkPipeline->bind(commandBuffer);
 
 	for (auto& gameObject : objects) {
@@ -67,7 +68,7 @@ void VkEngineRenderSystem::renderGameObjects(const VkCommandBuffer* const comman
 		gameObject.mTransform.rotation.x += 0.005f;
 
 		const PushConstants pushConstants{
-		    .transform = gameObject.mTransform.mat4(),
+		    .transform = camera.getProjectionMatrix() * gameObject.mTransform.mat4(),
 		    .color = gameObject.mColor,
 		};
 
