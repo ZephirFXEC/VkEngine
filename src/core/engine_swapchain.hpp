@@ -52,6 +52,10 @@ namespace vke {
 
         VkResult submitCommandBuffers(const VkCommandBuffer* buffers, const u32* imageIndex);
 
+        bool compareSwapFormats(const VkEngineSwapChain& other) const {
+            return other.mSwapChainImageFormat == mSwapChainImageFormat && other.mDepthFormat == mDepthFormat;
+        }
+
     private:
         void init();
 
@@ -90,6 +94,7 @@ namespace vke {
         VkImageRessource mDepthImages{};
         SyncPrimitives mSyncPrimitives{};
         VkFormat mSwapChainImageFormat{};
+        VkFormat mDepthFormat{};
         VkExtent2D mSwapChainExtent{};
         VkExtent2D mWindowExtent{};
 

@@ -18,23 +18,18 @@ VkEngineRenderer::VkEngineRenderer(VkEngineWindow& window, VkEngineDevice& devic
 VkEngineRenderer::~VkEngineRenderer() { freeCommandBuffers(); }
 
 void VkEngineRenderer::createCommandBuffers() {
-	mCommandBuffer = {
-	    .ppVkCommandBuffers = Memory::allocMemory<VkCommandBuffer>(mVkSwapChain->getImageCount(), MEMORY_TAG_VULKAN),
-	    .mSize = mVkSwapChain->getImageCount()};
-
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 	                                            .commandPool = mVkSwapChain->getCommandPool(),
 	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	                                            .commandBufferCount = mCommandBuffer.mSize};
+	                                            .commandBufferCount = static_cast<u32>(mVkCommandBuffers.size())};
 
 
-	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, mCommandBuffer.ppVkCommandBuffers));
+	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, mVkCommandBuffers.data()));
 }
 
 
 void VkEngineRenderer::freeCommandBuffers() const {
 	vkResetCommandPool(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), 0);
-	Memory::freeMemory(mCommandBuffer.ppVkCommandBuffers, mCommandBuffer.mSize, MEMORY_TAG_VULKAN);
 }
 
 void VkEngineRenderer::recreateSwapChain() {
@@ -50,21 +45,19 @@ void VkEngineRenderer::recreateSwapChain() {
 	if (mVkSwapChain == nullptr) {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
 	} else {
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, std::move(mVkSwapChain));
+		const std::shared_ptr<VkEngineSwapChain> oldSwapChain = std::move(mVkSwapChain);
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, oldSwapChain);
 
-		if (mVkSwapChain->getImageCount() != mCommandBuffer.mSize) {
-			freeCommandBuffers();
-			createCommandBuffers();
+		if (!oldSwapChain->compareSwapFormats(*mVkSwapChain)) {
+			throw std::runtime_error("Swap chain image format has changed!");
 		}
 	}
-
-	// TODO: create pipeline
 }
 
 VkCommandBuffer VkEngineRenderer::beginFrame() {
 	assert(!isFrameStarted && "Can't call beginFrame while frame is in progress.");
 
-	const VkResult result = mVkSwapChain->acquireNextImage(&mCurrentFrame);
+	const VkResult result = mVkSwapChain->acquireNextImage(&mCurrentImage);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 		recreateSwapChain();
@@ -95,7 +88,7 @@ void VkEngineRenderer::endFrame() {
 	}
 
 
-	if (const VkResult result = mVkSwapChain->submitCommandBuffers(&commandBuffer, &mCurrentFrame);
+	if (const VkResult result = mVkSwapChain->submitCommandBuffers(&commandBuffer, &mCurrentImage);
 	    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mVkWindow.wasWindowResized()) {
 		mVkWindow.resetWindowResizedFlag();
 		recreateSwapChain();
@@ -110,7 +103,7 @@ void VkEngineRenderer::endFrame() {
 }
 
 
-void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer commandBuffer) const {
+void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) const {
 	std::array<VkClearValue, 2> clearValues{};
 	clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
@@ -118,7 +111,7 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer commandBuf
 	const VkRenderPassBeginInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(mCurrentFrame)),
+	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(mCurrentImage)),
 	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
 	    .clearValueCount = static_cast<u32>(clearValues.size()),
 	    .pClearValues = clearValues.data(),
@@ -138,17 +131,17 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer commandBuf
 	    .extent = mVkSwapChain->getSwapChainExtent(),
 	};
 
-	vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+	vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
+	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 }
-void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer commandBuffer) const {
+void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) {
 	assert(isFrameStarted && "Cannot end render pass when frame is not in progress.");
 
-	assert(commandBuffer == mCommandBuffer.ppVkCommandBuffers[mCurrentFrame] &&
+	assert(*commandBuffer == getCurrentCommandBuffer() &&
 	       "Can only end the render pass on the currently active command buffer!");
 
-	vkCmdEndRenderPass(commandBuffer);
+	vkCmdEndRenderPass(*commandBuffer);
 }
 
 

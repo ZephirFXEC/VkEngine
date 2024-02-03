@@ -20,19 +20,23 @@ class VkEngineRenderer {
 	VkEngineRenderer(const VkEngineRenderer&) = delete;
 	VkEngineRenderer& operator=(const VkEngineRenderer&) = delete;
 
-	VkRenderPass getRenderPass() const& { return mVkSwapChain->getRenderPass(); }
 	bool isFrameInProgress() const { return isFrameStarted; }
 	const std::shared_ptr<VkEngineSwapChain>& getSwapChain() { return mVkSwapChain; }
 
 	VkCommandBuffer getCurrentCommandBuffer() const {
 		assert(isFrameStarted && "Cannot get command buffer when frame not in progress.");
-		return mCommandBuffer.ppVkCommandBuffers[mCurrentFrame];
+		return mVkCommandBuffers[mCurrentFrame];
+	}
+
+	u32 getFrameIndex() const {
+		assert(isFrameStarted && "Cannot get frame index when frame not in progress.");
+		return mCurrentFrame;
 	}
 
 	VkCommandBuffer beginFrame();
 	void endFrame();
-	void beginSwapChainRenderPass(VkCommandBuffer commandBuffer) const;
-	void endSwapChainRenderPass(VkCommandBuffer commandBuffer) const;
+	void beginSwapChainRenderPass(const VkCommandBuffer* commandBuffer) const;
+	static void endSwapChainRenderPass(const VkCommandBuffer* commandBuffer);
 
 	void run();
 
@@ -46,12 +50,11 @@ class VkEngineRenderer {
 	VkEngineDevice& mVkDevice;
 	std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
 
-	struct CommandBuffer {
-		VkCommandBuffer* ppVkCommandBuffers{};
-		u32 mSize{};  // number of command buffers (could be uint8_t)
-	} mCommandBuffer{};
+	std::array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> mVkCommandBuffers{VK_NULL_HANDLE};
 
+	u32 mCurrentImage = 0;
 	u32 mCurrentFrame = 0;
+
 	bool isFrameStarted = false;
 };
 }  // namespace vke

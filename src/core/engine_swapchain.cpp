@@ -300,11 +300,13 @@ void VkEngineSwapChain::createDepthResources() {
 	mDepthImages.ppImageMemorys = Memory::allocMemory<VmaAllocation>(getImageCount(), MEMORY_TAG_VULKAN);
 	mDepthImages.ppImageViews = Memory::allocMemory<VkImageView>(getImageCount(), MEMORY_TAG_VULKAN);
 
+	mDepthFormat = findDepthFormat();
+
 	for (size_t i = 0; i < getImageCount(); i++) {
 		const VkImageCreateInfo imageInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		    .imageType = VK_IMAGE_TYPE_2D,
-		    .format = VK_FORMAT_D24_UNORM_S8_UINT,
+		    .format = mDepthFormat,
 		    .extent = {.width = getSwapChainExtent().width, .height = getSwapChainExtent().height, .depth = 1},
 		    .mipLevels = 1,
 		    .arrayLayers = 1,
@@ -321,7 +323,7 @@ void VkEngineSwapChain::createDepthResources() {
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		    .image = mDepthImages.ppImages[i],
 		    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-		    .format = VK_FORMAT_D24_UNORM_S8_UINT,
+		    .format = mDepthFormat,
 		    .subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
 		                         .baseMipLevel = 0,
 		                         .levelCount = 1,
@@ -459,8 +461,9 @@ VkExtent2D VkEngineSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& c
 }
 
 VkFormat VkEngineSwapChain::findDepthFormat() const {
+	// TODO: Check for different formats
 	return mDevice.findSupportedFormat(
-	    {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT}, VK_IMAGE_TILING_OPTIMAL,
+	    {VK_FORMAT_D24_UNORM_S8_UINT}, VK_IMAGE_TILING_OPTIMAL,
 	    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 }  // namespace vke
