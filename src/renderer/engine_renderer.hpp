@@ -7,9 +7,9 @@
 
 #include <cassert>
 
-#include "engine_device.hpp"
-#include "engine_swapchain.hpp"
-#include "engine_window.hpp"
+#include "core/engine_device.hpp"
+#include "core/engine_swapchain.hpp"
+#include "core/engine_window.hpp"
 
 namespace vke {
 class VkEngineRenderer {
@@ -36,7 +36,7 @@ class VkEngineRenderer {
 	VkCommandBuffer beginFrame();
 	void endFrame();
 	void beginSwapChainRenderPass(const VkCommandBuffer* commandBuffer) const;
-	static void endSwapChainRenderPass(const VkCommandBuffer* commandBuffer);
+	void endSwapChainRenderPass(const VkCommandBuffer* commandBuffer) const;
 
 	void run();
 

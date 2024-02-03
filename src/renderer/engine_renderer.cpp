@@ -5,7 +5,6 @@
 #include "engine_renderer.hpp"
 
 #include "utils/logger.hpp"
-#include "utils/memory.hpp"
 #include "utils/types.hpp"
 
 namespace vke {
@@ -135,7 +134,7 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 }
-void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) {
+void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) const {
 	assert(isFrameStarted && "Cannot end render pass when frame is not in progress.");
 
 	assert(*commandBuffer == getCurrentCommandBuffer() &&

@@ -462,8 +462,7 @@ VkExtent2D VkEngineSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& c
 
 VkFormat VkEngineSwapChain::findDepthFormat() const {
 	// TODO: Check for different formats
-	return mDevice.findSupportedFormat(
-	    {VK_FORMAT_D24_UNORM_S8_UINT}, VK_IMAGE_TILING_OPTIMAL,
-	    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	return mDevice.findSupportedFormat({VK_FORMAT_D24_UNORM_S8_UINT}, VK_IMAGE_TILING_OPTIMAL,
+	                                   VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 }  // namespace vke

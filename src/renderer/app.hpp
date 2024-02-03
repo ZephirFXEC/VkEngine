@@ -1,9 +1,9 @@
 #pragma once
 
-#include "engine_device.hpp"
-#include "engine_ecs.hpp"
+#include "core/engine_device.hpp"
+#include "core/engine_ecs.hpp"
+#include "core/engine_window.hpp"
 #include "engine_renderer.hpp"
-#include "engine_window.hpp"
 
 namespace vke {
 class App {

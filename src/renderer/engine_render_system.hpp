@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "engine_device.hpp"
-#include "engine_ecs.hpp"
-#include "engine_pipeline.hpp"
+#include "core/engine_device.hpp"
+#include "core/engine_ecs.hpp"
+#include "core/engine_pipeline.hpp"
 
 namespace vke {
 class VkEngineRenderSystem {

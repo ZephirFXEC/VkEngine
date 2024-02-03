@@ -9,7 +9,7 @@ namespace vke {
 App::App() { loadGameObjects(); }
 
 void App::run() {
-	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChain()->getRenderPass());
+	const VkEngineRenderSystem renderSystem(mVkDevice, &mVkRenderer.getSwapChain()->getRenderPass());
 
 	u64 frame = 0;
 	while (!mVkWindow.shouldClose()) {
