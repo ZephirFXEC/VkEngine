@@ -88,7 +88,7 @@ VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
 	VK_CHECK(
 	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
 
-	vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]);
+	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
 
 	return vkAcquireNextImageKHR(mDevice.getDevice(), pSwapChain, UINT64_MAX,
 	                             mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],

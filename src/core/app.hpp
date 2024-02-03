@@ -3,7 +3,7 @@
 #include "engine_device.hpp"
 #include "engine_ecs.hpp"
 #include "engine_pipeline.hpp"
-#include "engine_swapchain.hpp"
+#include "engine_renderer.hpp"
 #include "engine_window.hpp"
 
 namespace vke {
@@ -29,32 +29,18 @@ class App {
 
 	void createPipeline();
 
-	void createCommandBuffers();
-
-	void drawFrame();
-
-	void recreateSwapChain();
-
-	void recordCommandsBuffers(size_t imageIndex);
-
 	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects) const;
-
-	void freeCommandBuffers() const;
 
 	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
 
 	VkEngineDevice mVkDevice{mVkWindow};
 
-	std::shared_ptr<VkEngineSwapChain> mVkSwapChain = nullptr;
+	VkEngineRenderer mVkRenderer{mVkWindow, mVkDevice};
+
 	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 	std::vector<VkEngineGameObjects> mVkGameObjects{};
 
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
-
-	struct CommandBuffer {
-		VkCommandBuffer* ppVkCommandBuffers{};
-		u32 mSize{};  // number of command buffers (could be uint8_t)
-	} mCommandBuffer{};
 
 	static inline u64 mCurrentFrame = 0;
 
