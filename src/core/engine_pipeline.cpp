@@ -9,7 +9,7 @@
 #include <vulkan/vulkan_core.h>
 
 namespace vke {
-VkEnginePipeline::VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
+VkEnginePipeline::VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
                                    const PipelineConfigInfo& configInfo)
     : mDevice(device) {
 	createGraphicsPipeline(vertShader, fragShader, configInfo);

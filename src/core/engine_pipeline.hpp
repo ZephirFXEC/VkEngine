@@ -8,32 +8,14 @@
 #include "engine_model.hpp"
 
 namespace vke {
-struct PipelineConfigInfo {
-	PipelineConfigInfo() = default;
 
-	PipelineConfigInfo(const PipelineConfigInfo&) = delete;
-
-	PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
-
-	VkPipelineViewportStateCreateInfo viewportInfo{};
-	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
-	VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
-	VkPipelineMultisampleStateCreateInfo multisampleInfo{};
-	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
-	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-	std::array<VkDynamicState,2> pDynamicStateEnables{};
-	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
-	VkRenderPass renderPass = VK_NULL_HANDLE;
-	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-	u32 subpass = 0;
-};
+struct PipelineConfigInfo;
 
 class VkEnginePipeline {
    public:
 	explicit VkEnginePipeline() = delete;
 
-	VkEnginePipeline(VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
+	VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
 	                 const PipelineConfigInfo& configInfo);
 
 	~VkEnginePipeline();
@@ -58,5 +40,28 @@ class VkEnginePipeline {
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
 	Shader mShaders{};
+};
+
+struct PipelineConfigInfo {
+	PipelineConfigInfo() {
+		VkEnginePipeline::defaultPipelineConfigInfo(*this);
+	}
+
+	PipelineConfigInfo(const PipelineConfigInfo&) = delete;
+
+	PipelineConfigInfo& operator=(const PipelineConfigInfo&) = delete;
+
+	VkPipelineViewportStateCreateInfo viewportInfo{};
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
+	VkPipelineRasterizationStateCreateInfo rasterizationInfo{};
+	VkPipelineMultisampleStateCreateInfo multisampleInfo{};
+	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
+	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
+	std::array<VkDynamicState,2> pDynamicStateEnables{};
+	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
+	VkRenderPass renderPass = VK_NULL_HANDLE;
+	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+	u32 subpass = 0;
 };
 }  // namespace vke
