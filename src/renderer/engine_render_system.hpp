@@ -12,7 +12,7 @@
 namespace vke {
 class VkEngineRenderSystem {
    public:
-	VkEngineRenderSystem(VkEngineDevice& device, const VkRenderPass* renderPass);
+	VkEngineRenderSystem(const VkEngineDevice& device, const VkRenderPass* renderPass);
 
 	~VkEngineRenderSystem();
 
@@ -20,7 +20,8 @@ class VkEngineRenderSystem {
 
 	VkEngineRenderSystem& operator=(const VkEngineRenderSystem&) = delete;
 
-	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects, const VkEngineCamera& camera) const;
+	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects,
+	                       const VkEngineCamera& camera) const;
 
 
    private:
@@ -28,7 +29,7 @@ class VkEngineRenderSystem {
 	void createPipeline(const VkRenderPass* renderPass);
 
 
-	VkEngineDevice& mVkDevice;
+	const VkEngineDevice& mVkDevice;
 	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
 };

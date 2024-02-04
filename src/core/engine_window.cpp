@@ -1,7 +1,8 @@
 #include "engine_window.hpp"
-#include "utils/logger.hpp"
 
 #include <GLFW/glfw3.h>
+
+#include "utils/logger.hpp"
 
 
 namespace vke {

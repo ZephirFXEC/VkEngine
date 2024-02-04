@@ -8,7 +8,7 @@
 #include "utils/types.hpp"
 
 namespace vke {
-VkEngineRenderer::VkEngineRenderer(VkEngineWindow& window, VkEngineDevice& device)
+VkEngineRenderer::VkEngineRenderer(const VkEngineDevice& device, VkEngineWindow& window)
     : mVkWindow(window), mVkDevice(device) {
 	recreateSwapChain();
 	createCommandBuffers();
@@ -70,7 +70,10 @@ VkCommandBuffer VkEngineRenderer::beginFrame() {
 	isFrameStarted = true;
 
 	auto* const commandBuffer = getCurrentCommandBuffer();
-	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+	constexpr VkCommandBufferBeginInfo beginInfo{
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
 
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to begin recording command buffer!");

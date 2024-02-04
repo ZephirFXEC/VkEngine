@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <array>
+
 #include "fmt/core.h"
 #include "types.hpp"
-
-#include <array>
 
 #define LOG_WARN_ENABLE 1
 #define LOG_INFO_ENABLE 1
@@ -20,40 +20,38 @@
 #endif
 
 using LogLevel = enum LogLevel : u8 {
-    LOG_LEVEL_FATAL = 0,
-    LOG_LEVEL_ERROR = 1,
-    LOG_LEVEL_WARN = 2,
-    LOG_LEVEL_INFO = 3,
-    LOG_LEVEL_DEBUG = 4,
-    LOG_LEVEL_TRACE = 5,
+	LOG_LEVEL_FATAL = 0,
+	LOG_LEVEL_ERROR = 1,
+	LOG_LEVEL_WARN = 2,
+	LOG_LEVEL_INFO = 3,
+	LOG_LEVEL_DEBUG = 4,
+	LOG_LEVEL_TRACE = 5,
 };
 
 
-template<typename... Args>
+template <typename... Args>
 constexpr void log_output(const LogLevel level, const char* message, Args&&... args) {
-    constexpr std::array level_string = {
-        "[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: "
-    };
+	constexpr std::array level_string = {"[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: "};
 
-    fmt::print("{}{}\n", level_string.at(level), fmt::format(fmt::runtime(message), std::forward<Args>(args)...));
+	fmt::print("{}{}\n", level_string.at(level), fmt::format(fmt::runtime(message), std::forward<Args>(args)...));
 }
 
-template<typename... Args>
+template <typename... Args>
 constexpr void VKFATAL(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_FATAL, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_FATAL, message, std::forward<Args>(args)...);
 }
 
 #ifndef VKERROR
-template<typename... Args>
+template <typename... Args>
 constexpr void VKERROR(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_ERROR, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_ERROR, message, std::forward<Args>(args)...);
 }
 #endif
 
 #if LOG_WARN_ENABLE
-template<typename... Args>
+template <typename... Args>
 constexpr void VKWARN(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_WARN, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_WARN, message, std::forward<Args>(args)...);
 }
 #else
 template <typename... Args>
@@ -61,9 +59,9 @@ constexpr void VKWARN(const char* /*unused*/, Args... /*unused*/) {}
 #endif
 
 #if LOG_INFO_ENABLE
-template<typename... Args>
+template <typename... Args>
 constexpr void VKINFO(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_INFO, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_INFO, message, std::forward<Args>(args)...);
 }
 #else
 template <typename... Args>
@@ -71,9 +69,9 @@ constexpr void VKINFO(const char* /*unused*/, Args&&... /*unused*/) {}
 #endif
 
 #if LOG_DEBUG_ENABLE
-template<typename... Args>
+template <typename... Args>
 constexpr void VKDEBUG(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_DEBUG, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_DEBUG, message, std::forward<Args>(args)...);
 }
 #else
 template <typename... Args>
@@ -81,9 +79,9 @@ constexpr void VKDEBUG(const char* /*unused*/, Args&&... /*unused*/) {}
 #endif
 
 #if LOG_TRACE_ENABLE
-template<typename... Args>
+template <typename... Args>
 constexpr void VKTRACE(const char* message, Args&&... args) {
-    log_output(LOG_LEVEL_TRACE, message, std::forward<Args>(args)...);
+	log_output(LOG_LEVEL_TRACE, message, std::forward<Args>(args)...);
 }
 #else
 template <typename... Args>
@@ -92,12 +90,12 @@ constexpr void VKTRACE(const char* /*unused*/, Args&&... /*unused*/) {}
 
 
 #ifndef NDEBUG
-#define VK_CHECK(x)                                                          \
-	do {                                                                     \
-		if ((x)) {                                                           \
+#define VK_CHECK(x)                                              \
+	do {                                                         \
+		if ((x)) {                                               \
 			fmt::println("Detected Vulkan error: {}", __LINE__); \
-			abort();                                                         \
-		}                                                                    \
+			abort();                                             \
+		}                                                        \
 	} while (0)
 #else
 #define VK_CHECK(x) x

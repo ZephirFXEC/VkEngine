@@ -4,21 +4,23 @@
 
 #include "engine_camera.hpp"
 
+#include <glm/ext/scalar_constants.hpp>
+
 namespace vke {
 void VkEngineCamera::setOrthographicProjection(const float left, const float right, const float top, const float bottom,
                                                const float near, const float far) {
 	mProjectionMatrix = glm::mat4{1.0f};
 	mProjectionMatrix[0][0] = 2.f / (right - left);
-	mProjectionMatrix[1][1] = 2.f / (bottom - top);
+	mProjectionMatrix[1][1] = 2.f / (top - bottom);
 	mProjectionMatrix[2][2] = 1.f / (far - near);
 	mProjectionMatrix[3][0] = -(right + left) / (right - left);
-	mProjectionMatrix[3][1] = -(bottom + top) / (bottom - top);
+	mProjectionMatrix[3][1] = -(bottom + top) / (top - bottom);
 	mProjectionMatrix[3][2] = -near / (far - near);
 }
 
 void VkEngineCamera::setPerspectiveProjection(const float fovy, const float aspect, const float zNear,
                                               const float zFar) {
-	assert(glm::abs(aspect - std::numeric_limits<float>::epsilon()) > 0.0f);
+	assert(glm::abs(aspect - glm::epsilon<float>()) > 0.0f);
 	const float tanHalfFovy = glm::tan(fovy / 2.f);
 	mProjectionMatrix = glm::mat4{0.0f};
 	mProjectionMatrix[0][0] = 1.f / (aspect * tanHalfFovy);

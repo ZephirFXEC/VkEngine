@@ -15,7 +15,7 @@ struct PushConstants {
 	alignas(16) glm::vec3 color{};
 };
 
-VkEngineRenderSystem::VkEngineRenderSystem(VkEngineDevice& device, const VkRenderPass* const renderPass)
+VkEngineRenderSystem::VkEngineRenderSystem(const VkEngineDevice& device, const VkRenderPass* const renderPass)
     : mVkDevice(device) {
 	createPipelineLayout();
 	createPipeline(renderPass);
@@ -47,8 +47,6 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass* const renderPass) 
 	assert(pVkPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
 
 	PipelineConfigInfo pipelineConfig{};
-	VkEnginePipeline::defaultPipelineConfigInfo(pipelineConfig);
-
 	pipelineConfig.renderPass = *renderPass;
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 

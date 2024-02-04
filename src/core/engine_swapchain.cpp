@@ -69,13 +69,16 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppRenderFinishedSemaphores[i], nullptr);
-		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores[i], nullptr);
-		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences[i], nullptr);
+		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppRenderFinishedSemaphores.at(i), nullptr);
+		vkDestroySemaphore(mDevice.getDevice(), mSyncPrimitives.ppImageAvailableSemaphores.at(i), nullptr);
+		vkDestroyFence(mDevice.getDevice(), mSyncPrimitives.ppInFlightFences.at(i), nullptr);
 	}
-	Memory::freeMemory(mSyncPrimitives.ppImageAvailableSemaphores, MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mSyncPrimitives.ppRenderFinishedSemaphores, MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
-	Memory::freeMemory(mSyncPrimitives.ppInFlightFences, MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
+
+	// clear arrays
+	mSyncPrimitives.ppImageAvailableSemaphores.fill(VK_NULL_HANDLE);
+	mSyncPrimitives.ppRenderFinishedSemaphores.fill(VK_NULL_HANDLE);
+	mSyncPrimitives.ppInFlightFences.fill(VK_NULL_HANDLE);
+
 	Memory::freeMemory(mSyncPrimitives.ppInFlightImages, getImageCount(), MEMORY_TAG_VULKAN);
 
 
@@ -85,13 +88,13 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
-	VK_CHECK(
-	    vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame], VK_TRUE, UINT64_MAX));
+	VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences.at(mCurrentFrame), VK_TRUE,
+	                         UINT64_MAX));
 
-	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
+	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences.at(mCurrentFrame)));
 
 	return vkAcquireNextImageKHR(mDevice.getDevice(), pSwapChain, UINT64_MAX,
-	                             mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
+	                             mSyncPrimitives.ppImageAvailableSemaphores.at(mCurrentFrame),
 	                             // must be a not signaled semaphore
 	                             VK_NULL_HANDLE, imageIndex);
 }
@@ -102,27 +105,29 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 		                         UINT64_MAX));
 	}
 
-	mSyncPrimitives.ppInFlightImages[*imageIndex] = mSyncPrimitives.ppInFlightFences[mCurrentFrame];
+	mSyncPrimitives.ppInFlightImages[*imageIndex] = mSyncPrimitives.ppInFlightFences.at(mCurrentFrame);
 
 	constexpr std::array<VkPipelineStageFlags, 1> waitStages = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
 
-	const VkSubmitInfo submitInfo = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	                                 .waitSemaphoreCount = 1,
-	                                 .pWaitSemaphores = &mSyncPrimitives.ppImageAvailableSemaphores[mCurrentFrame],
-	                                 .pWaitDstStageMask = waitStages.data(),
+	const VkSubmitInfo submitInfo = {
+	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+	    .waitSemaphoreCount = 1,
+	    .pWaitSemaphores = &mSyncPrimitives.ppImageAvailableSemaphores.at(mCurrentFrame),
+	    .pWaitDstStageMask = waitStages.data(),
 
-	                                 .commandBufferCount = 1,
-	                                 .pCommandBuffers = buffers,
+	    .commandBufferCount = 1,
+	    .pCommandBuffers = buffers,
 
-	                                 .signalSemaphoreCount = 1,
-	                                 .pSignalSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores[mCurrentFrame]};
+	    .signalSemaphoreCount = 1,
+	    .pSignalSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores.at(mCurrentFrame)};
 
-	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences[mCurrentFrame]));
+	VK_CHECK(
+	    vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences.at(mCurrentFrame)));
 
 	const VkPresentInfoKHR presentInfo{
 	    .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 	    .waitSemaphoreCount = 1,
-	    .pWaitSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores[mCurrentFrame],
+	    .pWaitSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores.at(mCurrentFrame),
 	    .swapchainCount = 1,
 	    .pSwapchains = &pSwapChain,
 	    .pImageIndices = imageIndex,
@@ -360,11 +365,6 @@ void VkEngineSwapChain::createCommandPools() {
 }
 
 void VkEngineSwapChain::createSyncObjects() {
-	mSyncPrimitives.ppImageAvailableSemaphores =
-	    Memory::allocMemory<VkSemaphore>(MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
-	mSyncPrimitives.ppRenderFinishedSemaphores =
-	    Memory::allocMemory<VkSemaphore>(MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
-	mSyncPrimitives.ppInFlightFences = Memory::allocMemory<VkFence>(MAX_FRAMES_IN_FLIGHT, MEMORY_TAG_VULKAN);
 	mSyncPrimitives.ppInFlightImages = Memory::allocMemory<VkFence>(getImageCount(), MEMORY_TAG_VULKAN);
 
 	constexpr VkSemaphoreCreateInfo semaphoreInfo{
@@ -378,10 +378,10 @@ void VkEngineSwapChain::createSyncObjects() {
 
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
-		                           &mSyncPrimitives.ppImageAvailableSemaphores[i]));
+		                           &mSyncPrimitives.ppImageAvailableSemaphores.at(i)));
 		VK_CHECK(vkCreateSemaphore(mDevice.getDevice(), &semaphoreInfo, nullptr,
-		                           &mSyncPrimitives.ppRenderFinishedSemaphores[i]));
-		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences[i]));
+		                           &mSyncPrimitives.ppRenderFinishedSemaphores.at(i)));
+		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences.at(i)));
 	}
 }
 
@@ -438,7 +438,7 @@ VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPr
 		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {
-		fmt::println("Present mode: Immedaiate");
+		fmt::println("Present mode: Immediate");
 		return *it;
 	}
 

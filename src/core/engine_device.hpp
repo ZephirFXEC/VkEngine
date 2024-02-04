@@ -1,8 +1,8 @@
 #pragma once
 
-#include "engine_window.hpp"
-
 #include <array>
+
+#include "engine_window.hpp"
 
 #ifdef NDEBUG
 static constexpr bool enableValidationLayers = false;
@@ -95,7 +95,7 @@ class VkEngineDevice {
 
 	const std::array<const char*, 1> mValidationLayer{"VK_LAYER_KHRONOS_validation"};
 
-	//TODO: make it more bullet proof for cross platform
+	// TODO: make it more bullet proof for cross platform
 	const std::array<const char*, 1> mDeviceExtensions{VK_KHR_SWAPCHAIN_EXTENSION_NAME
 #ifdef __APPLE__
 	                                                   ,

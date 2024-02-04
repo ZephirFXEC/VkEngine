@@ -44,7 +44,7 @@ std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttri
 
 void VkEngineModel::bind(const VkCommandBuffer* const commandBuffer) const {
 	auto* const buffer = mVertexBuffer.pDataBuffer;
-	constexpr std::array<VkDeviceSize, 1> offsets{0};
+	constexpr std::array<VkDeviceSize, 1> offsets{};
 
 	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &buffer, offsets.data());
 	vkCmdBindIndexBuffer(*commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
@@ -61,22 +61,21 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
                                    VkBuffer& buffer, VmaAllocation& bufferMemory) {
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
-	const VkBufferCreateInfo bufferInfo{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = bufferSize,
-		.usage = usage,
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
-	};
+	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+	                                    .size = bufferSize,
+	                                    .usage = usage,
+	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
 	constexpr VmaAllocationCreateInfo allocCreateInfo{
-		.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, // device is GPU preferred
+	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+	    .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,  // device is GPU preferred
 	};
 
 	VmaAllocationInfo allocInfo{};
-	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &buffer, &bufferMemory, &allocInfo));
+	VK_CHECK(
+	    vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &buffer, &bufferMemory, &allocInfo));
 
-	Memory::copyMemory(allocInfo.pMappedData, data, static_cast<size_t>(bufferSize));
+	Memory::copyMemory(allocInfo.pMappedData, data, allocInfo.size);
 }
 
 

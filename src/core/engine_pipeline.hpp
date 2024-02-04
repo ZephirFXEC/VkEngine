@@ -9,6 +9,7 @@
 
 namespace vke {
 
+// Forward declaration
 struct PipelineConfigInfo;
 
 class VkEnginePipeline {
@@ -43,9 +44,7 @@ class VkEnginePipeline {
 };
 
 struct PipelineConfigInfo {
-	PipelineConfigInfo() {
-		VkEnginePipeline::defaultPipelineConfigInfo(*this);
-	}
+	PipelineConfigInfo() { VkEnginePipeline::defaultPipelineConfigInfo(*this); }
 
 	PipelineConfigInfo(const PipelineConfigInfo&) = delete;
 
@@ -58,7 +57,7 @@ struct PipelineConfigInfo {
 	VkPipelineColorBlendAttachmentState colorBlendAttachment{};
 	VkPipelineColorBlendStateCreateInfo colorBlendInfo{};
 	VkPipelineDepthStencilStateCreateInfo depthStencilInfo{};
-	std::array<VkDynamicState,2> pDynamicStateEnables{};
+	std::array<VkDynamicState, 2> pDynamicStateEnables{};
 	VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
 	VkRenderPass renderPass = VK_NULL_HANDLE;
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;

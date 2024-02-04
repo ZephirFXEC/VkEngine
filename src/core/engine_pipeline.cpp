@@ -1,16 +1,17 @@
 #include "engine_pipeline.hpp"
 
+#include <vulkan/vulkan_core.h>
+
+#include <fstream>
+#include <string>
+
 #include "engine_device.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 
-#include <fstream>
-#include <string>
-#include <vulkan/vulkan_core.h>
-
 namespace vke {
-VkEnginePipeline::VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
-                                   const PipelineConfigInfo& configInfo)
+VkEnginePipeline::VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader,
+                                   const std::string& fragShader, const PipelineConfigInfo& configInfo)
     : mDevice(device) {
 	createGraphicsPipeline(vertShader, fragShader, configInfo);
 }
