@@ -10,25 +10,20 @@
 
 namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
-                             const Vertex* vertices, const u32 vCount, const u32* indices, const u32 iCount)
+                             const MeshData& meshData)
 
-    : mIndexCount{iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
+    : mIndexCount{meshData.iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
 	VKINFO("Creating model");
-	createIndexBuffers(indices, iCount);
-	createVertexBuffers(vertices, vCount);
+	createIndexBuffers(meshData.pIndices, meshData.iCount);
+	createVertexBuffers(meshData.pVertices, meshData.vCount);
 }
 
 VkEngineModel::~VkEngineModel() {
-	destroyBuffer(mVertexBuffer);
-	destroyBuffer(mIndexBuffer);
+	vmaDestroyBuffer(mDevice.getAllocator(), mIndexBuffer.pDataBuffer, mIndexBuffer.pDataBufferMemory);
+	vmaDestroyBuffer(mDevice.getAllocator(), mVertexBuffer.pDataBuffer, mVertexBuffer.pDataBufferMemory);
+
 	VKINFO("Destroyed model");
 }
-
-
-void VkEngineModel::destroyBuffer(const DataBuffer& buffer) const {
-	vmaDestroyBuffer(mDevice.getAllocator(), buffer.pDataBuffer, buffer.pDataBufferMemory);
-}
-
 
 std::array<VkVertexInputBindingDescription, 1> VkEngineModel::Vertex::getBindingDescriptions() {
 	return std::array{VkVertexInputBindingDescription{
@@ -66,25 +61,22 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
                                    VkBuffer& buffer, VmaAllocation& bufferMemory) {
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
-	VkBuffer stagingBuffer = nullptr;
-	VmaAllocation stagingBufferMemory = nullptr;
+	const VkBufferCreateInfo bufferInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = bufferSize,
+		.usage = usage,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
 
-	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, stagingBuffer,
-	                               stagingBufferMemory, VMA_MEMORY_USAGE_CPU_TO_GPU);
+	constexpr VmaAllocationCreateInfo allocCreateInfo{
+		.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+		.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, // device is GPU preferred
+	};
 
-	void* mappedData = nullptr;
-	VK_CHECK(vmaMapMemory(mDevice.getAllocator(), stagingBufferMemory, &mappedData));
+	VmaAllocationInfo allocInfo{};
+	VK_CHECK(vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &buffer, &bufferMemory, &allocInfo));
 
-	Memory::copyMemory(mappedData, data, static_cast<size_t>(bufferSize));
-
-	vmaUnmapMemory(mDevice.getAllocator(), stagingBufferMemory);
-
-	BufferUtils::createModelBuffer(mDevice, bufferSize, usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT, buffer, bufferMemory,
-	                               VMA_MEMORY_USAGE_GPU_ONLY);
-
-	copyBuffer(&stagingBuffer, &buffer, bufferSize);
-
-	vmaDestroyBuffer(mDevice.getAllocator(), stagingBuffer, stagingBufferMemory);
+	Memory::copyMemory(allocInfo.pMappedData, data, static_cast<size_t>(bufferSize));
 }
 
 
@@ -99,15 +91,4 @@ void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCou
 	               mIndexBuffer.pDataBufferMemory);
 }
 
-
-void VkEngineModel::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
-                               const VkDeviceSize size) {
-	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer);
-
-	const VkBufferCopy copyRegion{.size = size};
-	vkCmdCopyBuffer(mCommandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
-
-	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), pSwapChain->getCommandPool(), mCommandBuffer,
-	                                   mDevice.getGraphicsQueue());
-}
 }  // namespace vke

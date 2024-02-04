@@ -24,8 +24,14 @@ class VkEngineModel {
 		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
 	};
 
-	VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
-	              const Vertex* vertices, u32 vCount, const u32* indices, u32 iCount);
+	struct MeshData {
+		Vertex* pVertices;
+		u32 vCount;
+		u32* pIndices;
+		u32 iCount;
+	};
+
+	VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain, const MeshData& meshData);
 
 	~VkEngineModel();
 
@@ -41,10 +47,6 @@ class VkEngineModel {
 	void createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage, VkBuffer& buffer,
 	                    VmaAllocation& bufferMemory);
 
-
-	void destroyBuffer(const DataBuffer& buffer) const;
-
-	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size);
 
 	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
 
