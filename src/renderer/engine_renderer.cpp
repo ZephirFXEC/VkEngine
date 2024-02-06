@@ -9,7 +9,7 @@
 
 namespace vke {
 VkEngineRenderer::VkEngineRenderer(const VkEngineDevice& device, VkEngineWindow& window)
-    : mVkWindow(window), mVkDevice(device) {
+    : mVkDevice(device), mVkWindow(window) {
 	recreateSwapChain();
 	createCommandBuffers();
 }
@@ -113,7 +113,7 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 	const VkRenderPassBeginInfo renderPassInfo{
 	    .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 	    .renderPass = mVkSwapChain->getRenderPass(),
-	    .framebuffer = mVkSwapChain->getFrameBuffer(static_cast<u32>(mCurrentImage)),
+	    .framebuffer = mVkSwapChain->getFrameBuffer(mCurrentImage),
 	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
 	    .clearValueCount = static_cast<u32>(clearValues.size()),
 	    .pClearValues = clearValues.data(),

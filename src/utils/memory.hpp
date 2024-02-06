@@ -119,9 +119,9 @@ class Memory : NO_COPY_NOR_MOVE {
 			if (const u64 bytes = mMemoryStats.tagAllocated.at(i).load(); bytes > 0) {
 				std::string tag = MEMORY_TAG_NAMES.at(i);
 				std::string bytesStr{fmt::format("{} bytes", bytes)};
-				std::string gibStr{fmt::format("{:.2f} GiB", S_CAST(f32, bytes) / S_CAST(f32, gib))};
-				std::string mibStr{fmt::format("{:.2f} MiB", S_CAST(f32, bytes) / S_CAST(f32, mib))};
-				std::string kibStr{fmt::format("{:.2f} KiB", S_CAST(f32, bytes) / S_CAST(f32, kib))};
+				std::string gibStr{fmt::format("{:.2f} GiB", static_cast<f32>(bytes) / static_cast<f32>(gib))};
+				std::string mibStr{fmt::format("{:.2f} MiB", static_cast<f32>(bytes) / static_cast<f32>(mib))};
+				std::string kibStr{fmt::format("{:.2f} KiB", static_cast<f32>(bytes) / static_cast<f32>(kib))};
 
 				memoryUsage += fmt::format("{}: {} ({}, {}, {})\n", tag, bytesStr, gibStr, mibStr, kibStr);
 			}

@@ -20,7 +20,7 @@ class VkEngineWindow {
 
 	[[nodiscard]] VkExtent2D getExtent() const { return {static_cast<u32>(mWidth), static_cast<u32>(mHeight)}; }
 
-	NDC_INLINE bool wasWindowResized() const { return mFramebufferResized; }
+	[[nodiscard]] bool wasWindowResized() const { return mFramebufferResized; }
 
 	void createWindowSurface(const VkInstance* instance, VkSurfaceKHR* surface) const;
 

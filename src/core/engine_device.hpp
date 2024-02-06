@@ -29,13 +29,13 @@ class VkEngineDevice {
 	VkEngineDevice& operator=(VkEngineDevice&&) = delete;
 
 	// TYPE				NAME			VARIABLE //
-	GETTERS(VkPhysicalDevice, PhysicalDevice, pPhysicalDevice)
-	GETTERS(VkInstance, Instance, pInstance)
-	GETTERS(VkSurfaceKHR, Surface, pSurface)
-	GETTERS(VkQueue, GraphicsQueue, pGraphicsQueue)
-	GETTERS(VkQueue, PresentQueue, pPresentQueue)
-	GETTERS(VkDevice, Device, pDevice)
-	GETTERS(VmaAllocator, Allocator, pAllocator)
+	[[nodiscard]] const VkPhysicalDeviceProperties& getPhysicalDeviceProperties() const { return mProperties; }
+	[[nodiscard]] const VkInstance& getInstance() const { return pInstance; }
+	[[nodiscard]] const VkSurfaceKHR& getSurface() const { return pSurface; }
+	[[nodiscard]] const VkQueue& getGraphicsQueue() const { return pGraphicsQueue; }
+	[[nodiscard]] const VkQueue& getPresentQueue() const { return pPresentQueue; }
+	[[nodiscard]] const VkDevice& getDevice() const { return pDevice; }
+	[[nodiscard]] const VmaAllocator& getAllocator() const { return pAllocator; }
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);

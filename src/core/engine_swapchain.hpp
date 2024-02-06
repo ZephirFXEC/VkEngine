@@ -23,22 +23,52 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-	NDC_INLINE const VkFramebuffer& getFrameBuffer(const u32 index) const { return ppSwapChainFramebuffers[index]; }
+	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const u32 index) const {
+		return ppSwapChainFramebuffers[index];
+	}
 
-	NDC_INLINE const VkImageView& getImageView(const u32 index) const { return mSwapChainImages.ppImageViews[index]; }
+	[[nodiscard]] const VkImageView& getImageView(const u32 index) const {
+		return mSwapChainImages.ppImageViews[index];
+	}
 
-	// TYPE				NAME			VARIABLE //
-	GETTERS(VkSwapchainKHR, SwapChain, pSwapChain)
-	GETTERS(VkRenderPass, RenderPass, pRenderPass)
-	GETTERS(VkEngineDevice, EngineDevice, mDevice)
-	GETTERS(VkCommandPool, CommandPool, mFrameData.at(mCurrentFrame).pCommandPool)
-	GETTERS(VkFormat, SwapChainImageFormat, mSwapChainImageFormat)
-	GETTERS(VkExtent2D, SwapChainExtent, mSwapChainExtent)
-	GETTERS(u32, Width, mSwapChainExtent.width)
-	GETTERS(u32, Height, mSwapChainExtent.height)
-	GETTERS(u32, ImageCount, mSwapChainImageCount)
+	[[nodiscard]] const VkSwapchainKHR &getSwapChain() const {
+		return pSwapChain;
+	}
+	[[nodiscard]] const VkRenderPass &getRenderPass() const {
+		return pRenderPass;
+	}
 
-	NDC_INLINE float extentAspectRatio() const {
+	[[nodiscard]] const VkEngineDevice &getEngineDevice() const {
+		return mDevice;
+	}
+
+	[[nodiscard]] const VkCommandPool &getCommandPool() const {
+		return mFrameData.at(mCurrentFrame).pCommandPool;
+	}
+
+	[[nodiscard]] const VkFormat &getSwapChainImageFormat() const {
+		return mSwapChainImageFormat;
+	}
+
+	[[nodiscard]] const VkExtent2D &getSwapChainExtent() const {
+		return mSwapChainExtent;
+	}
+
+	[[nodiscard]] u32 getWidth() const {
+		return mSwapChainExtent.width;
+	}
+
+	[[nodiscard]] u32 getHeight() const {
+		return mSwapChainExtent.height;
+	}
+
+	[[nodiscard]] u32 getImageCount() const {
+		return mSwapChainImageCount;
+	}
+
+
+
+	[[nodiscard]]  float extentAspectRatio() const {
 		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
 	}
 
