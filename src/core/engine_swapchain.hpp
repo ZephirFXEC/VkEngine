@@ -31,7 +31,7 @@ class VkEngineSwapChain {
 		return mSwapChainImages.ppImageViews[index];
 	}
 
-	[[nodiscard]] const VkSwapchainKHR &getSwapChain() const {
+	[[nodiscard]] const  VkSwapchainKHR &getSwapChain() const {
 		return pSwapChain;
 	}
 	[[nodiscard]] const VkRenderPass &getRenderPass() const {
@@ -114,7 +114,7 @@ class VkEngineSwapChain {
 	const VkEngineDevice& mDevice;
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
-	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
+	VkSwapchainKHR pSwapChain;
 
 	VkImageRessource mSwapChainImages{};
 	VkImageRessource mDepthImages{};

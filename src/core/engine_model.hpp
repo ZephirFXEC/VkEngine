@@ -7,10 +7,12 @@
 // engine
 #include "engine_device.hpp"
 #include "engine_swapchain.hpp"
+#include "utils/hash.hpp"
 
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
+
 
 namespace vke {
 class VkEngineModel {
@@ -18,10 +20,16 @@ class VkEngineModel {
 	struct Vertex {
 		glm::vec3 mPosition{};
 		glm::vec3 mColor{};
+		glm::vec3 mNormal{};
+		glm::vec2 mUV{};
 
 		static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();
-
 		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+
+		bool operator==(const Vertex& other) const {
+			return mPosition == other.mPosition && mColor == other.mColor && mNormal == other.mNormal &&
+			       mUV == other.mUV;
+		}
 	};
 
 	struct MeshData {
@@ -29,9 +37,11 @@ class VkEngineModel {
 		u32 vCount;
 		u32* pIndices;
 		u32 iCount;
+
+		void loadModel(const std::string& filepath);
 	};
 
-	VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain, const MeshData& meshData);
+	VkEngineModel(const VkEngineDevice& device, const MeshData& meshData);
 
 	~VkEngineModel();
 
@@ -39,6 +49,8 @@ class VkEngineModel {
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
 	VkEngineModel(VkEngineModel&&) = default;  // Enable move semantics
 
+	static std::unique_ptr<VkEngineModel> createModelFromFile(const VkEngineDevice& device,
+	                                                          const std::string& filepath);
 	void bind(const VkCommandBuffer* commandBuffer) const;
 	void draw(const VkCommandBuffer* commandBuffer) const;
 
@@ -63,6 +75,5 @@ class VkEngineModel {
 
 	// note don't access mDevice using the swap chain, since it's a shared pointer it will be nullptr when resizing
 	// the window
-	const std::shared_ptr<VkEngineSwapChain> pSwapChain;
 };
 }  // namespace vke

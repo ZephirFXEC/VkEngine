@@ -26,6 +26,8 @@ class VkEngineWindow {
 
 	void resetWindowResizedFlag() { mFramebufferResized = false; }
 
+	GLFWwindow* getWindow() const { return pWindow; }
+
    private:
 	void initWindow();  // initialize GLFW window
 	static void framebufferResizeCallback(GLFWwindow* window, int width, int height);

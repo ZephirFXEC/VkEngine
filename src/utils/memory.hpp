@@ -41,8 +41,8 @@ struct MemoryStats {
 		totalAllocated.store(0, std::memory_order::relaxed);
 		for (auto& t : tagAllocated) {
 			t.store(0, std::memory_order::relaxed);
+ 		}
 		}
-	}
 };
 
 class Memory : NO_COPY_NOR_MOVE {

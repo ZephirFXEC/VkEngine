@@ -4,16 +4,36 @@
 
 #include "engine_model.hpp"
 
+// tinyobjloader
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #include "utils/buffer_utils.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 
-namespace vke {
-VkEngineModel::VkEngineModel(const VkEngineDevice& device, std::shared_ptr<VkEngineSwapChain> swapchain,
-                             const MeshData& meshData)
 
-    : mIndexCount{meshData.iCount}, mDevice{device}, pSwapChain{std::move(swapchain)} {
-	VKINFO("Creating model");
+
+namespace std {
+template <>
+struct hash<vke::VkEngineModel::Vertex> {
+	std::size_t operator()(const vke::VkEngineModel::Vertex &vertex) const noexcept  {
+		std::size_t seed = 0 ;
+		vke::hashCombine(seed, vertex.mPosition, vertex.mColor, vertex.mNormal, vertex.mUV);
+		return seed;
+	}
+};
+}
+
+namespace vke {
+
+VkEngineModel::VkEngineModel(const VkEngineDevice& device, const MeshData& meshData)
+
+    : mIndexCount{meshData.iCount}, mDevice{device} {
+
 	createIndexBuffers(meshData.pIndices, meshData.iCount);
 	createVertexBuffers(meshData.pVertices, meshData.vCount);
 }
@@ -88,6 +108,81 @@ void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t ver
 void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCount) {
 	createVkBuffer(indices, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
 	               mIndexBuffer.pDataBufferMemory);
+}
+
+std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(const VkEngineDevice& device,
+																  const std::string& filepath) {
+	MeshData meshData{};
+	meshData.loadModel(filepath);
+
+	VKINFO("Creating model from file: {}, Triangles : {} ", filepath, meshData.vCount);
+	return std::make_unique<VkEngineModel>(device, meshData);
+}
+
+
+void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string warn;
+	std::string err;
+
+	if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
+		throw std::runtime_error(warn + err);
+	}
+
+	delete[] pVertices;
+	delete[] pIndices;
+
+
+	std::unordered_map<Vertex, u32> uniqueVertices{};
+	std::vector<Vertex> vertices{};
+	std::vector<u32> indices{};
+	for(const auto& shape : shapes) {
+		for(const auto& index : shape.mesh.indices) {
+			Vertex vertex{};
+
+			if(index.vertex_index > 0) {
+				vertex.mPosition = {attrib.vertices[3 * index.vertex_index + 0],
+				                    attrib.vertices[3 * index.vertex_index + 1],
+				                    attrib.vertices[3 * index.vertex_index + 2]
+				};
+			}
+
+			if(index.normal_index > 0) {
+				vertex.mNormal = {attrib.normals[3 * index.vertex_index + 0],
+				                 attrib.normals[3 * index.vertex_index + 1],
+				                 attrib.normals[3 * index.vertex_index + 2]
+				};
+			}
+
+			if(index.texcoord_index > 0) {
+				vertex.mUV = {attrib.texcoords[2 * index.texcoord_index + 0],
+								attrib.texcoords[2 * index.texcoord_index + 1]
+				};
+			}
+
+
+			if(!uniqueVertices.contains(vertex)) {
+				uniqueVertices[vertex] = static_cast<u32>(vertices.size());
+				vertices.push_back(vertex);
+			}
+
+			indices.push_back(uniqueVertices[vertex]);
+		}
+	}
+
+
+	vCount = static_cast<u32>(vertices.size());
+	iCount = static_cast<u32>(indices.size());
+
+	pVertices = new Vertex[vCount];
+	pIndices = new u32[iCount];
+
+	std::ranges::copy(vertices.begin(), vertices.end(), pVertices);
+	std::ranges::copy(indices.begin(), indices.end(), pIndices);
+
+
 }
 
 }  // namespace vke

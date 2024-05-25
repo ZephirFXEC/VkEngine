@@ -20,7 +20,7 @@ class VkEngineRenderSystem {
 
 	VkEngineRenderSystem& operator=(const VkEngineRenderSystem&) = delete;
 
-	void renderGameObjects(const VkCommandBuffer* commandBuffer, std::vector<VkEngineGameObjects>& objects,
+	void renderGameObjects(const VkCommandBuffer* commandBuffer, const std::vector<VkEngineGameObjects>& objects,
 	                       const VkEngineCamera& camera) const;
 
 

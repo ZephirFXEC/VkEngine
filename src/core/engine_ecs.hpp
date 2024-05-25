@@ -4,9 +4,11 @@
 
 #pragma once
 
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "engine_model.hpp"
+
+#include <atomic>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace vke {
 struct TransformComponent {
@@ -30,34 +32,28 @@ struct TransformComponent {
 // has a private constructor so we can't create an instance of this class
 // without using the static createGameObject() method which increments the id
 class VkEngineGameObjects {
-   public:
-	using ObjectID = u32;
+public:
+	using ObjectID = uint32_t;
 
-	// delete copy constructor and assignment operator
 	VkEngineGameObjects(const VkEngineGameObjects&) = delete;
-
 	VkEngineGameObjects& operator=(const VkEngineGameObjects&) = delete;
-
-	// default move constructor and move assignment operator
-	VkEngineGameObjects(VkEngineGameObjects&&) = default;
-
-	VkEngineGameObjects& operator=(VkEngineGameObjects&&) = default;
-
+	VkEngineGameObjects(VkEngineGameObjects&&) noexcept = default;
+	VkEngineGameObjects& operator=(VkEngineGameObjects&&) noexcept = default;
 
 	static VkEngineGameObjects createGameObject() {
-		static ObjectID id = 0;
-		return VkEngineGameObjects{id++};
+		static std::atomic<ObjectID> id{0};
+		return VkEngineGameObjects{++id};
 	}
 
-	ObjectID getId() const { return mId; }
+	ObjectID getId() const noexcept { return mId; }
 
 	std::shared_ptr<VkEngineModel> pModel = nullptr;
 	glm::vec3 mColor = {1.f, 1.f, 1.f};
-	TransformComponent mTransform;
+	TransformComponent mTransform{};
 
-   private:
-	explicit VkEngineGameObjects(const ObjectID id) : mId(id) {}
+private:
+	explicit VkEngineGameObjects(const ObjectID id) noexcept : mId(id) {}
 
-	ObjectID mId = 0;
+	ObjectID mId;
 };
 }  // namespace vke
