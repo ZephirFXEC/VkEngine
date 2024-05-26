@@ -145,6 +145,7 @@ void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const comma
 	assert(*commandBuffer == getCurrentCommandBuffer() &&
 	       "Can only end the render pass on the currently active command buffer!");
 
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *commandBuffer);
 	vkCmdEndRenderPass(*commandBuffer);
 }
 
