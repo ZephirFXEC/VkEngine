@@ -4,6 +4,9 @@
 
 #include "utils/logger.hpp"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 
 namespace vke {
 VkEngineWindow::VkEngineWindow(const int width, const int height, std::string name)
@@ -32,6 +35,17 @@ void VkEngineWindow::initWindow() {
 	pWindow = glfwCreateWindow(mWidth, mHeight, mName.c_str(), nullptr, nullptr);
 	glfwSetWindowUserPointer(pWindow, this);
 	glfwSetFramebufferSizeCallback(pWindow, framebufferResizeCallback);
+
+
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
 }
 
 void VkEngineWindow::framebufferResizeCallback(GLFWwindow* window, const int width, const int height) {

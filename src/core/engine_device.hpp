@@ -36,6 +36,8 @@ class VkEngineDevice {
 	[[nodiscard]] const VkQueue& getPresentQueue() const { return pPresentQueue; }
 	[[nodiscard]] const VkDevice& getDevice() const { return pDevice; }
 	[[nodiscard]] const VmaAllocator& getAllocator() const { return pAllocator; }
+	[[nodiscard]] const VkPhysicalDevice& getPhysicalDevice() const { return pPhysicalDevice; }
+	[[nodiscard]] const VkDescriptorPool& getDescriptorPool() const { return pDescriptorPool; }
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);
@@ -85,6 +87,7 @@ class VkEngineDevice {
 
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
 
+	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
 	VkInstance pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
