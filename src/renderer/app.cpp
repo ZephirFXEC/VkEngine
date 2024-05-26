@@ -1,9 +1,14 @@
 #include "app.hpp"
 
+
 #include <chrono>
 #include <core/engine_controller.hpp>
 
 #include "engine_render_system.hpp"
+
+#include <imgui_impl_glfw.h>
+#include "imgui_impl_vulkan.h"
+
 #include "utils/logger.hpp"
 
 namespace vke {
@@ -16,6 +21,29 @@ void App::run() {
 
 	auto viewerObject = VkEngineGameObjects::createGameObject();
 	constexpr KeyboardController cameraController{};
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForVulkan(mVkWindow.getWindow(), true);
+
+	ImGui_ImplVulkan_InitInfo init_info = {
+		.Instance = mVkDevice.getInstance(),
+		.PhysicalDevice = mVkDevice.getPhysicalDevice(),
+		.Device = mVkDevice.getDevice(),
+		.QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+		.Queue = mVkDevice.getGraphicsQueue(),
+		.DescriptorPool = mVkDevice.getDescriptorPool(),
+		.PipelineCache = VK_NULL_HANDLE,
+		.RenderPass = mVkRenderer.getSwapChainRenderPass(),
+		.MinImageCount = 2,
+		.Subpass = 0,
+		.ImageCount = 2,
+		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+		.Allocator = nullptr,
+		.CheckVkResultFn = nullptr,
+	};
+
+	ImGui_ImplVulkan_Init(&init_info);
+
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	while (!mVkWindow.shouldClose()) {
@@ -31,6 +59,14 @@ void App::run() {
 
 		const float aspect = mVkRenderer.getAspectRatio();
 		camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+
+		ImGui::NewFrame();
+
+		ImGui::ShowDemoWindow();
+
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
 			mVkRenderer.beginSwapChainRenderPass(&commandBuffer);
