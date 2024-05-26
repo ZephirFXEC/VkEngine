@@ -114,7 +114,7 @@ class VkEngineSwapChain {
 	const VkEngineDevice& mDevice;
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
-	VkSwapchainKHR pSwapChain;
+	VkSwapchainKHR pSwapChain{};
 
 	VkImageRessource mSwapChainImages{};
 	VkImageRessource mDepthImages{};

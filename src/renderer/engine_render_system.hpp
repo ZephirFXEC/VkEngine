@@ -12,7 +12,7 @@
 namespace vke {
 class VkEngineRenderSystem {
    public:
-	VkEngineRenderSystem(const VkEngineDevice& device, const VkRenderPass* renderPass);
+	VkEngineRenderSystem(const VkEngineDevice& device, VkRenderPass renderPass);
 
 	~VkEngineRenderSystem();
 
@@ -26,7 +26,7 @@ class VkEngineRenderSystem {
 
    private:
 	void createPipelineLayout();
-	void createPipeline(const VkRenderPass* renderPass);
+	void createPipeline(VkRenderPass renderPass);
 
 
 	const VkEngineDevice& mVkDevice;

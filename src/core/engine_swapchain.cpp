@@ -35,8 +35,6 @@ void VkEngineSwapChain::init() {
 VkEngineSwapChain::~VkEngineSwapChain() {
 	VKINFO("Destroyed swapchain");
 
-	vkDeviceWaitIdle(mDevice.getDevice());
-
 	for (size_t i = 0; i < getImageCount(); ++i) {
 		vkDestroyImageView(mDevice.getDevice(), mSwapChainImages.ppImageViews[i], nullptr);
 	}

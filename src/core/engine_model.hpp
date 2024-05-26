@@ -24,7 +24,7 @@ class VkEngineModel {
 		glm::vec2 mUV{};
 
 		static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();
-		static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+		static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
 
 		bool operator==(const Vertex& other) const {
 			return mPosition == other.mPosition && mColor == other.mColor && mNormal == other.mNormal &&

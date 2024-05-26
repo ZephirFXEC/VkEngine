@@ -17,16 +17,14 @@
 
 
 
-namespace std {
 template <>
-struct hash<vke::VkEngineModel::Vertex> {
+struct std::hash<vke::VkEngineModel::Vertex> {
 	std::size_t operator()(const vke::VkEngineModel::Vertex &vertex) const noexcept  {
 		std::size_t seed = 0 ;
 		vke::hashCombine(seed, vertex.mPosition, vertex.mColor, vertex.mNormal, vertex.mUV);
 		return seed;
 	}
 };
-}
 
 namespace vke {
 
@@ -51,14 +49,16 @@ std::array<VkVertexInputBindingDescription, 1> VkEngineModel::Vertex::getBinding
 }
 
 
-std::array<VkVertexInputAttributeDescription, 2> VkEngineModel::Vertex::getAttributeDescriptions() {
+std::array<VkVertexInputAttributeDescription, 4> VkEngineModel::Vertex::getAttributeDescriptions() {
 	return std::array{
-
 	    VkVertexInputAttributeDescription{
 	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
-
 	    VkVertexInputAttributeDescription{
-	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)}};
+	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)},
+		VkVertexInputAttributeDescription{
+			.location = 2, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mNormal)},
+		VkVertexInputAttributeDescription{
+			.location = 3, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mUV)}};
 }
 
 
@@ -134,7 +134,6 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 	delete[] pVertices;
 	delete[] pIndices;
 
-
 	std::unordered_map<Vertex, u32> uniqueVertices{};
 	std::vector<Vertex> vertices{};
 	std::vector<u32> indices{};
@@ -149,10 +148,17 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 				};
 			}
 
+			if(index.vertex_index > 0) {
+				vertex.mColor = {attrib.colors[3 * index.vertex_index + 0],
+									attrib.colors[3 * index.vertex_index + 1],
+									attrib.colors[3 * index.vertex_index + 2]
+				};
+			}
+
 			if(index.normal_index > 0) {
-				vertex.mNormal = {attrib.normals[3 * index.vertex_index + 0],
-				                 attrib.normals[3 * index.vertex_index + 1],
-				                 attrib.normals[3 * index.vertex_index + 2]
+				vertex.mNormal = {attrib.normals[3 * index.normal_index + 0],
+				                 attrib.normals[3 * index.normal_index + 1],
+				                 attrib.normals[3 * index.normal_index + 2]
 				};
 			}
 
@@ -176,8 +182,8 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 	vCount = static_cast<u32>(vertices.size());
 	iCount = static_cast<u32>(indices.size());
 
-	pVertices = new Vertex[vCount];
-	pIndices = new u32[iCount];
+	pVertices = Memory::allocMemory<Vertex>(vCount, MEMORY_TAG_ENGINE);
+	pIndices = Memory::allocMemory<u32>(iCount, MEMORY_TAG_ENGINE);
 
 	std::ranges::copy(vertices.begin(), vertices.end(), pVertices);
 	std::ranges::copy(indices.begin(), indices.end(), pIndices);
