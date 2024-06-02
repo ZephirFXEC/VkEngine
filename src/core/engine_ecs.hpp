@@ -5,10 +5,10 @@
 #pragma once
 
 
-#include "engine_model.hpp"
-
 #include <atomic>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include "engine_model.hpp"
 
 namespace vke {
 struct TransformComponent {
@@ -32,7 +32,7 @@ struct TransformComponent {
 // has a private constructor so we can't create an instance of this class
 // without using the static createGameObject() method which increments the id
 class VkEngineGameObjects {
-public:
+   public:
 	using ObjectID = uint32_t;
 
 	VkEngineGameObjects(const VkEngineGameObjects&) = delete;
@@ -51,7 +51,7 @@ public:
 	glm::vec3 mColor = {1.f, 1.f, 1.f};
 	TransformComponent mTransform{};
 
-private:
+   private:
 	explicit VkEngineGameObjects(const ObjectID id) noexcept : mId(id) {}
 
 	ObjectID mId;

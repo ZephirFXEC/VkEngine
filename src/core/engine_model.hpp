@@ -7,7 +7,6 @@
 // engine
 #include "engine_device.hpp"
 #include "engine_swapchain.hpp"
-#include "utils/hash.hpp"
 
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -23,14 +22,15 @@ class VkEngineModel {
 		glm::vec3 mNormal{};
 		glm::vec2 mUV{};
 
-		static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();
-		static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
-
 		bool operator==(const Vertex& other) const {
 			return mPosition == other.mPosition && mColor == other.mColor && mNormal == other.mNormal &&
 			       mUV == other.mUV;
 		}
 	};
+
+	static std::array<VkVertexInputBindingDescription, 1> getBindingDescriptions();
+	static std::array<VkVertexInputAttributeDescription, 4> getAttributeDescriptions();
+
 
 	struct MeshData {
 		Vertex* pVertices;

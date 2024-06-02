@@ -23,54 +23,28 @@ class VkEngineSwapChain {
 
 	VkEngineSwapChain& operator=(const VkEngineSwapChain&) = delete;
 
-	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const u32 index) const {
-		return ppSwapChainFramebuffers[index];
-	}
+	[[nodiscard]] const VkFramebuffer& getFrameBuffer(const u32 index) const { return ppSwapChainFramebuffers[index]; }
 
 	[[nodiscard]] const VkImageView& getImageView(const u32 index) const {
 		return mSwapChainImages.ppImageViews[index];
 	}
 
-	[[nodiscard]] const  VkSwapchainKHR &getSwapChain() const {
-		return pSwapChain;
-	}
-	[[nodiscard]] const VkRenderPass &getRenderPass() const {
-		return pRenderPass;
-	}
+	[[nodiscard]] const VkSwapchainKHR& getSwapChain() const { return pSwapChain; }
+	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
 
-	[[nodiscard]] const VkEngineDevice &getEngineDevice() const {
-		return mDevice;
-	}
+	[[nodiscard]] const VkEngineDevice& getEngineDevice() const { return mDevice; }
 
-	[[nodiscard]] const VkCommandPool &getCommandPool() const {
-		return mFrameData.at(mCurrentFrame).pCommandPool;
-	}
+	[[nodiscard]] const VkCommandPool& getCommandPool() const { return mFrameData.at(mCurrentFrame).pCommandPool; }
 
-	[[nodiscard]] const VkFormat &getSwapChainImageFormat() const {
-		return mSwapChainImageFormat;
-	}
+	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 
-	[[nodiscard]] const VkExtent2D &getSwapChainExtent() const {
-		return mSwapChainExtent;
-	}
+	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
 
-	[[nodiscard]] u32 getWidth() const {
-		return mSwapChainExtent.width;
-	}
+	[[nodiscard]] u32 getWidth() const { return mSwapChainExtent.width; }
 
-	[[nodiscard]] u32 getHeight() const {
-		return mSwapChainExtent.height;
-	}
+	[[nodiscard]] u32 getHeight() const { return mSwapChainExtent.height; }
 
-	[[nodiscard]] u32 getImageCount() const {
-		return mSwapChainImageCount;
-	}
-
-
-
-	[[nodiscard]]  float extentAspectRatio() const {
-		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
-	}
+	[[nodiscard]] u32 getImageCount() const { return mSwapChainImageCount; }
 
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
@@ -81,6 +55,11 @@ class VkEngineSwapChain {
 	bool compareSwapFormats(const VkEngineSwapChain& other) const {
 		return other.mSwapChainImageFormat == mSwapChainImageFormat && other.mDepthFormat == mDepthFormat;
 	}
+
+	[[nodiscard]] float extentAspectRatio() const {
+		return static_cast<float>(mSwapChainExtent.width) / static_cast<float>(mSwapChainExtent.height);
+	}
+
 
    private:
 	void init();

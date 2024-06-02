@@ -29,6 +29,5 @@ class App {
 	VkEngineRenderer mVkRenderer{mVkDevice, mVkWindow};
 
 	std::vector<VkEngineGameObjects> mVkGameObjects{};
-
 };
 }  // namespace vke

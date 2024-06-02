@@ -181,8 +181,8 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	      .pName = "main",
 	      .pSpecializationInfo = nullptr}}};
 
-	const auto bindingDescriptions = VkEngineModel::Vertex::getBindingDescriptions();
-	const auto attributeDescriptions = VkEngineModel::Vertex::getAttributeDescriptions();
+	const auto bindingDescriptions = VkEngineModel::getBindingDescriptions();
+	const auto attributeDescriptions = VkEngineModel::getAttributeDescriptions();
 
 	const VkPipelineVertexInputStateCreateInfo vertexInputInfo{
 	    .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,

@@ -14,8 +14,10 @@ class VkEngineCamera {
    public:
 	void setPerspectiveProjection(float fovy, float aspect, float zNear, float zFar);
 	void setOrthographicProjection(float left, float right, float top, float bottom, float near, float far);
-	void setViewDirection(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up = glm::vec3{0.f, -1.f, 0.f});
-	void setViewTarget(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up = glm::vec3{0.f, -1.f, 0.f});
+	void setViewDirection(const glm::vec3& position, const glm::vec3& direction,
+	                      const glm::vec3& up = glm::vec3{0.f, -1.f, 0.f});
+	void setViewTarget(const glm::vec3& position, const glm::vec3& target,
+	                   const glm::vec3& up = glm::vec3{0.f, -1.f, 0.f});
 	void setViewXYZ(const glm::vec3& position, const glm::vec3& rotation);
 
 	const glm::mat4& getProjectionMatrix() const { return mProjectionMatrix; }

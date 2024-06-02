@@ -2,11 +2,9 @@
 
 #include <GLFW/glfw3.h>
 
-#include "utils/logger.hpp"
-
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+#include "utils/logger.hpp"
 
 namespace vke {
 VkEngineWindow::VkEngineWindow(const int width, const int height, std::string name)
@@ -40,9 +38,9 @@ void VkEngineWindow::initWindow() {
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();

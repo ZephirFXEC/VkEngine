@@ -433,6 +433,7 @@ VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<
 VkPresentModeKHR VkEngineSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
 	if (const auto it = std::ranges::find_if(availablePresentModes.begin(), availablePresentModes.end(),
 	                                         [](const VkPresentModeKHR& availablePresentMode) {
+		                                         // TODO: crash when using FIFO
 		                                         return availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR;
 	                                         });
 	    it != availablePresentModes.end()) {

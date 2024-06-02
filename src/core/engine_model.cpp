@@ -12,15 +12,15 @@
 #include <glm/gtx/hash.hpp>
 
 #include "utils/buffer_utils.hpp"
+#include "utils/hash.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 
 
-
 template <>
 struct std::hash<vke::VkEngineModel::Vertex> {
-	std::size_t operator()(const vke::VkEngineModel::Vertex &vertex) const noexcept  {
-		std::size_t seed = 0 ;
+	std::size_t operator()(const vke::VkEngineModel::Vertex& vertex) const noexcept {
+		std::size_t seed = 0;
 		vke::hashCombine(seed, vertex.mPosition, vertex.mColor, vertex.mNormal, vertex.mUV);
 		return seed;
 	}
@@ -31,7 +31,6 @@ namespace vke {
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, const MeshData& meshData)
 
     : mIndexCount{meshData.iCount}, mDevice{device} {
-
 	createIndexBuffers(meshData.pIndices, meshData.iCount);
 	createVertexBuffers(meshData.pVertices, meshData.vCount);
 }
@@ -43,22 +42,22 @@ VkEngineModel::~VkEngineModel() {
 	VKINFO("Destroyed model");
 }
 
-std::array<VkVertexInputBindingDescription, 1> VkEngineModel::Vertex::getBindingDescriptions() {
+std::array<VkVertexInputBindingDescription, 1> VkEngineModel::getBindingDescriptions() {
 	return std::array{VkVertexInputBindingDescription{
 	    .binding = 0, .stride = sizeof(Vertex), .inputRate = VK_VERTEX_INPUT_RATE_VERTEX}};
 }
 
 
-std::array<VkVertexInputAttributeDescription, 4> VkEngineModel::Vertex::getAttributeDescriptions() {
+std::array<VkVertexInputAttributeDescription, 4> VkEngineModel::getAttributeDescriptions() {
 	return std::array{
 	    VkVertexInputAttributeDescription{
 	        .location = 0, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mPosition)},
 	    VkVertexInputAttributeDescription{
 	        .location = 1, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mColor)},
-		VkVertexInputAttributeDescription{
-			.location = 2, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mNormal)},
-		VkVertexInputAttributeDescription{
-			.location = 3, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mUV)}};
+	    VkVertexInputAttributeDescription{
+	        .location = 2, .binding = 0, .format = VK_FORMAT_R32G32B32_SFLOAT, .offset = offsetof(Vertex, mNormal)},
+	    VkVertexInputAttributeDescription{
+	        .location = 3, .binding = 0, .format = VK_FORMAT_R32G32_SFLOAT, .offset = offsetof(Vertex, mUV)}};
 }
 
 
@@ -111,7 +110,7 @@ void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCou
 }
 
 std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(const VkEngineDevice& device,
-																  const std::string& filepath) {
+                                                                  const std::string& filepath) {
 	MeshData meshData{};
 	meshData.loadModel(filepath);
 
@@ -121,15 +120,20 @@ std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(const VkEngine
 
 
 void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
-	tinyobj::attrib_t attrib;
-	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
-	std::string warn;
-	std::string err;
+	const tinyobj::ObjReaderConfig reader_config{};
+	tinyobj::ObjReader reader{};
 
-	if(!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filepath.c_str())) {
-		throw std::runtime_error(warn + err);
+	if (!reader.ParseFromFile(filepath, reader_config)) {
+		if (!reader.Error().empty()) {
+			throw std::runtime_error("TinyObjReader: " + reader.Error());
+		}
 	}
+
+	if (!reader.Warning().empty()) {
+		VKWARN("TinyObjReader: ", reader.Warning());
+	}
+
+	const auto& attrib = reader.GetAttrib();
 
 	delete[] pVertices;
 	delete[] pIndices;
@@ -137,39 +141,35 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 	std::unordered_map<Vertex, u32> uniqueVertices{};
 	std::vector<Vertex> vertices{};
 	std::vector<u32> indices{};
-	for(const auto& shape : shapes) {
-		for(const auto& index : shape.mesh.indices) {
+
+	for (const auto& shape : reader.GetShapes()) {
+		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
 
-			if(index.vertex_index > 0) {
+			if (index.vertex_index > 0) {
 				vertex.mPosition = {attrib.vertices[3 * index.vertex_index + 0],
 				                    attrib.vertices[3 * index.vertex_index + 1],
-				                    attrib.vertices[3 * index.vertex_index + 2]
-				};
+				                    attrib.vertices[3 * index.vertex_index + 2]};
 			}
 
-			if(index.vertex_index > 0) {
-				vertex.mColor = {attrib.colors[3 * index.vertex_index + 0],
-									attrib.colors[3 * index.vertex_index + 1],
-									attrib.colors[3 * index.vertex_index + 2]
-				};
+			if (index.vertex_index > 0) {
+				vertex.mColor = {attrib.colors[3 * index.vertex_index + 0], attrib.colors[3 * index.vertex_index + 1],
+				                 attrib.colors[3 * index.vertex_index + 2]};
 			}
 
-			if(index.normal_index > 0) {
+			if (index.normal_index > 0) {
 				vertex.mNormal = {attrib.normals[3 * index.normal_index + 0],
-				                 attrib.normals[3 * index.normal_index + 1],
-				                 attrib.normals[3 * index.normal_index + 2]
-				};
+				                  attrib.normals[3 * index.normal_index + 1],
+				                  attrib.normals[3 * index.normal_index + 2]};
 			}
 
-			if(index.texcoord_index > 0) {
+			if (index.texcoord_index > 0) {
 				vertex.mUV = {attrib.texcoords[2 * index.texcoord_index + 0],
-								attrib.texcoords[2 * index.texcoord_index + 1]
-				};
+				              attrib.texcoords[2 * index.texcoord_index + 1]};
 			}
 
 
-			if(!uniqueVertices.contains(vertex)) {
+			if (!uniqueVertices.contains(vertex)) {
 				uniqueVertices[vertex] = static_cast<u32>(vertices.size());
 				vertices.push_back(vertex);
 			}
@@ -187,8 +187,6 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 
 	std::ranges::copy(vertices.begin(), vertices.end(), pVertices);
 	std::ranges::copy(indices.begin(), indices.end(), pIndices);
-
-
 }
 
 }  // namespace vke

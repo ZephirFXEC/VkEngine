@@ -5,7 +5,6 @@
 
 #include <vk_mem_alloc.h>
 
-#include "core/engine_device.hpp"
 #include "logger.hpp"
 
 

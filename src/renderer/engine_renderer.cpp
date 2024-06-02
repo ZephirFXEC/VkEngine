@@ -139,7 +139,18 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
 }
-void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) {
+
+VkCommandBuffer VkEngineRenderer::getCurrentCommandBuffer() const {
+	assert(isFrameStarted && "Cannot get command buffer when frame not in progress.");
+	return mVkCommandBuffers[mCurrentFrame];
+}
+
+u32 VkEngineRenderer::getFrameIndex() const {
+	assert(isFrameStarted && "Cannot get frame index when frame not in progress.");
+	return mCurrentFrame;
+}
+
+void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) const {
 	assert(isFrameStarted && "Cannot end render pass when frame is not in progress.");
 
 	assert(*commandBuffer == getCurrentCommandBuffer() &&

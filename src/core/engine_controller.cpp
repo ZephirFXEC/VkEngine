@@ -7,7 +7,6 @@
 #include <utils/logger.hpp>
 namespace vke {
 void KeyboardController::moveInPlaneXZ(GLFWwindow* pwindow, float dt, VkEngineGameObjects& gameObjects) const {
-
 	glm::vec3 rot{0.0f};
 
 	rot.y += static_cast<float>(glfwGetKey(pwindow, mKeyMapping.lookRight) == GLFW_PRESS);
@@ -16,7 +15,7 @@ void KeyboardController::moveInPlaneXZ(GLFWwindow* pwindow, float dt, VkEngineGa
 	rot.x -= static_cast<float>(glfwGetKey(pwindow, mKeyMapping.lookDown) == GLFW_PRESS);
 
 	// Check for null
-	if(glm::dot(rot, rot) > glm::epsilon<float>()) {
+	if (glm::dot(rot, rot) > glm::epsilon<float>()) {
 		gameObjects.mTransform.rotation += glm::normalize(rot) * lookSpeed * dt;
 	}
 
@@ -36,8 +35,8 @@ void KeyboardController::moveInPlaneXZ(GLFWwindow* pwindow, float dt, VkEngineGa
 	moveDir += static_cast<float>(glfwGetKey(pwindow, mKeyMapping.moveUp) == GLFW_PRESS) * up;
 	moveDir -= static_cast<float>(glfwGetKey(pwindow, mKeyMapping.moveDown) == GLFW_PRESS) * up;
 
-	if(glm::dot(moveDir, moveDir) > glm::epsilon<float>()) {
+	if (glm::dot(moveDir, moveDir) > glm::epsilon<float>()) {
 		gameObjects.mTransform.translation += glm::normalize(moveDir) * moveSpeed * dt;
 	}
 }
-}
+}  // namespace vke

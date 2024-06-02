@@ -93,9 +93,8 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 
 
 	{
-		constexpr VkDescriptorPoolSize pool_sizes[] =
-		{
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+		constexpr VkDescriptorPoolSize pool_sizes[] = {
+		    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
 		};
 
 		VkDescriptorPoolCreateInfo pool_info = {};
@@ -105,7 +104,6 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 		pool_info.poolSizeCount = 1;
 		pool_info.pPoolSizes = pool_sizes;
 		VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
-
 	}
 }
 

@@ -46,7 +46,9 @@ void VkEngineRenderSystem::createPipelineLayout() {
 }
 
 void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
-	assert(pVkPipelineLayout != nullptr && "Cannot create pipeline before pipeline layout");
+	if (pVkPipeline) {
+		throw std::runtime_error("Cannot create pipeline before pipeline layout");
+	}
 
 	PipelineConfigInfo pipelineConfig{};
 	pipelineConfig.renderPass = renderPass;
@@ -61,7 +63,6 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
 void VkEngineRenderSystem::renderGameObjects(const VkCommandBuffer* const commandBuffer,
                                              const std::vector<VkEngineGameObjects>& objects,
                                              const VkEngineCamera& camera) const {
-
 	ImGui::Render();
 
 	pVkPipeline->bind(commandBuffer);

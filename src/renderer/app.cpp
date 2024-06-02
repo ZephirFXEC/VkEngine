@@ -1,14 +1,12 @@
 #include "app.hpp"
 
+#include <imgui_impl_glfw.h>
 
 #include <chrono>
 #include <core/engine_controller.hpp>
 
 #include "engine_render_system.hpp"
-
-#include <imgui_impl_glfw.h>
 #include "imgui_impl_vulkan.h"
-
 #include "utils/logger.hpp"
 
 namespace vke {
@@ -17,29 +15,26 @@ App::App() { loadGameObjects(); }
 void App::run() {
 	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChainRenderPass());
 	VkEngineCamera camera{};
-	camera.setViewTarget({-1.0f, -2.0f, -2.0f},{0.0f, 0.0f, 2.5f});
+	camera.setViewTarget({-1.0f, -2.0f, -2.0f}, {0.0f, 0.0f, 2.5f});
 
-	auto viewerObject = VkEngineGameObjects::createGameObject();
+	VkEngineGameObjects viewerObject = VkEngineGameObjects::createGameObject();
 	constexpr KeyboardController cameraController{};
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForVulkan(mVkWindow.getWindow(), true);
 
+	// Init ImGUI
 	ImGui_ImplVulkan_InitInfo init_info = {
-		.Instance = mVkDevice.getInstance(),
-		.PhysicalDevice = mVkDevice.getPhysicalDevice(),
-		.Device = mVkDevice.getDevice(),
-		.QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
-		.Queue = mVkDevice.getGraphicsQueue(),
-		.DescriptorPool = mVkDevice.getDescriptorPool(),
-		.PipelineCache = VK_NULL_HANDLE,
-		.RenderPass = mVkRenderer.getSwapChainRenderPass(),
-		.MinImageCount = 2,
-		.Subpass = 0,
-		.ImageCount = 2,
-		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-		.Allocator = nullptr,
-		.CheckVkResultFn = nullptr,
+	    .Instance = mVkDevice.getInstance(),
+	    .PhysicalDevice = mVkDevice.getPhysicalDevice(),
+	    .Device = mVkDevice.getDevice(),
+	    .QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+	    .Queue = mVkDevice.getGraphicsQueue(),
+	    .DescriptorPool = mVkDevice.getDescriptorPool(),
+	    .RenderPass = mVkRenderer.getSwapChainRenderPass(),
+	    .MinImageCount = 2,
+	    .ImageCount = 2,
+	    .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
 	};
 
 	ImGui_ImplVulkan_Init(&init_info);
@@ -75,7 +70,6 @@ void App::run() {
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 			mVkRenderer.endFrame();
 		}
-
 	}
 
 	vkDeviceWaitIdle(mVkDevice.getDevice());
@@ -85,7 +79,8 @@ void App::loadGameObjects() {
 	VKINFO("Loading models...");
 
 
-	const std::shared_ptr pVkModel = VkEngineModel::createModelFromFile(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
+	const std::shared_ptr pVkModel =
+	    VkEngineModel::createModelFromFile(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
 
 	auto game_objects = VkEngineGameObjects::createGameObject();
 	game_objects.pModel = pVkModel;

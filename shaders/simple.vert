@@ -19,5 +19,5 @@ void main()
     vec3 outCol = color * (max(0.0f, dot(normal,light))  * (1.0f / (dist * dist)));
 
     gl_Position = push.transform * vec4(position, 1.0);
-    fragColor = outCol;
+    fragColor = normal*dot(normal, light);
 }
