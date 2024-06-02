@@ -11,7 +11,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 
-#include "utils/buffer_utils.hpp"
 #include "utils/hash.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
@@ -30,9 +29,9 @@ namespace vke {
 
 VkEngineModel::VkEngineModel(const VkEngineDevice& device, const MeshData& meshData)
 
-    : mIndexCount{meshData.iCount}, mDevice{device} {
-	createIndexBuffers(meshData.pIndices, meshData.iCount);
-	createVertexBuffers(meshData.pVertices, meshData.vCount);
+    : mIndexCount{meshData.pIndices.size()}, mDevice{device} {
+	createIndexBuffers(meshData.pIndices);
+	createVertexBuffers(meshData.pVertices);
 }
 
 VkEngineModel::~VkEngineModel() {
@@ -62,22 +61,21 @@ std::array<VkVertexInputAttributeDescription, 4> VkEngineModel::getAttributeDesc
 
 
 void VkEngineModel::bind(const VkCommandBuffer* const commandBuffer) const {
-	auto* const buffer = mVertexBuffer.pDataBuffer;
 	constexpr std::array<VkDeviceSize, 1> offsets{};
-
-	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &buffer, offsets.data());
+	vkCmdBindVertexBuffers(*commandBuffer, 0, 1, &mVertexBuffer.pDataBuffer, offsets.data());
 	vkCmdBindIndexBuffer(*commandBuffer, mIndexBuffer.pDataBuffer, 0, VK_INDEX_TYPE_UINT32);
 }
 
 
 void VkEngineModel::draw(const VkCommandBuffer* const commandBuffer) const {
-	vkCmdDrawIndexed(*commandBuffer, mIndexCount, 1, 0, 0, 0);
+	vkCmdDrawIndexed(*commandBuffer, static_cast<uint32_t>(mIndexCount), 1, 0, 0, 0);
 }
 
 
 template <typename T>
 void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const VkBufferUsageFlags usage,
                                    VkBuffer& buffer, VmaAllocation& bufferMemory) {
+
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
 	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -98,14 +96,14 @@ void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const V
 }
 
 
-void VkEngineModel::createVertexBuffers(const Vertex* vertices, const size_t vertexCount) {
-	createVkBuffer(vertices, vertexCount, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer.pDataBuffer,
+void VkEngineModel::createVertexBuffers(const std::span<const Vertex>& vertices) {
+	createVkBuffer(vertices.data(), vertices.size(), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer.pDataBuffer,
 	               mVertexBuffer.pDataBufferMemory);
 }
 
 
-void VkEngineModel::createIndexBuffers(const u32* indices, const size_t indexCount) {
-	createVkBuffer(indices, indexCount, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
+void VkEngineModel::createIndexBuffers(const std::span<const u32>& indices) {
+	createVkBuffer(indices.data(), indices.size(), VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer.pDataBuffer,
 	               mIndexBuffer.pDataBufferMemory);
 }
 
@@ -114,7 +112,6 @@ std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(const VkEngine
 	MeshData meshData{};
 	meshData.loadModel(filepath);
 
-	VKINFO("Creating model from file: {}, Triangles : {} ", filepath, meshData.vCount);
 	return std::make_unique<VkEngineModel>(device, meshData);
 }
 
@@ -134,9 +131,6 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 	}
 
 	const auto& attrib = reader.GetAttrib();
-
-	delete[] pVertices;
-	delete[] pIndices;
 
 	std::unordered_map<Vertex, u32> uniqueVertices{};
 	std::vector<Vertex> vertices{};
@@ -177,16 +171,17 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
+	// Allocate memory for vertices and indices
+	auto* vertexMemory = Memory::allocMemory<Vertex>(vertices.size(), MEMORY_TAG_ENGINE);
+	auto* indexMemory = Memory::allocMemory<u32>(indices.size(), MEMORY_TAG_ENGINE);
 
+	// Copy data to allocated memory
+	std::ranges::copy(vertices, vertexMemory);
+	std::ranges::copy(indices, indexMemory);
 
-	vCount = static_cast<u32>(vertices.size());
-	iCount = static_cast<u32>(indices.size());
-
-	pVertices = Memory::allocMemory<Vertex>(vCount, MEMORY_TAG_ENGINE);
-	pIndices = Memory::allocMemory<u32>(iCount, MEMORY_TAG_ENGINE);
-
-	std::ranges::copy(vertices.begin(), vertices.end(), pVertices);
-	std::ranges::copy(indices.begin(), indices.end(), pIndices);
+	// Assign spans to pVertices and pIndices
+	pVertices = std::span(vertexMemory, vertices.size());
+	pIndices = std::span(indexMemory, indices.size());
 }
 
 }  // namespace vke

@@ -3,9 +3,6 @@
 //
 
 #include "engine_render_system.hpp"
-
-#include <imgui.h>
-
 #include <glm/glm.hpp>
 
 #include "utils/logger.hpp"
@@ -63,8 +60,6 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
 void VkEngineRenderSystem::renderGameObjects(const VkCommandBuffer* const commandBuffer,
                                              const std::vector<VkEngineGameObjects>& objects,
                                              const VkEngineCamera& camera) const {
-	ImGui::Render();
-
 	pVkPipeline->bind(commandBuffer);
 
 	const glm::mat4x4 projectionView = camera.getProjectionMatrix() * camera.getViewMatrix();

@@ -4,8 +4,6 @@
 
 #include "engine_renderer.hpp"
 
-#include <imgui_impl_vulkan.h>
-
 #include "utils/logger.hpp"
 #include "utils/types.hpp"
 

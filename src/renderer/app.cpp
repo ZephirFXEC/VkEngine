@@ -1,12 +1,9 @@
 #include "app.hpp"
 
-#include <imgui_impl_glfw.h>
-
 #include <chrono>
 #include <core/engine_controller.hpp>
 
 #include "engine_render_system.hpp"
-#include "imgui_impl_vulkan.h"
 #include "utils/logger.hpp"
 
 namespace vke {
@@ -53,7 +50,7 @@ void App::run() {
 
 
 		const float aspect = mVkRenderer.getAspectRatio();
-		camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 10.f);
+		camera.setPerspectiveProjection(glm::radians(50.f), aspect, 0.1f, 1000.f);
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -64,10 +61,9 @@ void App::run() {
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
 			mVkRenderer.beginSwapChainRenderPass(&commandBuffer);
+			ImGui::Render();
 			renderSystem.renderGameObjects(&commandBuffer, mVkGameObjects, camera);
 			mVkRenderer.endSwapChainRenderPass(&commandBuffer);
-
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 			mVkRenderer.endFrame();
 		}
 	}
@@ -86,7 +82,6 @@ void App::loadGameObjects() {
 	game_objects.pModel = pVkModel;
 	game_objects.mTransform.translation = {0.f, 0.f, 2.5f};
 	game_objects.mTransform.scale = glm::vec3(-1);
-
 	mVkGameObjects.push_back(std::move(game_objects));
 }
 

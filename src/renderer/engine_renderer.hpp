@@ -17,25 +17,23 @@ class VkEngineRenderer {
 	VkEngineRenderer(const VkEngineDevice& device, VkEngineWindow& window);
 	~VkEngineRenderer();
 
-	bool isFrameInProgress() const { return isFrameStarted; }
-	float getAspectRatio() const { return mVkSwapChain->extentAspectRatio(); }
-	VkRenderPass getSwapChainRenderPass() const { return mVkSwapChain->getRenderPass(); }
-
-	VkCommandBuffer getCurrentCommandBuffer() const;
-
-	u32 getFrameIndex() const;
-
-	VkCommandBuffer beginFrame();
+	void run();
 	void endFrame();
+	VkCommandBuffer beginFrame();
+	bool isFrameInProgress() const { return isFrameStarted; }
 	void beginSwapChainRenderPass(const VkCommandBuffer* commandBuffer) const;
 	void endSwapChainRenderPass(const VkCommandBuffer* commandBuffer) const;
 
-	void run();
+
+	u32 getFrameIndex() const;
+	float getAspectRatio() const { return mVkSwapChain->extentAspectRatio(); }
+	VkRenderPass getSwapChainRenderPass() const { return mVkSwapChain->getRenderPass(); }
+	VkCommandBuffer getCurrentCommandBuffer() const;
 
    private:
-	void createCommandBuffers();
 	void drawFrame();
 	void recreateSwapChain();
+	void createCommandBuffers();
 	void freeCommandBuffers() const;
 
 	const VkEngineDevice& mVkDevice;

@@ -3,7 +3,6 @@
 #include <vulkan/vulkan_core.h>
 
 #include "engine_device.hpp"
-#include "utils/buffer_utils.hpp"
 #include "utils/logger.hpp"
 #include "utils/memory.hpp"
 
@@ -385,8 +384,19 @@ void VkEngineSwapChain::createSyncObjects() {
 
 void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const u32 width,
                                           const u32 height, const u32 layerCount) {
-	BufferUtils::beginSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
-	                                     mFrameData.at(mCurrentFrame).pCommandBuffer);
+	const VkCommandBufferAllocateInfo allocInfo{
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+	    .commandPool = getCommandPool(),
+	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+	    .commandBufferCount = 1,
+	};
+
+	VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &mFrameData.at(mCurrentFrame).pCommandBuffer));
+
+	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+	                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
+
+	VK_CHECK(vkBeginCommandBuffer(mFrameData.at(mCurrentFrame).pCommandBuffer, &beginInfo));
 
 	const VkBufferImageCopy region{.bufferOffset = 0,
 	                               .bufferRowLength = 0,
@@ -403,8 +413,18 @@ void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const Vk
 	vkCmdCopyBufferToImage(mFrameData.at(mCurrentFrame).pCommandBuffer, *buffer, *image,
 	                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-	BufferUtils::endSingleTimeCommands(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool,
-	                                   mFrameData.at(mCurrentFrame).pCommandBuffer, mDevice.getGraphicsQueue());
+
+	VK_CHECK(vkEndCommandBuffer(mFrameData.at(mCurrentFrame).pCommandBuffer));
+
+	const VkSubmitInfo submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+	                              .commandBufferCount = 1,
+	                              .pCommandBuffers = &mFrameData.at(mCurrentFrame).pCommandBuffer};
+
+	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
+	VK_CHECK(vkQueueWaitIdle(mDevice.getGraphicsQueue()));
+
+	vkFreeCommandBuffers(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool, 1,
+	                     &mFrameData.at(mCurrentFrame).pCommandBuffer);
 }
 
 void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,

@@ -82,6 +82,26 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
 	}
 }
 
+
+void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
+                                  const VmaMemoryUsage memoryUsage, VkBuffer& buffer, VmaAllocation& bufferAllocation) const {
+	// Create buffer info
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = usage;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	// Allocation info for VMA
+	VmaAllocationCreateInfo allocInfo{};
+	allocInfo.usage = memoryUsage;
+
+	// Create buffer and allocate memory with VMA
+	if (vmaCreateBuffer(pAllocator, &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create buffer with VMA!");
+	}
+}
+
 // class member functions
 VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 	createInstance();

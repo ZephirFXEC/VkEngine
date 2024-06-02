@@ -12,6 +12,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 
+#include <span>
 
 namespace vke {
 class VkEngineModel {
@@ -33,11 +34,8 @@ class VkEngineModel {
 
 
 	struct MeshData {
-		Vertex* pVertices;
-		u32 vCount;
-		u32* pIndices;
-		u32 iCount;
-
+		std::span<const Vertex> pVertices;
+		std::span<const u32> pIndices;
 		void loadModel(const std::string& filepath);
 	};
 
@@ -60,16 +58,16 @@ class VkEngineModel {
 	                    VmaAllocation& bufferMemory);
 
 
-	void createVertexBuffers(const Vertex* vertices, size_t vertexCount);
+	void createVertexBuffers(const std::span<const Vertex>& vertices);
 
-	void createIndexBuffers(const u32* indices, size_t indexCount);
+	void createIndexBuffers(const std::span<const u32>& indices);
 
 	DataBuffer mVertexBuffer{};
 	DataBuffer mIndexBuffer{};
 
 	VkCommandBuffer mCommandBuffer = VK_NULL_HANDLE;
 
-	u32 mIndexCount = 0;
+	size_t mIndexCount = 0;
 
 	const VkEngineDevice& mDevice;
 

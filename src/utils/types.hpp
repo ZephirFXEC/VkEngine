@@ -8,9 +8,9 @@
 
 #include <array>
 #include <deque>
-#include <functional>
 #include <optional>
-#include <ranges>
+#include <string>
+#include <vector>
 
 
 using u8 = uint8_t;
@@ -27,22 +27,6 @@ using f64 = double;
 
 // User defined types
 static constexpr u8 MAX_FRAMES_IN_FLIGHT = 2;
-
-
-struct DeletionQueue {
-	std::deque<std::function<void()>> mQueue{};
-	void push_function(std::function<void()>&& function) { mQueue.push_back(std::move(function)); }
-
-	void flush() {
-		// reverse iterate the deletion queue to execute all the functions
-		for (const auto& it : std::ranges::reverse_view(mQueue)) {
-			it();
-		}
-
-		mQueue.clear();
-	}
-};
-
 
 struct DataBuffer {
 	VkBuffer pDataBuffer = VK_NULL_HANDLE;

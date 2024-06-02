@@ -31,21 +31,13 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] const VkSwapchainKHR& getSwapChain() const { return pSwapChain; }
 	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
-
 	[[nodiscard]] const VkEngineDevice& getEngineDevice() const { return mDevice; }
-
 	[[nodiscard]] const VkCommandPool& getCommandPool() const { return mFrameData.at(mCurrentFrame).pCommandPool; }
-
 	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
-
 	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
-
 	[[nodiscard]] u32 getWidth() const { return mSwapChainExtent.width; }
-
 	[[nodiscard]] u32 getHeight() const { return mSwapChainExtent.height; }
-
 	[[nodiscard]] u32 getImageCount() const { return mSwapChainImageCount; }
-
 	[[nodiscard]] VkFormat findDepthFormat() const;
 
 	VkResult acquireNextImage(u32* imageIndex) const;
@@ -93,7 +85,7 @@ class VkEngineSwapChain {
 	const VkEngineDevice& mDevice;
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
-	VkSwapchainKHR pSwapChain{};
+	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
 
 	VkImageRessource mSwapChainImages{};
 	VkImageRessource mDepthImages{};

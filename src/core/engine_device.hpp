@@ -50,6 +50,9 @@ class VkEngineDevice {
 	[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
 	                                           VkFormatFeatureFlags features) const;
 
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage,
+	                                  VkBuffer& buffer, VmaAllocation& bufferAllocation) const;
+
 	VkPhysicalDeviceProperties mProperties{};
 
    private:
