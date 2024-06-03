@@ -12,9 +12,9 @@ class VkEngineSwapChain {
    public:
 	explicit VkEngineSwapChain() = delete;
 
-	VkEngineSwapChain(const VkEngineDevice& deviceRef, VkExtent2D windowExtent);
+	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent);
 
-	VkEngineSwapChain(const VkEngineDevice& deviceRef, VkExtent2D windowExtent,
+	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent,
 	                  const std::shared_ptr<VkEngineSwapChain>& previous);
 
 	~VkEngineSwapChain();
@@ -32,7 +32,6 @@ class VkEngineSwapChain {
 	[[nodiscard]] const VkSwapchainKHR& getSwapChain() const { return pSwapChain; }
 	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
 	[[nodiscard]] const VkEngineDevice& getEngineDevice() const { return mDevice; }
-	[[nodiscard]] const VkCommandPool& getCommandPool() const { return mFrameData.at(mCurrentFrame).pCommandPool; }
 	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
 	[[nodiscard]] u32 getWidth() const { return mSwapChainExtent.width; }
@@ -66,8 +65,6 @@ class VkEngineSwapChain {
 
 	void createFramebuffers();
 
-	void createCommandPools();
-
 	void createSyncObjects();
 
 	// Helper functions
@@ -77,12 +74,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
-
-	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, u32 width, u32 height, u32 layerCount);
-
-	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory) const;
-
-	const VkEngineDevice& mDevice;
+	VkEngineDevice& mDevice;
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
@@ -96,7 +88,6 @@ class VkEngineSwapChain {
 	VkExtent2D mWindowExtent{};
 
 	VkFramebuffer* ppSwapChainFramebuffers = nullptr;
-	std::array<FrameData, MAX_FRAMES_IN_FLIGHT> mFrameData{};
 	std::shared_ptr<VkEngineSwapChain> pOldSwapChain = nullptr;
 
 	u32 mSwapChainImageCount = 0;

@@ -8,12 +8,12 @@
 
 
 namespace vke {
-VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
+VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D windowExtent)
     : mDevice{deviceRef}, mWindowExtent{windowExtent} {
 	init();
 }
 
-VkEngineSwapChain::VkEngineSwapChain(const VkEngineDevice& deviceRef, const VkExtent2D windowExtent,
+VkEngineSwapChain::VkEngineSwapChain(VkEngineDevice& deviceRef, const VkExtent2D windowExtent,
                                      const std::shared_ptr<VkEngineSwapChain>& previous)
     : mDevice{deviceRef}, mWindowExtent{windowExtent}, pOldSwapChain{previous} {
 	init();
@@ -26,7 +26,6 @@ void VkEngineSwapChain::init() {
 	createRenderPass();
 	createDepthResources();
 	createFramebuffers();
-	createCommandPools();
 	createSyncObjects();
 }
 
@@ -77,11 +76,6 @@ VkEngineSwapChain::~VkEngineSwapChain() {
 	mSyncPrimitives.ppInFlightFences.fill(VK_NULL_HANDLE);
 
 	Memory::freeMemory(mSyncPrimitives.ppInFlightImages, getImageCount(), MEMORY_TAG_VULKAN);
-
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		vkDestroyCommandPool(mDevice.getDevice(), mFrameData.at(i).pCommandPool, nullptr);
-	}
 }
 
 VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
@@ -319,7 +313,7 @@ void VkEngineSwapChain::createDepthResources() {
 		    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
 		};
 
-		createImageWithInfo(imageInfo, mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
+		mDevice.createImageWithInfo(imageInfo, mDepthImages.ppImages[i], mDepthImages.ppImageMemorys[i]);
 
 		const VkImageViewCreateInfo viewInfo{
 		    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -337,29 +331,6 @@ void VkEngineSwapChain::createDepthResources() {
 	}
 }
 
-void VkEngineSwapChain::createCommandPools() {
-	const VkCommandPoolCreateInfo poolInfo = {
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-	    .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-	    .queueFamilyIndex = mDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
-
-	};
-
-	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		VK_CHECK(vkCreateCommandPool(mDevice.getDevice(), &poolInfo, nullptr, &mFrameData.at(i).pCommandPool));
-
-		// allocate the default command buffer that we will use for rendering
-		const VkCommandBufferAllocateInfo cmdAllocInfo{
-		    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-		    .pNext = nullptr,
-		    .commandPool = mFrameData.at(i).pCommandPool,
-		    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		    .commandBufferCount = 1,
-		};
-
-		VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &cmdAllocInfo, &mFrameData.at(i).pCommandBuffer));
-	}
-}
 
 void VkEngineSwapChain::createSyncObjects() {
 	mSyncPrimitives.ppInFlightImages = Memory::allocMemory<VkFence>(getImageCount(), MEMORY_TAG_VULKAN);
@@ -380,61 +351,6 @@ void VkEngineSwapChain::createSyncObjects() {
 		                           &mSyncPrimitives.ppRenderFinishedSemaphores.at(i)));
 		VK_CHECK(vkCreateFence(mDevice.getDevice(), &fenceInfo, nullptr, &mSyncPrimitives.ppInFlightFences.at(i)));
 	}
-}
-
-void VkEngineSwapChain::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const u32 width,
-                                          const u32 height, const u32 layerCount) {
-	const VkCommandBufferAllocateInfo allocInfo{
-	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	    .commandPool = getCommandPool(),
-	    .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-	    .commandBufferCount = 1,
-	};
-
-	VK_CHECK(vkAllocateCommandBuffers(mDevice.getDevice(), &allocInfo, &mFrameData.at(mCurrentFrame).pCommandBuffer));
-
-	constexpr VkCommandBufferBeginInfo beginInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-	                                             .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT};
-
-	VK_CHECK(vkBeginCommandBuffer(mFrameData.at(mCurrentFrame).pCommandBuffer, &beginInfo));
-
-	const VkBufferImageCopy region{.bufferOffset = 0,
-	                               .bufferRowLength = 0,
-	                               .bufferImageHeight = 0,
-
-	                               .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-	                                                    .mipLevel = 0,
-	                                                    .baseArrayLayer = 0,
-	                                                    .layerCount = layerCount},
-
-	                               .imageOffset = {0, 0, 0},
-	                               .imageExtent = {width, height, 1}};
-
-	vkCmdCopyBufferToImage(mFrameData.at(mCurrentFrame).pCommandBuffer, *buffer, *image,
-	                       VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-
-	VK_CHECK(vkEndCommandBuffer(mFrameData.at(mCurrentFrame).pCommandBuffer));
-
-	const VkSubmitInfo submitInfo{.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-	                              .commandBufferCount = 1,
-	                              .pCommandBuffers = &mFrameData.at(mCurrentFrame).pCommandBuffer};
-
-	VK_CHECK(vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
-	VK_CHECK(vkQueueWaitIdle(mDevice.getGraphicsQueue()));
-
-	vkFreeCommandBuffers(mDevice.getDevice(), mFrameData.at(mCurrentFrame).pCommandPool, 1,
-	                     &mFrameData.at(mCurrentFrame).pCommandBuffer);
-}
-
-void VkEngineSwapChain::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
-                                            VmaAllocation& imageMemory) const {
-	constexpr VmaAllocationCreateInfo rimg_allocinfo{
-	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-	    .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-	};
-
-	vmaCreateImage(mDevice.getAllocator(), &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
 }
 
 VkSurfaceFormatKHR VkEngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <stdexcept>
+#include <utils/memory.hpp>
 
 
 namespace vke {
@@ -27,18 +28,21 @@ VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instan
 	bufferSize = alignmentSize * instanceCount;
 
 	// Create buffer with VMA
-	VkBufferCreateInfo bufferInfo = {};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = bufferSize;
-	bufferInfo.usage = usageFlags;
+	const VkBufferCreateInfo bufferInfo = {
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = bufferSize,
+		.usage = usageFlags
+	};
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = memoryUsage;
+	const VmaAllocationCreateInfo allocInfo = {
+		.usage = memoryUsage
+	};
 
 	if (vmaCreateBuffer(lveDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) !=
 	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to allocate buffer with VMA");
 	}
+
 }
 
 VkEngineBuffer::~VkEngineBuffer() {
@@ -60,12 +64,17 @@ void VkEngineBuffer::unmap() {
 }
 
 void VkEngineBuffer::writeToBuffer(const void *data, const VkDeviceSize size, const VkDeviceSize offset) const {
-	assert(mapped && "Cannot copy to unmapped buffer");
+	if(!mapped) {
+		throw std::runtime_error("Cannot map memory to write");
+	}
 
 	const VkDeviceSize copySize = (size == VK_WHOLE_SIZE) ? bufferSize : size;
-	assert((offset + copySize) <= bufferSize && "Copy operation exceeds buffer bounds");
 
-	std::memcpy(static_cast<char *>(mapped) + offset, data, copySize);
+	if (offset + copySize > bufferSize) {
+		throw std::out_of_range("Buffer write out of range");
+	}
+
+	Memory::copyMemory(static_cast<char *>(mapped) + offset, data, copySize);
 }
 
 

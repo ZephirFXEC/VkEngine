@@ -30,14 +30,14 @@ class VkEngineBuffer {
 	VkDescriptorBufferInfo descriptorInfoForIndex(int index) const;
 	VkResult invalidateIndex(int index) const;
 
-	VkBuffer getBuffer() const { return buffer; }
 	void* getMappedMemory() const { return mapped; }
 	uint32_t getInstanceCount() const { return instanceCount; }
-	VkDeviceSize getInstanceSize() const { return instanceSize; }
-	VkDeviceSize getAlignmentSize() const { return alignmentSize; }
-	VkBufferUsageFlags getUsageFlags() const { return usageFlags; }
-	VmaMemoryUsage getMemoryUsage() const { return memoryUsage; }
-	VkDeviceSize getBufferSize() const { return bufferSize; }
+	const VkBuffer& getBuffer() const { return buffer; }
+	const VkDeviceSize& getInstanceSize() const { return instanceSize; }
+	const VkDeviceSize& getAlignmentSize() const { return alignmentSize; }
+	const VkBufferUsageFlags& getUsageFlags() const { return usageFlags; }
+	const VmaMemoryUsage& getMemoryUsage() const { return memoryUsage; }
+	const VkDeviceSize& getBufferSize() const { return bufferSize; }
 
    private:
 	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);

@@ -27,7 +27,7 @@ struct std::hash<vke::VkEngineModel::Vertex> {
 
 namespace vke {
 
-VkEngineModel::VkEngineModel(const VkEngineDevice& device, const MeshData& meshData)
+VkEngineModel::VkEngineModel(VkEngineDevice& device, const MeshData& meshData)
 
     : mIndexCount{meshData.pIndices.size()}, mDevice{device} {
 	createIndexBuffers(meshData.pIndices);
@@ -75,13 +75,15 @@ void VkEngineModel::draw(const VkCommandBuffer* const commandBuffer) const {
 template <typename T>
 void VkEngineModel::createVkBuffer(const T* data, const size_t dataSize, const VkBufferUsageFlags usage,
                                    VkBuffer& buffer, VmaAllocation& bufferMemory) {
-
 	const VkDeviceSize bufferSize = sizeof(T) * dataSize;
 
-	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-	                                    .size = bufferSize,
-	                                    .usage = usage,
-	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
+	// Create final buffer
+	const VkBufferCreateInfo bufferInfo{
+		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+		.size = bufferSize,
+		.usage = usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		.sharingMode = VK_SHARING_MODE_EXCLUSIVE
+	};
 
 	constexpr VmaAllocationCreateInfo allocCreateInfo{
 	    .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
@@ -107,7 +109,7 @@ void VkEngineModel::createIndexBuffers(const std::span<const u32>& indices) {
 	               mIndexBuffer.pDataBufferMemory);
 }
 
-std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(const VkEngineDevice& device,
+std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(VkEngineDevice& device,
                                                                   const std::string& filepath) {
 	MeshData meshData{};
 	meshData.loadModel(filepath);

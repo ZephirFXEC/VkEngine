@@ -54,14 +54,12 @@ void App::run() {
 
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
-
 		ImGui::NewFrame();
-
 		ImGui::ShowDemoWindow();
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
 			mVkRenderer.beginSwapChainRenderPass(&commandBuffer);
-			ImGui::Render();
+
 			renderSystem.renderGameObjects(&commandBuffer, mVkGameObjects, camera);
 			mVkRenderer.endSwapChainRenderPass(&commandBuffer);
 			mVkRenderer.endFrame();

@@ -14,6 +14,11 @@ VkEngineWindow::VkEngineWindow(const int width, const int height, std::string na
 
 VkEngineWindow::~VkEngineWindow() {
 	VKINFO("Destroyed window");
+
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+
 	glfwDestroyWindow(pWindow);  // destroy window
 	glfwTerminate();             // terminate GLFW
 }

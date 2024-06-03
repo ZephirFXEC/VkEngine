@@ -8,7 +8,7 @@
 #include "utils/types.hpp"
 
 namespace vke {
-VkEngineRenderer::VkEngineRenderer(const VkEngineDevice& device, VkEngineWindow& window)
+VkEngineRenderer::VkEngineRenderer(VkEngineDevice& device, VkEngineWindow& window)
     : mVkDevice(device), mVkWindow(window) {
 	recreateSwapChain();
 	createCommandBuffers();
@@ -18,7 +18,7 @@ VkEngineRenderer::~VkEngineRenderer() { freeCommandBuffers(); }
 
 void VkEngineRenderer::createCommandBuffers() {
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	                                            .commandPool = mVkSwapChain->getCommandPool(),
+	                                            .commandPool = mVkDevice.getCommandPool(),
 	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	                                            .commandBufferCount = static_cast<u32>(mVkCommandBuffers.size())};
 
@@ -28,7 +28,7 @@ void VkEngineRenderer::createCommandBuffers() {
 
 
 void VkEngineRenderer::freeCommandBuffers() const {
-	vkResetCommandPool(mVkDevice.getDevice(), mVkSwapChain->getCommandPool(), 0);
+	vkResetCommandPool(mVkDevice.getDevice(), mVkDevice.getCommandPool(), 0);
 }
 
 void VkEngineRenderer::recreateSwapChain() {
@@ -136,6 +136,7 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 	vkCmdBeginRenderPass(*commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 	vkCmdSetViewport(*commandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(*commandBuffer, 0, 1, &scissor);
+	ImGui::Render();
 }
 
 VkCommandBuffer VkEngineRenderer::getCurrentCommandBuffer() const {

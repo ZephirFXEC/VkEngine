@@ -14,7 +14,6 @@ namespace vke {
 class VkEngineDevice {
    public:
 	explicit VkEngineDevice() = delete;
-
 	explicit VkEngineDevice(VkEngineWindow& window);
 
 	~VkEngineDevice();
@@ -38,6 +37,8 @@ class VkEngineDevice {
 	[[nodiscard]] const VmaAllocator& getAllocator() const { return pAllocator; }
 	[[nodiscard]] const VkPhysicalDevice& getPhysicalDevice() const { return pPhysicalDevice; }
 	[[nodiscard]] const VkDescriptorPool& getDescriptorPool() const { return pDescriptorPool; }
+	[[nodiscard]] const VkCommandPool& getCommandPool() const { return pcommandPool; }
+
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
 		return querySwapChainSupport(&pPhysicalDevice);
@@ -50,8 +51,17 @@ class VkEngineDevice {
 	[[nodiscard]] VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling,
 	                                           VkFormatFeatureFlags features) const;
 
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage,
-	                                  VkBuffer& buffer, VmaAllocation& bufferAllocation) const;
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VkBuffer& buffer,
+	                  VmaAllocation& bufferAllocation) const;
+
+	// Buffer Helper Functions
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
+	                  VkDeviceMemory& bufferMemory);
+	VkCommandBuffer beginSingleTimeCommands();
+	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
+	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory);
 
 	VkPhysicalDeviceProperties mProperties{};
 
@@ -65,6 +75,8 @@ class VkEngineDevice {
 	void pickPhysicalDevice();
 
 	void createLogicalDevice();
+
+	void createCommandPools();
 
 	void createAllocator();
 
@@ -91,6 +103,7 @@ class VkEngineDevice {
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
 
 	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
+	VkCommandPool pcommandPool = VK_NULL_HANDLE;
 	VkInstance pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;

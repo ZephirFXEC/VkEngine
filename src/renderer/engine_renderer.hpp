@@ -4,9 +4,6 @@
 
 #pragma once
 
-
-#include <cassert>
-
 #include "core/engine_device.hpp"
 #include "core/engine_swapchain.hpp"
 #include "core/engine_window.hpp"
@@ -14,7 +11,7 @@
 namespace vke {
 class VkEngineRenderer {
    public:
-	VkEngineRenderer(const VkEngineDevice& device, VkEngineWindow& window);
+	VkEngineRenderer(VkEngineDevice& device, VkEngineWindow& window);
 	~VkEngineRenderer();
 
 	void run();
@@ -36,7 +33,7 @@ class VkEngineRenderer {
 	void createCommandBuffers();
 	void freeCommandBuffers() const;
 
-	const VkEngineDevice& mVkDevice;
+	VkEngineDevice& mVkDevice;
 	VkEngineWindow& mVkWindow;
 
 	std::unique_ptr<VkEngineSwapChain> mVkSwapChain;

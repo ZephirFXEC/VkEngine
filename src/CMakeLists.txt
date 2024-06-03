@@ -7,11 +7,11 @@ file(GLOB_RECURSE SOURCES "../src/*.cpp")
 file(GLOB_RECURSE HEADERS "../src/*.hpp")
 
 add_executable(${PROJECT_NAME}
-               ${SOURCES}
-               ${HEADERS})
+        ${SOURCES}
+        ${HEADERS})
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
+target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ../src)
 
