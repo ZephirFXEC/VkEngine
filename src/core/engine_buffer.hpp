@@ -14,7 +14,6 @@ class VkEngineBuffer {
 	               VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage, VkDeviceSize minOffsetAlignment = 1);
 	~VkEngineBuffer();
 
-	VkEngineBuffer(const VkEngineBuffer&) = delete;
 	VkEngineBuffer& operator=(const VkEngineBuffer&) = delete;
 
 	VkResult map(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
@@ -30,29 +29,29 @@ class VkEngineBuffer {
 	VkDescriptorBufferInfo descriptorInfoForIndex(int index) const;
 	VkResult invalidateIndex(int index) const;
 
-	void* getMappedMemory() const { return mapped; }
-	uint32_t getInstanceCount() const { return instanceCount; }
-	const VkBuffer& getBuffer() const { return buffer; }
-	const VkDeviceSize& getInstanceSize() const { return instanceSize; }
-	const VkDeviceSize& getAlignmentSize() const { return alignmentSize; }
-	const VkBufferUsageFlags& getUsageFlags() const { return usageFlags; }
-	const VmaMemoryUsage& getMemoryUsage() const { return memoryUsage; }
-	const VkDeviceSize& getBufferSize() const { return bufferSize; }
+	void* getMappedMemory() const { return pMapped; }
+	uint32_t getInstanceCount() const { return mInstanceCount; }
+	const VkBuffer& getBuffer() const { return pBuffer; }
+	const VkDeviceSize& getInstanceSize() const { return mInstanceSize; }
+	const VkDeviceSize& getAlignmentSize() const { return mAlignmentSize; }
+	const VkBufferUsageFlags& getUsageFlags() const { return mUsageFlags; }
+	const VmaMemoryUsage& getMemoryUsage() const { return mMemoryUsage; }
+	const VkDeviceSize& getBufferSize() const { return mBufferSize; }
 
    private:
 	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
-	VkEngineDevice& lveDevice;
-	void* mapped = nullptr;
-	VkBuffer buffer = VK_NULL_HANDLE;
-	VmaAllocation allocation = VK_NULL_HANDLE;
+	VkEngineDevice& mDevice;
+	void* pMapped = nullptr;
+	VkBuffer pBuffer = VK_NULL_HANDLE;
+	VmaAllocation pDataBufferMemory = VK_NULL_HANDLE;
 
-	VkDeviceSize bufferSize{};
-	uint32_t instanceCount{};
-	VkDeviceSize instanceSize{};
-	VkDeviceSize alignmentSize{};
-	VkBufferUsageFlags usageFlags{};
-	VmaMemoryUsage memoryUsage{};
+	VkDeviceSize mBufferSize{};
+	uint32_t mInstanceCount{};
+	VkDeviceSize mInstanceSize{};
+	VkDeviceSize mAlignmentSize{};
+	VkBufferUsageFlags mUsageFlags{};
+	VmaMemoryUsage mMemoryUsage{};
 };
 
 }  // namespace vke

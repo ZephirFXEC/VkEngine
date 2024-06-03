@@ -11,8 +11,9 @@
 // glm
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
-
 #include <span>
+
+#include "engine_buffer.hpp"
 
 namespace vke {
 class VkEngineModel {
@@ -47,23 +48,21 @@ class VkEngineModel {
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
 	VkEngineModel(VkEngineModel&&) = default;  // Enable move semantics
 
-	static std::unique_ptr<VkEngineModel> createModelFromFile(VkEngineDevice& device,
-	                                                          const std::string& filepath);
+	static std::unique_ptr<VkEngineModel> createModelFromFile(VkEngineDevice& device, const std::string& filepath);
 	void bind(const VkCommandBuffer* commandBuffer) const;
 	void draw(const VkCommandBuffer* commandBuffer) const;
 
    private:
 	template <typename T>
-	void createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage, VkBuffer& buffer,
-	                    VmaAllocation& bufferMemory);
+	VkEngineBuffer createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage);
 
 
 	void createVertexBuffers(const std::span<const Vertex>& vertices);
 
 	void createIndexBuffers(const std::span<const u32>& indices);
 
-	DataBuffer mVertexBuffer{};
-	DataBuffer mIndexBuffer{};
+	std::unique_ptr<VkEngineBuffer> mVertexBuffer{};
+	std::unique_ptr<VkEngineBuffer> mIndexBuffer{};
 
 	VkCommandBuffer mCommandBuffer = VK_NULL_HANDLE;
 

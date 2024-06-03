@@ -19,93 +19,90 @@ VkDeviceSize VkEngineBuffer::getAlignment(const VkDeviceSize instanceSize, const
 VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instanceSize, const uint32_t instanceCount,
                                const VkBufferUsageFlags usageFlags, const VmaMemoryUsage memoryUsage,
                                const VkDeviceSize minOffsetAlignment)
-    : lveDevice(device),
-      instanceCount(instanceCount),
-      instanceSize(instanceSize),
-      alignmentSize(getAlignment(instanceSize, minOffsetAlignment)), usageFlags(usageFlags),
-      memoryUsage(memoryUsage) {
-
-	bufferSize = alignmentSize * instanceCount;
+    : mDevice(device),
+      mInstanceCount(instanceCount),
+      mInstanceSize(instanceSize),
+      mAlignmentSize(getAlignment(instanceSize, minOffsetAlignment)),
+      mUsageFlags(usageFlags),
+      mMemoryUsage(memoryUsage) {
+	mBufferSize = mAlignmentSize * instanceCount;
 
 	// Create buffer with VMA
 	const VkBufferCreateInfo bufferInfo = {
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = bufferSize,
-		.usage = usageFlags
+	    .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+	    .size = mBufferSize,
+	    .usage = usageFlags,
 	};
 
-	const VmaAllocationCreateInfo allocInfo = {
-		.usage = memoryUsage
-	};
+	const VmaAllocationCreateInfo allocCreateInfo = {.usage = memoryUsage};
 
-	if (vmaCreateBuffer(lveDevice.getAllocator(), &bufferInfo, &allocInfo, &buffer, &allocation, nullptr) !=
+	if (vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &pBuffer, &pDataBufferMemory, nullptr) !=
 	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to allocate buffer with VMA");
 	}
-
 }
 
 VkEngineBuffer::~VkEngineBuffer() {
-	if (buffer != VK_NULL_HANDLE) {
-		vmaDestroyBuffer(lveDevice.getAllocator(), buffer, allocation);
+	if (pBuffer != VK_NULL_HANDLE) {
+		vmaDestroyBuffer(mDevice.getAllocator(), pBuffer, pDataBufferMemory);
 	}
 }
 
 VkResult VkEngineBuffer::map(const VkDeviceSize size, const VkDeviceSize offset) {
-	return vmaMapMemory(lveDevice.getAllocator(), allocation, &mapped);
+	return vmaMapMemory(mDevice.getAllocator(), pDataBufferMemory, &pMapped);
 }
 
 
 void VkEngineBuffer::unmap() {
-	if (mapped) {
-		vmaUnmapMemory(lveDevice.getAllocator(), allocation);
-		mapped = nullptr;
+	if (pMapped) {
+		vmaUnmapMemory(mDevice.getAllocator(), pDataBufferMemory);
+		pMapped = nullptr;
 	}
 }
 
 void VkEngineBuffer::writeToBuffer(const void *data, const VkDeviceSize size, const VkDeviceSize offset) const {
-	if(!mapped) {
+	if (!pMapped) {
 		throw std::runtime_error("Cannot map memory to write");
 	}
 
-	const VkDeviceSize copySize = (size == VK_WHOLE_SIZE) ? bufferSize : size;
+	const VkDeviceSize copySize = (size == VK_WHOLE_SIZE) ? mBufferSize : size;
 
-	if (offset + copySize > bufferSize) {
+	if (offset + copySize > mBufferSize) {
 		throw std::out_of_range("Buffer write out of range");
 	}
 
-	Memory::copyMemory(static_cast<char *>(mapped) + offset, data, copySize);
+	Memory::copyMemory(static_cast<char *>(pMapped) + offset, data, copySize);
 }
 
 
 VkResult VkEngineBuffer::flush(const VkDeviceSize size, const VkDeviceSize offset) const {
-	return vmaFlushAllocation(lveDevice.getAllocator(), allocation, offset, size);
+	return vmaFlushAllocation(mDevice.getAllocator(), pDataBufferMemory, offset, size);
 }
 
 VkResult VkEngineBuffer::invalidate(const VkDeviceSize size, const VkDeviceSize offset) const {
-	return vmaInvalidateAllocation(lveDevice.getAllocator(), allocation, offset, size);
+	return vmaInvalidateAllocation(mDevice.getAllocator(), pDataBufferMemory, offset, size);
 }
 
 VkDescriptorBufferInfo VkEngineBuffer::descriptorInfo(const VkDeviceSize size, const VkDeviceSize offset) const {
-	return VkDescriptorBufferInfo{buffer, offset, size};
+	return VkDescriptorBufferInfo{pBuffer, offset, size};
 }
 
 
 void VkEngineBuffer::writeToIndex(const void *data, const int index) const {
-	writeToBuffer(data, instanceSize, index * alignmentSize);
+	writeToBuffer(data, mInstanceSize, index * mAlignmentSize);
 }
 
 
-VkResult VkEngineBuffer::flushIndex(const int index) const { return flush(alignmentSize, index * alignmentSize); }
+VkResult VkEngineBuffer::flushIndex(const int index) const { return flush(mAlignmentSize, index * mAlignmentSize); }
 
 
 VkDescriptorBufferInfo VkEngineBuffer::descriptorInfoForIndex(const int index) const {
-	return descriptorInfo(alignmentSize, index * alignmentSize);
+	return descriptorInfo(mAlignmentSize, index * mAlignmentSize);
 }
 
 
 VkResult VkEngineBuffer::invalidateIndex(const int index) const {
-	return invalidate(alignmentSize, index * alignmentSize);
+	return invalidate(mAlignmentSize, index * mAlignmentSize);
 }
 
 }  // namespace vke

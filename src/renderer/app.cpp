@@ -81,6 +81,16 @@ void App::loadGameObjects() {
 	game_objects.mTransform.translation = {0.f, 0.f, 2.5f};
 	game_objects.mTransform.scale = glm::vec3(-1);
 	mVkGameObjects.push_back(std::move(game_objects));
+
+	// create a grid of models
+	for (int x = -30; x <= 30; x += 2) {
+		for (int y = -30; y <= 30; y += 2) {
+			auto game_objects = VkEngineGameObjects::createGameObject();
+			game_objects.pModel = pVkModel;
+			game_objects.mTransform.translation = {x, y, 0};
+			mVkGameObjects.push_back(std::move(game_objects));
+		}
+	}
 }
 
 }  // namespace vke
