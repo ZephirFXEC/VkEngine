@@ -55,13 +55,12 @@ class VkEngineDevice {
 	                  VmaAllocation& bufferAllocation) const;
 
 	// Buffer Helper Functions
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
-	                  VkDeviceMemory& bufferMemory);
-	VkCommandBuffer beginSingleTimeCommands();
-	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount);
-	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory);
+	VkCommandBuffer beginSingleTimeCommands() const;
+	void endSingleTimeCommands(const VkCommandBuffer* commandBuffer) const;
+	void copyBuffer(const VkBuffer* srcBuffer, const VkBuffer* dstBuffer, VkDeviceSize size) const;
+	void copyBufferToImage(const VkBuffer* buffer, const VkImage* image, uint32_t width, uint32_t height,
+	                       uint32_t layerCount) const;
+	void createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image, VmaAllocation& imageMemory) const;
 
 	VkPhysicalDeviceProperties mProperties{};
 

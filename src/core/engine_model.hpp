@@ -54,7 +54,8 @@ class VkEngineModel {
 
    private:
 	template <typename T>
-	VkEngineBuffer createVkBuffer(const T* data, size_t dataSize, VkBufferUsageFlags usage);
+	void createVkBuffer(const std::span<const T>& data, VkBufferUsageFlags usage, VkBufferUsageFlags usageDst,
+	                    std::unique_ptr<VkEngineBuffer>& buffer);
 
 
 	void createVertexBuffers(const std::span<const Vertex>& vertices);

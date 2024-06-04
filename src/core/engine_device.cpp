@@ -538,8 +538,9 @@ u32 VkEngineDevice::findMemoryType(const u32 typeFilter, const VkMemoryPropertyF
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
+// TODO(enzocr): refactor those buffer helper for VMA
 
-VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() {
+VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() const {
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -557,63 +558,54 @@ VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() {
 	return commandBuffer;
 }
 
-void VkEngineDevice::endSingleTimeCommands(const VkCommandBuffer commandBuffer) {
-	vkEndCommandBuffer(commandBuffer);
+void VkEngineDevice::endSingleTimeCommands(const VkCommandBuffer* const commandBuffer) const {
+	vkEndCommandBuffer(*commandBuffer);
 
 	VkSubmitInfo submitInfo{};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &commandBuffer;
+	submitInfo.pCommandBuffers = commandBuffer;
 
 	vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(pGraphicsQueue);
 
-	vkFreeCommandBuffers(pDevice, pcommandPool, 1, &commandBuffer);
+	vkFreeCommandBuffers(pDevice, pcommandPool, 1, commandBuffer);
 }
 
-void VkEngineDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties,
-                                  VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
+                                  const VmaMemoryUsage memoryUsage, VkBuffer& buffer,
+                                  VmaAllocation& bufferAllocation) const {
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
 	bufferInfo.usage = usage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(pDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create vertex buffer!");
+	VmaAllocationCreateInfo allocInfo{};
+	allocInfo.usage = memoryUsage;
+
+	if (vmaCreateBuffer(pAllocator, &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create buffer!");
 	}
-
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(pDevice, buffer, &memRequirements);
-
-	VkMemoryAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-
-	if (vkAllocateMemory(pDevice, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate vertex buffer memory!");
-	}
-
-	vkBindBufferMemory(pDevice, buffer, bufferMemory, 0);
 }
 
-void VkEngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+void VkEngineDevice::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer* const dstBuffer,
+                                const VkDeviceSize size) const {
+	auto* const commandBuffer = beginSingleTimeCommands();
 
 	VkBufferCopy copyRegion{};
 	copyRegion.srcOffset = 0;  // Optional
 	copyRegion.dstOffset = 0;  // Optional
 	copyRegion.size = size;
-	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+	vkCmdCopyBuffer(commandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
-	endSingleTimeCommands(commandBuffer);
+	endSingleTimeCommands(&commandBuffer);
 }
 
 
-void VkEngineDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height,
-                                       uint32_t layerCount) {
-	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkImage* const image, const uint32_t width,
+                                       const uint32_t height, const uint32_t layerCount) const {
+	auto* const commandBuffer = beginSingleTimeCommands();
 
 	VkBufferImageCopy region{};
 	region.bufferOffset = 0;
@@ -628,13 +620,14 @@ void VkEngineDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t 
 	region.imageOffset = {0, 0, 0};
 	region.imageExtent = {width, height, 1};
 
-	vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-	endSingleTimeCommands(commandBuffer);
+
+	vkCmdCopyBufferToImage(commandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+	endSingleTimeCommands(&commandBuffer);
 }
 
 
 void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
-                                         VmaAllocation& imageMemory) {
+                                         VmaAllocation& imageMemory) const {
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
 	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
 	    .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
