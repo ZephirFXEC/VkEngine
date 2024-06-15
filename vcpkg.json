@@ -1,0 +1,17 @@
+{
+  "dependencies": [
+    "fmt",
+    "glfw3",
+    "glm",
+    "tinyobjloader",
+    "vulkan",
+    "vulkan-memory-allocator",
+    {
+      "name": "imgui",
+      "features": [
+        "glfw-binding",
+        "vulkan-binding"
+      ]
+    }
+  ]
+}
