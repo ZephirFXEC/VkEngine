@@ -11,6 +11,46 @@ static constexpr bool enableValidationLayers = true;
 #endif
 
 namespace vke {
+
+
+class VkCommandBufferPool {
+   public:
+	VkCommandBufferPool() = default;
+	VkCommandBufferPool(const VkDevice device, const VkCommandPool commandPool)
+	    : pDevice(device), pCommandPool(commandPool) {}
+
+	VkCommandBuffer getCommandBuffer() const {
+		if (!pCommandBuffers.empty()) {
+			const VkCommandBuffer cmd = pCommandBuffers.back();
+			pCommandBuffers.pop_back();
+			return cmd;
+		}
+
+		const VkCommandBufferAllocateInfo allocInfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+		                                               .commandPool = pCommandPool,
+		                                               .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		                                               .commandBufferCount = 1};
+
+		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+		vkAllocateCommandBuffers(pDevice, &allocInfo, &commandBuffer);
+		return commandBuffer;
+	}
+
+	void returnCommandBuffer(const VkCommandBuffer commandBuffer) const { pCommandBuffers.push_back(commandBuffer); }
+
+	~VkCommandBufferPool() {
+		for (VkCommandBuffer cmd : pCommandBuffers) {
+			vkFreeCommandBuffers(pDevice, pCommandPool, 1, &cmd);
+		}
+	}
+
+   private:
+	VkDevice pDevice = VK_NULL_HANDLE;
+	VkCommandPool pCommandPool = VK_NULL_HANDLE;
+	mutable std::vector<VkCommandBuffer> pCommandBuffers{};
+};
+
+
 class VkEngineDevice {
    public:
 	explicit VkEngineDevice() = delete;
@@ -100,9 +140,9 @@ class VkEngineDevice {
 	VkDevice pDevice = VK_NULL_HANDLE;
 
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
-
-	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
+	VkCommandBufferPool pCommandBufferPool;
 	VkCommandPool pcommandPool = VK_NULL_HANDLE;
+	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
 	VkInstance pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;
 	VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;

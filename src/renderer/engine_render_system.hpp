@@ -23,6 +23,7 @@ class VkEngineRenderSystem {
 	void renderGameObjects(const VkCommandBuffer* commandBuffer, const std::vector<VkEngineGameObjects>& objects,
 	                       const VkEngineCamera& camera) const;
 
+	const std::unique_ptr<VkEnginePipeline>& getPipeline() const { return pVkPipeline;}
 
    private:
 	void createPipelineLayout();

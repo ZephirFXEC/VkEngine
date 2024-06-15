@@ -54,7 +54,7 @@ class VkEngineModel {
 
    private:
 	template <typename T>
-	void createVkBuffer(const std::span<const T>& data, VkBufferUsageFlags usage, VkBufferUsageFlags usageDst,
+	void createVkBuffer(const std::span<const T>& data, VkBufferUsageFlags usageDst,
 	                    std::unique_ptr<VkEngineBuffer>& buffer);
 
 

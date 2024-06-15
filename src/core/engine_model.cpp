@@ -69,34 +69,44 @@ void VkEngineModel::draw(const VkCommandBuffer* const commandBuffer) const {
 
 
 template <typename T>
-void VkEngineModel::createVkBuffer(const std::span<const T>& data, const VkBufferUsageFlags usage,
-                                   const VkBufferUsageFlags usageDst, std::unique_ptr<VkEngineBuffer>& buffer) {
+void VkEngineModel::createVkBuffer(const std::span<const T>& data, const VkBufferUsageFlags usageDst,
+                                   std::unique_ptr<VkEngineBuffer>& buffer) {
 	const size_t bufferSize = sizeof(T) * data.size();
 
 	VkEngineBuffer stagingBuffer{
-	    mDevice, sizeof(T), static_cast<uint32_t>(data.size()), usage | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-	    VMA_MEMORY_USAGE_CPU_ONLY  // CPU only memory
+		mDevice,
+		sizeof(T),
+		static_cast<uint32_t>(data.size()),
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+		VMA_MEMORY_USAGE_AUTO  // CPU only memory
 	};
 
 	stagingBuffer.map();
 	stagingBuffer.writeToBuffer(data.data());
 
-	buffer = std::make_unique<VkEngineBuffer>(mDevice, sizeof(T), static_cast<uint32_t>(data.size()),
-	                                          usageDst | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+	buffer = std::make_unique<VkEngineBuffer>(
+		mDevice,
+		sizeof(T),
+		static_cast<uint32_t>(data.size()),
+		usageDst | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+		VMA_MEMORY_USAGE_AUTO);
 
+	//vmaCopyMemoryToAllocation(mDevice.getAllocator(), stagingBuffer.getMappedMemory(), buffer->getBufferMemory(), 0, bufferSize);
 	mDevice.copyBuffer(&stagingBuffer.getBuffer(), &buffer->getBuffer(), bufferSize);
 
-	stagingBuffer.unmap();
+	VK_CHECK(stagingBuffer.unmap());
 }
 
 
 void VkEngineModel::createVertexBuffers(const std::span<const Vertex>& vertices) {
-	createVkBuffer(vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer);
+	createVkBuffer(vertices, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, mVertexBuffer);
 }
 
 
 void VkEngineModel::createIndexBuffers(const std::span<const u32>& indices) {
-	createVkBuffer(indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer);
+	createVkBuffer(indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer);
 }
 
 std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(VkEngineDevice& device, const std::string& filepath) {

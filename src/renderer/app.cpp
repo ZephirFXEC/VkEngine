@@ -55,15 +55,29 @@ void App::run() {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-		ImGui::ShowDemoWindow();
+
+
+		for (size_t i = 0; i < renderSystem.getPipeline()->getPipelineData().pipelineStats.size(); ++i) {
+			ImGui::Text("%s: %d", renderSystem.getPipeline()->getPipelineData().pipelineStatNames[i].c_str(),
+			            renderSystem.getPipeline()->getPipelineData().pipelineStats[i]);
+		}
+
+		ImGui::Text("%s: %f %s", "Frame Time", frameTime*1000, "ms");
+
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
 			mVkRenderer.beginSwapChainRenderPass(&commandBuffer);
 
+			vkCmdBeginQuery(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0, 0);
+
 			renderSystem.renderGameObjects(&commandBuffer, mVkGameObjects, camera);
+
+			vkCmdEndQuery(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0);
+
 			mVkRenderer.endSwapChainRenderPass(&commandBuffer);
 			mVkRenderer.endFrame();
 		}
+		renderSystem.getPipeline()->getQueryPool();
 	}
 
 	vkDeviceWaitIdle(mVkDevice.getDevice());
@@ -82,15 +96,6 @@ void App::loadGameObjects() {
 	game_objects.mTransform.scale = glm::vec3(-1);
 	mVkGameObjects.push_back(std::move(game_objects));
 
-	// create a grid of models
-	for (int x = -30; x <= 30; x += 2) {
-		for (int y = -30; y <= 30; y += 2) {
-			auto game_objects = VkEngineGameObjects::createGameObject();
-			game_objects.pModel = pVkModel;
-			game_objects.mTransform.translation = {x, y, 0};
-			mVkGameObjects.push_back(std::move(game_objects));
-		}
-	}
 }
 
 }  // namespace vke

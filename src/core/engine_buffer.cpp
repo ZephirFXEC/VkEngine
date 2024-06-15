@@ -1,8 +1,6 @@
 #include "engine_buffer.hpp"
 
 // std
-#include <cassert>
-#include <cstring>
 #include <stdexcept>
 #include <utils/memory.hpp>
 
@@ -17,7 +15,7 @@ VkDeviceSize VkEngineBuffer::getAlignment(const VkDeviceSize instanceSize, const
 }
 
 VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instanceSize, const uint32_t instanceCount,
-                               const VkBufferUsageFlags usageFlags, const VmaMemoryUsage memoryUsage,
+                               const VkBufferUsageFlags usageFlags, const VmaAllocationCreateFlags flag, const VmaMemoryUsage memoryUsage,
                                const VkDeviceSize minOffsetAlignment)
     : mDevice(device),
       mInstanceCount(instanceCount),
@@ -34,7 +32,10 @@ VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instan
 	    .usage = usageFlags,
 	};
 
-	const VmaAllocationCreateInfo allocCreateInfo = {.usage = memoryUsage};
+	const VmaAllocationCreateInfo allocCreateInfo = {
+		.flags = flag,
+		.usage = memoryUsage,
+	};
 
 	if (vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &pBuffer, &pDataBufferMemory, nullptr) !=
 	    VK_SUCCESS) {

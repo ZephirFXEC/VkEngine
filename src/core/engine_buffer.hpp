@@ -11,7 +11,7 @@ namespace vke {
 class VkEngineBuffer {
    public:
 	VkEngineBuffer(VkEngineDevice& device, VkDeviceSize instanceSize, uint32_t instanceCount,
-	               VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage, VkDeviceSize minOffsetAlignment = 1);
+	               VkBufferUsageFlags usageFlags, VmaAllocationCreateFlags flag, VmaMemoryUsage memoryUsage, VkDeviceSize minOffsetAlignment = 1);
 	~VkEngineBuffer();
 
 	VkEngineBuffer& operator=(const VkEngineBuffer&) = delete;
@@ -37,6 +37,7 @@ class VkEngineBuffer {
 	const VkBufferUsageFlags& getUsageFlags() const { return mUsageFlags; }
 	const VmaMemoryUsage& getMemoryUsage() const { return mMemoryUsage; }
 	const VkDeviceSize& getBufferSize() const { return mBufferSize; }
+	const VmaAllocation& getBufferMemory() const { return pDataBufferMemory; }
 
    private:
 	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);

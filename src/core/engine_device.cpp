@@ -92,20 +92,17 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 	createAllocator();
 	createCommandPools();
 
+	constexpr std::array<VkDescriptorPoolSize, 1> pool_sizes = {
+	    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	};
 
-	{
-		constexpr VkDescriptorPoolSize pool_sizes[] = {
-		    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-		};
+	const VkDescriptorPoolCreateInfo pool_info{.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+	                                               .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+	                                               .maxSets = 1,
+	                                               .poolSizeCount = 1,
+	                                               .pPoolSizes = pool_sizes.data()};
 
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 1;
-		pool_info.poolSizeCount = 1;
-		pool_info.pPoolSizes = pool_sizes;
-		VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
-	}
+	VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
 }
 
 VkEngineDevice::~VkEngineDevice() {
@@ -142,6 +139,8 @@ void VkEngineDevice::createCommandPools() {
 	if (vkCreateCommandPool(pDevice, &poolInfo, nullptr, &pcommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command pool!");
 	}
+
+	pCommandBufferPool = VkCommandBufferPool(pDevice, pcommandPool);
 }
 
 void VkEngineDevice::createInstance() {
@@ -254,6 +253,7 @@ void VkEngineDevice::createLogicalDevice() {
 	    .features =
 	        {
 	            .samplerAnisotropy = VK_TRUE,
+	    		.pipelineStatisticsQuery = VK_TRUE
 	        },
 	};
 
@@ -538,21 +538,14 @@ u32 VkEngineDevice::findMemoryType(const u32 typeFilter, const VkMemoryPropertyF
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
-// TODO(enzocr): refactor those buffer helper for VMA
 
 VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() const {
-	VkCommandBufferAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandPool = pcommandPool;
-	allocInfo.commandBufferCount = 1;
+	auto* const commandBuffer = pCommandBufferPool.getCommandBuffer();
 
-	VkCommandBuffer commandBuffer = nullptr;
-	vkAllocateCommandBuffers(pDevice, &allocInfo, &commandBuffer);
-
-	VkCommandBufferBeginInfo beginInfo{};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	constexpr VkCommandBufferBeginInfo beginInfo{
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+	    .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+	};
 
 	vkBeginCommandBuffer(commandBuffer, &beginInfo);
 	return commandBuffer;
@@ -561,28 +554,24 @@ VkCommandBuffer VkEngineDevice::beginSingleTimeCommands() const {
 void VkEngineDevice::endSingleTimeCommands(const VkCommandBuffer* const commandBuffer) const {
 	vkEndCommandBuffer(*commandBuffer);
 
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = commandBuffer;
+	const VkSubmitInfo submitInfo{
+	    .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO, .commandBufferCount = 1, .pCommandBuffers = commandBuffer};
 
 	vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 	vkQueueWaitIdle(pGraphicsQueue);
 
-	vkFreeCommandBuffers(pDevice, pcommandPool, 1, commandBuffer);
+	pCommandBufferPool.returnCommandBuffer(*commandBuffer);
 }
 
 void VkEngineDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage,
                                   const VmaMemoryUsage memoryUsage, VkBuffer& buffer,
                                   VmaAllocation& bufferAllocation) const {
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = usage;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+	const VkBufferCreateInfo bufferInfo{.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+	                                    .size = size,
+	                                    .usage = usage,
+	                                    .sharingMode = VK_SHARING_MODE_EXCLUSIVE};
 
-	VmaAllocationCreateInfo allocInfo{};
-	allocInfo.usage = memoryUsage;
+	const VmaAllocationCreateInfo allocInfo{.usage = memoryUsage};
 
 	if (vmaCreateBuffer(pAllocator, &bufferInfo, &allocInfo, &buffer, &bufferAllocation, nullptr) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create buffer!");
@@ -593,10 +582,12 @@ void VkEngineDevice::copyBuffer(const VkBuffer* const srcBuffer, const VkBuffer*
                                 const VkDeviceSize size) const {
 	auto* const commandBuffer = beginSingleTimeCommands();
 
-	VkBufferCopy copyRegion{};
-	copyRegion.srcOffset = 0;  // Optional
-	copyRegion.dstOffset = 0;  // Optional
-	copyRegion.size = size;
+	const VkBufferCopy copyRegion{
+	    .srcOffset = 0,
+	    .dstOffset = 0,
+	    .size = size,
+	};
+
 	vkCmdCopyBuffer(commandBuffer, *srcBuffer, *dstBuffer, 1, &copyRegion);
 
 	endSingleTimeCommands(&commandBuffer);
@@ -607,18 +598,19 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
                                        const uint32_t height, const uint32_t layerCount) const {
 	auto* const commandBuffer = beginSingleTimeCommands();
 
-	VkBufferImageCopy region{};
-	region.bufferOffset = 0;
-	region.bufferRowLength = 0;
-	region.bufferImageHeight = 0;
-
-	region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	region.imageSubresource.mipLevel = 0;
-	region.imageSubresource.baseArrayLayer = 0;
-	region.imageSubresource.layerCount = layerCount;
-
-	region.imageOffset = {0, 0, 0};
-	region.imageExtent = {width, height, 1};
+	const VkBufferImageCopy region{
+	    .bufferOffset = 0,
+	    .bufferRowLength = 0,
+	    .bufferImageHeight = 0,
+	    .imageSubresource = {
+	    	.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+		    .mipLevel = 0,
+		    .baseArrayLayer = 0,
+		    .layerCount = layerCount
+	    	},
+	    .imageOffset = {0, 0, 0},
+	    .imageExtent = {width, height, 1},
+	};
 
 
 	vkCmdCopyBufferToImage(commandBuffer, *buffer, *image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
@@ -629,8 +621,9 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
 void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
                                          VmaAllocation& imageMemory) const {
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
-	    .usage = VMA_MEMORY_USAGE_GPU_ONLY,
-	    .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+		.usage = VMA_MEMORY_USAGE_AUTO,
+		.priority = 1.0f
 	};
 
 	vmaCreateImage(pAllocator, &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);

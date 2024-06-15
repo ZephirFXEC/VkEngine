@@ -12,6 +12,12 @@ namespace vke {
 // Forward declaration
 struct PipelineConfigInfo;
 
+struct VkPipelineData {
+	VkQueryPool queryPool = VK_NULL_HANDLE;
+	std::vector<uint64_t> pipelineStats{};
+	std::vector<std::string> pipelineStatNames{};
+};
+
 class VkEnginePipeline {
    public:
 	explicit VkEnginePipeline() = delete;
@@ -28,6 +34,8 @@ class VkEnginePipeline {
 	static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
 
 	void bind(const VkCommandBuffer* commandBuffer) const;
+	void getQueryPool();
+	const VkPipelineData& getPipelineData() const { return mPipelineData; }
 
    private:
 	static char* readFile(const std::string& filename, size_t& bufferSize);
@@ -35,12 +43,15 @@ class VkEnginePipeline {
 	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
 	                            const PipelineConfigInfo& configInfo);
 
+	void setupQueryPool();
 	void createShaderModule(const char* code, size_t codeSize, VkShaderModule* shaderModule) const;
 
 	const VkEngineDevice& mDevice;
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
 	Shader mShaders{};
+
+	VkPipelineData mPipelineData{};
 };
 
 struct PipelineConfigInfo {
@@ -63,4 +74,6 @@ struct PipelineConfigInfo {
 	VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 	u32 subpass = 0;
 };
+
+
 }  // namespace vke
