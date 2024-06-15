@@ -91,56 +91,78 @@ VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
 	createLogicalDevice();
 	createAllocator();
 	createCommandPools();
-
-	constexpr std::array<VkDescriptorPoolSize, 1> pool_sizes = {
-	    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-	};
-
-	const VkDescriptorPoolCreateInfo pool_info{.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-	                                               .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-	                                               .maxSets = 1,
-	                                               .poolSizeCount = 1,
-	                                               .pPoolSizes = pool_sizes.data()};
-
-	VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
+	createDescriptorPools();
 }
 
 VkEngineDevice::~VkEngineDevice() {
 	VKINFO("Destroyed device");
 
-	vkDestroyCommandPool(pDevice, pcommandPool, nullptr);
+	pCommandBufferPool.cleanUp();
 
-	// 2. Destroy the allocator
-	vmaDestroyAllocator(pAllocator);
+	// Destroy the command pool
+	if (pcommandPool != VK_NULL_HANDLE) {
+		vkDestroyCommandPool(pDevice, pcommandPool, nullptr);
+		pcommandPool = VK_NULL_HANDLE;
+	}
 
-	// 3. Destroy the Vulkan device
-	vkDestroyDevice(pDevice, nullptr);
+	// Destroy the allocator
+	if (pAllocator != VK_NULL_HANDLE) {
+		vmaDestroyAllocator(pAllocator);
+		pAllocator = VK_NULL_HANDLE;
+	}
 
-	// 4. Optionally destroy the debug messenger if validation layers are enabled
+	// Destroy the Vulkan device
+	if (pDevice != VK_NULL_HANDLE) {
+		vkDestroyDevice(pDevice, nullptr);
+		pDevice = VK_NULL_HANDLE;
+	}
+
+	// Optionally destroy the debug messenger if validation layers are enabled
 	if (enableValidationLayers) {
 		DestroyDebugUtilsMessengerEXT(&pInstance, &pDebugMessenger, nullptr);
 	}
 
-	// 5. Destroy the surface
-	vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
+	// Destroy the surface
+	if (pSurface != VK_NULL_HANDLE) {
+		vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
+		pSurface = VK_NULL_HANDLE;
+	}
 
-	// 6. Destroy the Vulkan instance
-	vkDestroyInstance(pInstance, nullptr);
+	// Destroy the Vulkan instance
+	if (pInstance != VK_NULL_HANDLE) {
+		vkDestroyInstance(pInstance, nullptr);
+		pInstance = VK_NULL_HANDLE;
+	}
 }
 
 void VkEngineDevice::createCommandPools() {
 	const QueueFamilyIndices queueFamilyIndices = findQueueFamilies(&pPhysicalDevice);
 
-	VkCommandPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.queueFamilyIndex = queueFamilyIndices.mGraphicsFamily.value();
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	const VkCommandPoolCreateInfo poolInfo {
+		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+		.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+		.queueFamilyIndex = queueFamilyIndices.mGraphicsFamily.value(),
+	};
 
 	if (vkCreateCommandPool(pDevice, &poolInfo, nullptr, &pcommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command pool!");
 	}
 
-	pCommandBufferPool = VkCommandBufferPool(pDevice, pcommandPool);
+	pCommandBufferPool = VkCommandBufferPool(&pDevice, &pcommandPool);
+}
+
+void VkEngineDevice::createDescriptorPools() {
+	constexpr std::array<VkDescriptorPoolSize, 1> pool_sizes = {
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	};
+
+	const VkDescriptorPoolCreateInfo pool_info{.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+											   .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+											   .maxSets = 1,
+											   .poolSizeCount = 1,
+											   .pPoolSizes = pool_sizes.data()};
+
+	VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
 }
 
 void VkEngineDevice::createInstance() {
@@ -250,11 +272,7 @@ void VkEngineDevice::createLogicalDevice() {
 	VkPhysicalDeviceFeatures2 deviceFeatures2 = {
 	    .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 	    .pNext = &features13,  // link the 1.3 features to the 2.0 features
-	    .features =
-	        {
-	            .samplerAnisotropy = VK_TRUE,
-	    		.pipelineStatisticsQuery = VK_TRUE
-	        },
+	    .features = {.samplerAnisotropy = VK_TRUE, .pipelineStatisticsQuery = VK_TRUE},
 	};
 
 	VkDeviceCreateInfo createInfo = {
@@ -602,12 +620,10 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
 	    .bufferOffset = 0,
 	    .bufferRowLength = 0,
 	    .bufferImageHeight = 0,
-	    .imageSubresource = {
-	    	.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-		    .mipLevel = 0,
-		    .baseArrayLayer = 0,
-		    .layerCount = layerCount
-	    	},
+	    .imageSubresource = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+	                         .mipLevel = 0,
+	                         .baseArrayLayer = 0,
+	                         .layerCount = layerCount},
 	    .imageOffset = {0, 0, 0},
 	    .imageExtent = {width, height, 1},
 	};
@@ -621,10 +637,7 @@ void VkEngineDevice::copyBufferToImage(const VkBuffer* const buffer, const VkIma
 void VkEngineDevice::createImageWithInfo(const VkImageCreateInfo& imageInfo, VkImage& image,
                                          VmaAllocation& imageMemory) const {
 	constexpr VmaAllocationCreateInfo rimg_allocinfo{
-		.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO,
-		.priority = 1.0f
-	};
+	    .flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, .usage = VMA_MEMORY_USAGE_AUTO, .priority = 1.0f};
 
 	vmaCreateImage(pAllocator, &imageInfo, &rimg_allocinfo, &image, &imageMemory, nullptr);
 }

@@ -82,7 +82,6 @@ VkResult VkEngineSwapChain::acquireNextImage(u32* imageIndex) const {
 	VK_CHECK(vkWaitForFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences.at(mCurrentFrame), VK_TRUE,
 	                         UINT64_MAX));
 
-	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences.at(mCurrentFrame)));
 
 	return vkAcquireNextImageKHR(mDevice.getDevice(), pSwapChain, UINT64_MAX,
 	                             mSyncPrimitives.ppImageAvailableSemaphores.at(mCurrentFrame),
@@ -111,6 +110,8 @@ VkResult VkEngineSwapChain::submitCommandBuffers(const VkCommandBuffer* buffers,
 
 	    .signalSemaphoreCount = 1,
 	    .pSignalSemaphores = &mSyncPrimitives.ppRenderFinishedSemaphores.at(mCurrentFrame)};
+
+	VK_CHECK(vkResetFences(mDevice.getDevice(), 1, &mSyncPrimitives.ppInFlightFences.at(mCurrentFrame)));
 
 	VK_CHECK(
 	    vkQueueSubmit(mDevice.getGraphicsQueue(), 1, &submitInfo, mSyncPrimitives.ppInFlightFences.at(mCurrentFrame)));

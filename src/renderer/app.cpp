@@ -7,35 +7,58 @@
 #include "utils/logger.hpp"
 
 namespace vke {
-App::App() { loadGameObjects(); }
 
-void App::run() {
-	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChainRenderPass());
-	VkEngineCamera camera{};
-	camera.setViewTarget({-1.0f, -2.0f, -2.0f}, {0.0f, 0.0f, 2.5f});
+struct GlobalUBO {
+	glm::mat4 view;
+	glm::vec3 light = glm::normalize(glm::vec3(1.0f, -3.0f, -1.0f));
+};
 
-	VkEngineGameObjects viewerObject = VkEngineGameObjects::createGameObject();
-	constexpr KeyboardController cameraController{};
+App::App() {
+	initImGUI();
+	loadGameObjects();
+}
 
+void App::initImGUI() const {
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForVulkan(mVkWindow.getWindow(), true);
 
 	// Init ImGUI
 	ImGui_ImplVulkan_InitInfo init_info = {
-	    .Instance = mVkDevice.getInstance(),
-	    .PhysicalDevice = mVkDevice.getPhysicalDevice(),
-	    .Device = mVkDevice.getDevice(),
-	    .QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
-	    .Queue = mVkDevice.getGraphicsQueue(),
-	    .DescriptorPool = mVkDevice.getDescriptorPool(),
-	    .RenderPass = mVkRenderer.getSwapChainRenderPass(),
-	    .MinImageCount = 2,
-	    .ImageCount = 2,
-	    .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+		.Instance = mVkDevice.getInstance(),
+		.PhysicalDevice = mVkDevice.getPhysicalDevice(),
+		.Device = mVkDevice.getDevice(),
+		.QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+		.Queue = mVkDevice.getGraphicsQueue(),
+		.DescriptorPool = mVkDevice.getDescriptorPool(),
+		.RenderPass = mVkRenderer.getSwapChainRenderPass(),
+		.MinImageCount = 2,
+		.ImageCount = 2,
+		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
 	};
 
 	ImGui_ImplVulkan_Init(&init_info);
+}
 
+
+void App::run() {
+
+	VkEngineBuffer globalUBO {
+		mVkDevice,
+		sizeof(GlobalUBO),
+		1,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VMA_ALLOCATION_CREATE_MAPPED_BIT,
+		VMA_MEMORY_USAGE_CPU_TO_GPU,
+		mVkDevice.getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment
+	};
+
+	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChainRenderPass());
+
+	VkEngineCamera camera{};
+	camera.setViewTarget({-1.0f, -2.0f, -2.0f}, {0.0f, 0.0f, 2.5f});
+
+	VkEngineGameObjects viewerObject = VkEngineGameObjects::createGameObject();
+	constexpr KeyboardController cameraController{};
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
 	while (!mVkWindow.shouldClose()) {
@@ -58,7 +81,7 @@ void App::run() {
 
 
 		for (size_t i = 0; i < renderSystem.getPipeline()->getPipelineData().pipelineStats.size(); ++i) {
-			ImGui::Text("%s: %d", renderSystem.getPipeline()->getPipelineData().pipelineStatNames[i].c_str(),
+			ImGui::Text("%s: %llu", renderSystem.getPipeline()->getPipelineData().pipelineStatNames[i].c_str(),
 			            renderSystem.getPipeline()->getPipelineData().pipelineStats[i]);
 		}
 
@@ -66,14 +89,21 @@ void App::run() {
 
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
+			const u32 frameIndex = mVkRenderer.getFrameIndex();
+
+			GlobalUBO ubo{
+				.view = camera.getProjectionMatrix()*camera.getViewMatrix(),
+			};
+
+			//globalUBO.writeToIndex(&ubo, frameIndex);
+			//VK_CHECK(globalUBO.flushIndex(frameIndex));
+
+			// Render
+			vkCmdResetQueryPool(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0, 1);
 			mVkRenderer.beginSwapChainRenderPass(&commandBuffer);
-
 			vkCmdBeginQuery(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0, 0);
-
 			renderSystem.renderGameObjects(&commandBuffer, mVkGameObjects, camera);
-
 			vkCmdEndQuery(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0);
-
 			mVkRenderer.endSwapChainRenderPass(&commandBuffer);
 			mVkRenderer.endFrame();
 		}

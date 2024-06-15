@@ -14,7 +14,6 @@ VkEnginePipeline::VkEnginePipeline(const VkEngineDevice& device, const std::stri
                                    const std::string& fragShader, const PipelineConfigInfo& configInfo)
     : mDevice(device) {
 	createGraphicsPipeline(vertShader, fragShader, configInfo);
-	setupQueryPool();
 }
 
 VkEnginePipeline::~VkEnginePipeline() {
@@ -213,34 +212,32 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 	    .basePipelineIndex = -1,
 	};
 
-	VK_CHECK(
-	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
-
-	Memory::freeMemory(vertShaderCode, vertShaderSize, MEMORY_TAG_TEXTURE);
-	Memory::freeMemory(fragShaderCode, fragShaderSize, MEMORY_TAG_TEXTURE);
-}
-
-void VkEnginePipeline::setupQueryPool() {
 	mPipelineData.pipelineStatNames = {"Input assembly vertex count",      "Input assembly primitives count",
 	                                   "Vertex shader invocations",        "Clipping stage primitives processed",
 	                                   "Clipping stage primitives output", "Fragment shader invocation"};
 
 	mPipelineData.pipelineStats.resize(mPipelineData.pipelineStatNames.size());
 
-	VkQueryPoolCreateInfo queryPoolInfo = {};
-	queryPoolInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
-	// This query pool will store pipeline statistics
-	queryPoolInfo.queryType = VK_QUERY_TYPE_PIPELINE_STATISTICS;
-	// Pipeline counters to be returned for this pool
-	queryPoolInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT |
-	                                   VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT |
-	                                   VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT |
-	                                   VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT |
-	                                   VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT |
-	                                   VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT;
+	constexpr VkQueryPoolCreateInfo queryPoolInfo{
+	    .sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO,
+	    .queryType = VK_QUERY_TYPE_PIPELINE_STATISTICS,
+	    .queryCount = 1,
+	    .pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_VERTICES_BIT |
+	                          VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT |
+	                          VK_QUERY_PIPELINE_STATISTIC_VERTEX_SHADER_INVOCATIONS_BIT |
+	                          VK_QUERY_PIPELINE_STATISTIC_CLIPPING_INVOCATIONS_BIT |
+	                          VK_QUERY_PIPELINE_STATISTIC_CLIPPING_PRIMITIVES_BIT |
+	                          VK_QUERY_PIPELINE_STATISTIC_FRAGMENT_SHADER_INVOCATIONS_BIT
 
-	queryPoolInfo.queryCount = 1;
+	};
+
 	VK_CHECK(vkCreateQueryPool(mDevice.getDevice(), &queryPoolInfo, nullptr, &mPipelineData.queryPool));
+
+	VK_CHECK(
+	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
+
+	Memory::freeMemory(vertShaderCode, vertShaderSize, MEMORY_TAG_TEXTURE);
+	Memory::freeMemory(fragShaderCode, fragShaderSize, MEMORY_TAG_TEXTURE);
 }
 
 void VkEnginePipeline::getQueryPool() {

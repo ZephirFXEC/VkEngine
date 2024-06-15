@@ -42,7 +42,7 @@ class VkEngineBuffer {
    private:
 	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
-	VkEngineDevice& mDevice;
+	const VkEngineDevice& mDevice;
 	void* pMapped = nullptr;
 	VkBuffer pBuffer = VK_NULL_HANDLE;
 	VmaAllocation pDataBufferMemory = VK_NULL_HANDLE;

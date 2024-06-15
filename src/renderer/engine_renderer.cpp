@@ -14,7 +14,10 @@ VkEngineRenderer::VkEngineRenderer(VkEngineDevice& device, VkEngineWindow& windo
 	createCommandBuffers();
 }
 
-VkEngineRenderer::~VkEngineRenderer() { freeCommandBuffers(); }
+VkEngineRenderer::~VkEngineRenderer() {
+	VKINFO("Destroying Renderer");
+	freeCommandBuffers();
+}
 
 void VkEngineRenderer::createCommandBuffers() {
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,

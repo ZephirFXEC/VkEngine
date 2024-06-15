@@ -15,12 +15,19 @@ VkEngineWindow::VkEngineWindow(const int width, const int height, std::string na
 VkEngineWindow::~VkEngineWindow() {
 	VKINFO("Destroyed window");
 
+	// Shut down ImGui Vulkan and GLFW implementations
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 
-	glfwDestroyWindow(pWindow);  // destroy window
-	glfwTerminate();             // terminate GLFW
+	// Destroy the GLFW window
+	if (pWindow) {
+		glfwDestroyWindow(pWindow);
+		pWindow = nullptr;
+	}
+
+	// Terminate GLFW
+	glfwTerminate();
 }
 
 void VkEngineWindow::createWindowSurface(const VkInstance* const instance, VkSurfaceKHR* surface) const {

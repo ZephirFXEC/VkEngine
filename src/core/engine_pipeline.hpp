@@ -43,7 +43,6 @@ class VkEnginePipeline {
 	void createGraphicsPipeline(const std::string& vertShader, const std::string& fragShader,
 	                            const PipelineConfigInfo& configInfo);
 
-	void setupQueryPool();
 	void createShaderModule(const char* code, size_t codeSize, VkShaderModule* shaderModule) const;
 
 	const VkEngineDevice& mDevice;

@@ -84,6 +84,7 @@ void VkEngineModel::createVkBuffer(const std::span<const T>& data, const VkBuffe
 
 	stagingBuffer.map();
 	stagingBuffer.writeToBuffer(data.data());
+	stagingBuffer.unmap();
 
 	buffer = std::make_unique<VkEngineBuffer>(
 		mDevice,
@@ -95,8 +96,6 @@ void VkEngineModel::createVkBuffer(const std::span<const T>& data, const VkBuffe
 
 	//vmaCopyMemoryToAllocation(mDevice.getAllocator(), stagingBuffer.getMappedMemory(), buffer->getBufferMemory(), 0, bufferSize);
 	mDevice.copyBuffer(&stagingBuffer.getBuffer(), &buffer->getBuffer(), bufferSize);
-
-	VK_CHECK(stagingBuffer.unmap());
 }
 
 
@@ -137,6 +136,11 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 	std::vector<Vertex> vertices{};
 	std::vector<u32> indices{};
 
+
+	// Reserve memory to reduce reallocations
+	vertices.reserve(attrib.vertices.size() / 3);
+	indices.reserve(attrib.vertices.size() / 3);
+
 	for (const auto& shape : reader.GetShapes()) {
 		for (const auto& index : shape.mesh.indices) {
 			Vertex vertex{};
@@ -164,12 +168,12 @@ void VkEngineModel::MeshData::loadModel(const std::string& filepath) {
 			}
 
 
-			if (!uniqueVertices.contains(vertex)) {
-				uniqueVertices[vertex] = static_cast<u32>(vertices.size());
-				vertices.push_back(vertex);
+			auto [it, inserted] = uniqueVertices.emplace(vertex, static_cast<u32>(vertices.size()));
+			if (inserted) {
+				vertices.emplace_back(vertex);
 			}
 
-			indices.push_back(uniqueVertices[vertex]);
+			indices.emplace_back(it->second);
 		}
 	}
 	// Allocate memory for vertices and indices

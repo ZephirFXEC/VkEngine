@@ -16,8 +16,7 @@ namespace vke {
 class VkCommandBufferPool {
    public:
 	VkCommandBufferPool() = default;
-	VkCommandBufferPool(const VkDevice device, const VkCommandPool commandPool)
-	    : pDevice(device), pCommandPool(commandPool) {}
+	VkCommandBufferPool(VkDevice* device, VkCommandPool* commandPool) : pDevice(device), pCommandPool(commandPool) {}
 
 	VkCommandBuffer getCommandBuffer() const {
 		if (!pCommandBuffers.empty()) {
@@ -27,26 +26,28 @@ class VkCommandBufferPool {
 		}
 
 		const VkCommandBufferAllocateInfo allocInfo = {.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-		                                               .commandPool = pCommandPool,
+		                                               .commandPool = *pCommandPool,
 		                                               .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		                                               .commandBufferCount = 1};
 
 		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-		vkAllocateCommandBuffers(pDevice, &allocInfo, &commandBuffer);
+		vkAllocateCommandBuffers(*pDevice, &allocInfo, &commandBuffer);
 		return commandBuffer;
 	}
 
 	void returnCommandBuffer(const VkCommandBuffer commandBuffer) const { pCommandBuffers.push_back(commandBuffer); }
-
-	~VkCommandBufferPool() {
-		for (VkCommandBuffer cmd : pCommandBuffers) {
-			vkFreeCommandBuffers(pDevice, pCommandPool, 1, &cmd);
+	void cleanUp() const {
+		if (pDevice && pCommandPool) {
+			for (VkCommandBuffer cmd : pCommandBuffers) {
+				vkFreeCommandBuffers(*pDevice, *pCommandPool, 1, &cmd);
+			}
+			pCommandBuffers.clear();
 		}
 	}
 
    private:
-	VkDevice pDevice = VK_NULL_HANDLE;
-	VkCommandPool pCommandPool = VK_NULL_HANDLE;
+	VkDevice* pDevice = nullptr;
+	VkCommandPool* pCommandPool = nullptr;
 	mutable std::vector<VkCommandBuffer> pCommandBuffers{};
 };
 
@@ -117,6 +118,8 @@ class VkEngineDevice {
 
 	void createCommandPools();
 
+	void createDescriptorPools();
+
 	void createAllocator();
 
 	// helper functions
@@ -140,7 +143,7 @@ class VkEngineDevice {
 	VkDevice pDevice = VK_NULL_HANDLE;
 
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
-	VkCommandBufferPool pCommandBufferPool;
+	VkCommandBufferPool pCommandBufferPool{};
 	VkCommandPool pcommandPool = VK_NULL_HANDLE;
 	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
 	VkInstance pInstance = VK_NULL_HANDLE;

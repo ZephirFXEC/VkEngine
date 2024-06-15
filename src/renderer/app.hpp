@@ -18,6 +18,7 @@ class App {
 	static constexpr int WIDTH = 1280;
 
 	void run();
+	void initImGUI() const;
 
    private:
 	void loadGameObjects();
