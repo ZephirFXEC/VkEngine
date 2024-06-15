@@ -21,13 +21,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: lukka/get-cmake@latest
 
-    - name: run-vcpkg
-      # You may pin to the exact commit or the version.
-      # uses: lukka/run-vcpkg@6fe69898af670ac05f4a8427cc5cff4fb361cee5
-      uses: lukka/run-vcpkg@v11.2
+    - name: Setup vcpkg
+      uses: lukka/run-vcpkg@v11
+      id: runvcpkg
       with:
-        runVcpkgInstall: true
+        # This specifies the location of vcpkg, where it is going to be restored from cache, or create from scratch.
+        vcpkgDirectory: '${{ runner.workspace }}/b/vcpkg'
+        # The Git commit id of vcpkg to be checked out. This is only needed because we are not using a submodule.
+        vcpkgGitCommitId: '${{ matrix.vcpkgCommitId}}'
+        # The vcpkg.json file, which will be part of cache key computation.
+        vcpkgJsonGlob: '**/vcpkg.json'
         
 
     - name: Configure CMake
