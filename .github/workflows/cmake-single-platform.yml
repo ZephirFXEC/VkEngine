@@ -27,6 +27,14 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
+    - name: run-vcpkg
+      # You may pin to the exact commit or the version.
+      # uses: lukka/run-vcpkg@6fe69898af670ac05f4a8427cc5cff4fb361cee5
+      uses: lukka/run-vcpkg@v11.2
+      with:
+        runVcpkgInstall: true
+
+
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
