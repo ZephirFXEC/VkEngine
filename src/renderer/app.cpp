@@ -13,27 +13,30 @@ struct GlobalUBO {
 	glm::vec3 light = glm::normalize(glm::vec3(1.0f, -3.0f, -1.0f));
 };
 
-App::App() {
+App::App()
+    : mVkWindow(std::make_shared<VkEngineWindow>(WIDTH, HEIGHT, "VkEngine")),
+      mVkDevice(mVkWindow),
+      mVkRenderer(mVkDevice, *mVkWindow) {
 	initImGUI();
 	loadGameObjects();
 }
 
 void App::initImGUI() const {
 	// Setup Platform/Renderer backends
-	ImGui_ImplGlfw_InitForVulkan(mVkWindow.getWindow(), true);
+	ImGui_ImplGlfw_InitForVulkan(mVkWindow->getWindow(), true);
 
 	// Init ImGUI
 	ImGui_ImplVulkan_InitInfo init_info = {
-		.Instance = mVkDevice.getInstance(),
-		.PhysicalDevice = mVkDevice.getPhysicalDevice(),
-		.Device = mVkDevice.getDevice(),
-		.QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
-		.Queue = mVkDevice.getGraphicsQueue(),
-		.DescriptorPool = mVkDevice.getDescriptorPool(),
-		.RenderPass = mVkRenderer.getSwapChainRenderPass(),
-		.MinImageCount = 2,
-		.ImageCount = 2,
-		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+	    .Instance = mVkDevice.getInstance(),
+	    .PhysicalDevice = mVkDevice.getPhysicalDevice(),
+	    .Device = mVkDevice.getDevice(),
+	    .QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
+	    .Queue = mVkDevice.getGraphicsQueue(),
+	    .DescriptorPool = mVkDevice.getDescriptorPool(),
+	    .RenderPass = mVkRenderer.getSwapChainRenderPass(),
+	    .MinImageCount = 2,
+	    .ImageCount = 2,
+	    .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
 	};
 
 	ImGui_ImplVulkan_Init(&init_info);
@@ -41,16 +44,13 @@ void App::initImGUI() const {
 
 
 void App::run() {
-
-	VkEngineBuffer globalUBO {
-		mVkDevice,
-		sizeof(GlobalUBO),
-		1,
-		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-		VMA_ALLOCATION_CREATE_MAPPED_BIT,
-		VMA_MEMORY_USAGE_CPU_TO_GPU,
-		mVkDevice.getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment
-	};
+	VkEngineBuffer globalUBO{mVkDevice,
+	                         sizeof(GlobalUBO),
+	                         1,
+	                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+	                         VMA_ALLOCATION_CREATE_MAPPED_BIT,
+	                         VMA_MEMORY_USAGE_CPU_TO_GPU,
+	                         mVkDevice.getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment};
 
 	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChainRenderPass());
 
@@ -61,14 +61,14 @@ void App::run() {
 	constexpr KeyboardController cameraController{};
 
 	auto currentTime = std::chrono::high_resolution_clock::now();
-	while (!mVkWindow.shouldClose()) {
+	while (!mVkWindow->shouldClose()) {
 		glfwPollEvents();  // poll for events
 
 		auto newTime = std::chrono::high_resolution_clock::now();
 		const float frameTime = std::chrono::duration<float>(newTime - currentTime).count();
 		currentTime = newTime;
 
-		cameraController.moveInPlaneXZ(mVkWindow.getWindow(), frameTime, viewerObject);
+		cameraController.moveInPlaneXZ(mVkWindow->getWindow(), frameTime, viewerObject);
 		camera.setViewXYZ(viewerObject.mTransform.translation, viewerObject.mTransform.rotation);
 
 
@@ -85,18 +85,18 @@ void App::run() {
 			            renderSystem.getPipeline()->getPipelineData().pipelineStats[i]);
 		}
 
-		ImGui::Text("%s: %f %s", "Frame Time", frameTime*1000, "ms");
+		ImGui::Text("%s: %f %s", "Frame Time", frameTime * 1000, "ms");
 
 
 		if (auto* commandBuffer = mVkRenderer.beginFrame()) {
 			const u32 frameIndex = mVkRenderer.getFrameIndex();
 
 			GlobalUBO ubo{
-				.view = camera.getProjectionMatrix()*camera.getViewMatrix(),
+			    .view = camera.getProjectionMatrix() * camera.getViewMatrix(),
 			};
 
-			//globalUBO.writeToIndex(&ubo, frameIndex);
-			//VK_CHECK(globalUBO.flushIndex(frameIndex));
+			// globalUBO.writeToIndex(&ubo, frameIndex);
+			// VK_CHECK(globalUBO.flushIndex(frameIndex));
 
 			// Render
 			vkCmdResetQueryPool(commandBuffer, renderSystem.getPipeline()->getPipelineData().queryPool, 0, 1);
@@ -125,7 +125,6 @@ void App::loadGameObjects() {
 	game_objects.mTransform.translation = {0.f, 0.f, 2.5f};
 	game_objects.mTransform.scale = glm::vec3(-1);
 	mVkGameObjects.push_back(std::move(game_objects));
-
 }
 
 }  // namespace vke

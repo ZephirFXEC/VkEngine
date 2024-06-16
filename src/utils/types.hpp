@@ -55,12 +55,6 @@ struct NO_COPY_NOR_MOVE {
 };
 
 
-struct FrameData : NO_COPY_NOR_MOVE {
-	VkCommandPool pCommandPool = VK_NULL_HANDLE;
-	VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
-};
-
-
 struct SyncPrimitives : NO_COPY_NOR_MOVE {
 	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppImageAvailableSemaphores{};  // Semaphores for image availability
 	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppRenderFinishedSemaphores{};  // Semaphores for render finishing

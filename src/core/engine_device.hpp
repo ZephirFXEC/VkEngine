@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <memory>
+#include <mutex>
 
 #include "engine_window.hpp"
 
@@ -16,9 +18,33 @@ namespace vke {
 class VkCommandBufferPool {
    public:
 	VkCommandBufferPool() = default;
-	VkCommandBufferPool(VkDevice* device, VkCommandPool* commandPool) : pDevice(device), pCommandPool(commandPool) {}
+	VkCommandBufferPool(std::shared_ptr<VkDevice> device, std::unique_ptr<VkCommandPool> commandPool)
+	    : pDevice(std::move(device)), pCommandPool(std::move(commandPool)) {}
+
+	// Move constructor
+	VkCommandBufferPool(VkCommandBufferPool&& other) noexcept
+	    : pDevice(std::move(other.pDevice)),
+	      pCommandPool(std::move(other.pCommandPool)),
+	      pCommandBuffers(std::move(other.pCommandBuffers)) {}
+
+	// Move assignment operator
+	VkCommandBufferPool& operator=(VkCommandBufferPool&& other) noexcept {
+		if (this != &other) {
+			cleanUp();
+			pDevice = std::move(other.pDevice);
+			pCommandPool = std::move(other.pCommandPool);
+			pCommandBuffers = std::move(other.pCommandBuffers);
+		}
+		return *this;
+	}
+
+	// Delete copy constructor and copy assignment operator
+	VkCommandBufferPool(const VkCommandBufferPool&) = delete;
+	VkCommandBufferPool& operator=(const VkCommandBufferPool&) = delete;
+
 
 	VkCommandBuffer getCommandBuffer() const {
+		std::lock_guard<std::mutex> lock(bufferMutex);
 		if (!pCommandBuffers.empty()) {
 			const VkCommandBuffer cmd = pCommandBuffers.back();
 			pCommandBuffers.pop_back();
@@ -31,13 +57,20 @@ class VkCommandBufferPool {
 		                                               .commandBufferCount = 1};
 
 		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-		vkAllocateCommandBuffers(*pDevice, &allocInfo, &commandBuffer);
+		if (vkAllocateCommandBuffers(*pDevice, &allocInfo, &commandBuffer) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to allocate command buffer");
+		}
 		return commandBuffer;
 	}
 
-	void returnCommandBuffer(const VkCommandBuffer commandBuffer) const { pCommandBuffers.push_back(commandBuffer); }
+	void returnCommandBuffer(const VkCommandBuffer commandBuffer) const {
+		std::lock_guard<std::mutex> lock(bufferMutex);
+		pCommandBuffers.push_back(commandBuffer);
+	}
+
 	void cleanUp() const {
 		if (pDevice && pCommandPool) {
+			std::lock_guard<std::mutex> lock(bufferMutex);
 			for (VkCommandBuffer cmd : pCommandBuffers) {
 				vkFreeCommandBuffers(*pDevice, *pCommandPool, 1, &cmd);
 			}
@@ -46,16 +79,17 @@ class VkCommandBufferPool {
 	}
 
    private:
-	VkDevice* pDevice = nullptr;
-	VkCommandPool* pCommandPool = nullptr;
+	std::shared_ptr<VkDevice> pDevice{};
+	std::unique_ptr<VkCommandPool> pCommandPool{};
 	mutable std::vector<VkCommandBuffer> pCommandBuffers{};
+	mutable std::mutex bufferMutex{};
 };
 
 
 class VkEngineDevice {
    public:
 	explicit VkEngineDevice() = delete;
-	explicit VkEngineDevice(VkEngineWindow& window);
+	explicit VkEngineDevice(std::shared_ptr<VkEngineWindow> window);
 
 	~VkEngineDevice();
 
@@ -78,7 +112,7 @@ class VkEngineDevice {
 	[[nodiscard]] const VmaAllocator& getAllocator() const { return pAllocator; }
 	[[nodiscard]] const VkPhysicalDevice& getPhysicalDevice() const { return pPhysicalDevice; }
 	[[nodiscard]] const VkDescriptorPool& getDescriptorPool() const { return pDescriptorPool; }
-	[[nodiscard]] const VkCommandPool& getCommandPool() const { return pcommandPool; }
+	[[nodiscard]] const VkCommandPool& getCommandPool() const { return pCommandPool; }
 
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
@@ -139,12 +173,12 @@ class VkEngineDevice {
 
 	SwapChainSupportDetails querySwapChainSupport(const VkPhysicalDevice* device) const;
 
-	const VkEngineWindow& mWindow;
+	const std::shared_ptr<VkEngineWindow> pWindow{};
 	VkDevice pDevice = VK_NULL_HANDLE;
 
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
 	VkCommandBufferPool pCommandBufferPool{};
-	VkCommandPool pcommandPool = VK_NULL_HANDLE;
+	VkCommandPool pCommandPool = VK_NULL_HANDLE;
 	VkDescriptorPool pDescriptorPool = VK_NULL_HANDLE;
 	VkInstance pInstance = VK_NULL_HANDLE;
 	VkDebugUtilsMessengerEXT pDebugMessenger = VK_NULL_HANDLE;

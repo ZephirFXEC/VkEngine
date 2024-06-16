@@ -83,7 +83,7 @@ void DestroyDebugUtilsMessengerEXT(const VkInstance* const instance,
 }
 
 // class member functions
-VkEngineDevice::VkEngineDevice(VkEngineWindow& window) : mWindow{window} {
+VkEngineDevice::VkEngineDevice(std::shared_ptr<VkEngineWindow> window) : pWindow{std::move(window)} {
 	createInstance();
 	setupDebugMessenger();
 	createSurface();
@@ -100,9 +100,9 @@ VkEngineDevice::~VkEngineDevice() {
 	pCommandBufferPool.cleanUp();
 
 	// Destroy the command pool
-	if (pcommandPool != VK_NULL_HANDLE) {
-		vkDestroyCommandPool(pDevice, pcommandPool, nullptr);
-		pcommandPool = VK_NULL_HANDLE;
+	if (pCommandPool != VK_NULL_HANDLE) {
+		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
+		pCommandPool = VK_NULL_HANDLE;
 	}
 
 	// Destroy the allocator
@@ -138,29 +138,29 @@ VkEngineDevice::~VkEngineDevice() {
 void VkEngineDevice::createCommandPools() {
 	const QueueFamilyIndices queueFamilyIndices = findQueueFamilies(&pPhysicalDevice);
 
-	const VkCommandPoolCreateInfo poolInfo {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		.queueFamilyIndex = queueFamilyIndices.mGraphicsFamily.value(),
+	const VkCommandPoolCreateInfo poolInfo{
+	    .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+	    .flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	    .queueFamilyIndex = queueFamilyIndices.mGraphicsFamily.value(),
 	};
 
-	if (vkCreateCommandPool(pDevice, &poolInfo, nullptr, &pcommandPool) != VK_SUCCESS) {
+	if (vkCreateCommandPool(pDevice, &poolInfo, nullptr, &pCommandPool) != VK_SUCCESS) {
 		throw std::runtime_error("failed to create command pool!");
 	}
 
-	pCommandBufferPool = VkCommandBufferPool(&pDevice, &pcommandPool);
+	pCommandBufferPool = {std::make_shared<VkDevice>(pDevice), std::make_unique<VkCommandPool>(pCommandPool)};
 }
 
 void VkEngineDevice::createDescriptorPools() {
 	constexpr std::array<VkDescriptorPoolSize, 1> pool_sizes = {
-		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	    {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
 	};
 
 	const VkDescriptorPoolCreateInfo pool_info{.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-											   .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-											   .maxSets = 1,
-											   .poolSizeCount = 1,
-											   .pPoolSizes = pool_sizes.data()};
+	                                           .flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+	                                           .maxSets = 1,
+	                                           .poolSizeCount = 1,
+	                                           .pPoolSizes = pool_sizes.data()};
 
 	VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
 }
@@ -320,7 +320,7 @@ void VkEngineDevice::createAllocator() {
 }
 
 
-void VkEngineDevice::createSurface() { mWindow.createWindowSurface(&pInstance, &pSurface); }
+void VkEngineDevice::createSurface() { pWindow->createWindowSurface(&pInstance, &pSurface); }
 
 bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) const {
 	const QueueFamilyIndices indices = findQueueFamilies(device);

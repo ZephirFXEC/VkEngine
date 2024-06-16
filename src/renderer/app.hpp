@@ -23,12 +23,9 @@ class App {
    private:
 	void loadGameObjects();
 
-	VkEngineWindow mVkWindow{WIDTH, HEIGHT, "VkEngine"};  // Vulkan window
-
-	VkEngineDevice mVkDevice{mVkWindow};
-
-	VkEngineRenderer mVkRenderer{mVkDevice, mVkWindow};
-
+	std::shared_ptr<VkEngineWindow> mVkWindow{};
+	VkEngineDevice mVkDevice;
+	VkEngineRenderer mVkRenderer;
 	std::vector<VkEngineGameObjects> mVkGameObjects{};
 };
 }  // namespace vke
