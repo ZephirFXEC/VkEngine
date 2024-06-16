@@ -2,7 +2,7 @@
 #include "utils/memory.hpp"
 
 
-int main() noexcept {
+int main() {
 	Memory::initializeMemory();
 
 	vke::App app{};  // create app

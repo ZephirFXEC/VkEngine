@@ -44,7 +44,7 @@ void App::initImGUI() const {
 
 
 void App::run() {
-	VkEngineBuffer globalUBO{*mVkDevice,
+	VkEngineBuffer globalUBO{mVkDevice,
 	                         sizeof(GlobalUBO),
 	                         1,
 	                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -118,7 +118,7 @@ void App::loadGameObjects() {
 
 
 	const std::shared_ptr pVkModel =
-	    VkEngineModel::createModelFromFile(*mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
+	    VkEngineModel::createModelFromFile(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
 
 	auto game_objects = VkEngineGameObjects::createGameObject();
 	game_objects.pModel = pVkModel;

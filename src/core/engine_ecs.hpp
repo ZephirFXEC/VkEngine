@@ -47,7 +47,7 @@ class VkEngineGameObjects {
 
 	ObjectID getId() const noexcept { return mId; }
 
-	std::shared_ptr<VkEngineModel> pModel = nullptr;
+	std::shared_ptr<VkEngineModel> pModel{};
 	glm::vec3 mColor = {1.f, 1.f, 1.f};
 	TransformComponent mTransform{};
 

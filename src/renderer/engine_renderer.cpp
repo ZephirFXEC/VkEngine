@@ -45,10 +45,10 @@ void VkEngineRenderer::recreateSwapChain() {
 	VK_CHECK(vkDeviceWaitIdle(mVkDevice->getDevice()));
 
 	if (mVkSwapChain == nullptr) {
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(*mVkDevice, extent);
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
 	} else {
 		const std::shared_ptr oldSwapChain = std::move(mVkSwapChain);
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(*mVkDevice, extent, oldSwapChain);
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, oldSwapChain);
 
 		if (!oldSwapChain->compareSwapFormats(*mVkSwapChain)) {
 			throw std::runtime_error("Swap chain image format has changed!");

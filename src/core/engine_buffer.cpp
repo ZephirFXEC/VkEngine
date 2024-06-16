@@ -14,10 +14,10 @@ VkDeviceSize VkEngineBuffer::getAlignment(const VkDeviceSize instanceSize, const
 	return instanceSize;
 }
 
-VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instanceSize, const uint32_t instanceCount,
+VkEngineBuffer::VkEngineBuffer(std::shared_ptr<VkEngineDevice> device, const VkDeviceSize instanceSize, const uint32_t instanceCount,
                                const VkBufferUsageFlags usageFlags, const VmaAllocationCreateFlags flag, const VmaMemoryUsage memoryUsage,
                                const VkDeviceSize minOffsetAlignment)
-    : mDevice(device),
+    : mDevice(std::move(device)),
       mInstanceCount(instanceCount),
       mInstanceSize(instanceSize),
       mAlignmentSize(getAlignment(instanceSize, minOffsetAlignment)),
@@ -37,7 +37,7 @@ VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instan
 		.usage = memoryUsage,
 	};
 
-	if (vmaCreateBuffer(mDevice.getAllocator(), &bufferInfo, &allocCreateInfo, &pBuffer, &pDataBufferMemory, nullptr) !=
+	if (vmaCreateBuffer(mDevice->getAllocator(), &bufferInfo, &allocCreateInfo, &pBuffer, &pDataBufferMemory, nullptr) !=
 	    VK_SUCCESS) {
 		throw std::runtime_error("Failed to allocate buffer with VMA");
 	}
@@ -45,18 +45,18 @@ VkEngineBuffer::VkEngineBuffer(VkEngineDevice &device, const VkDeviceSize instan
 
 VkEngineBuffer::~VkEngineBuffer() {
 	if (pBuffer != VK_NULL_HANDLE) {
-		vmaDestroyBuffer(mDevice.getAllocator(), pBuffer, pDataBufferMemory);
+		vmaDestroyBuffer(mDevice->getAllocator(), pBuffer, pDataBufferMemory);
 	}
 }
 
 VkResult VkEngineBuffer::map(const VkDeviceSize size, const VkDeviceSize offset) {
-	return vmaMapMemory(mDevice.getAllocator(), pDataBufferMemory, &pMapped);
+	return vmaMapMemory(mDevice->getAllocator(), pDataBufferMemory, &pMapped);
 }
 
 
 void VkEngineBuffer::unmap() {
 	if (pMapped) {
-		vmaUnmapMemory(mDevice.getAllocator(), pDataBufferMemory);
+		vmaUnmapMemory(mDevice->getAllocator(), pDataBufferMemory);
 		pMapped = nullptr;
 	}
 }
@@ -77,11 +77,11 @@ void VkEngineBuffer::writeToBuffer(const void *data, const VkDeviceSize size, co
 
 
 VkResult VkEngineBuffer::flush(const VkDeviceSize size, const VkDeviceSize offset) const {
-	return vmaFlushAllocation(mDevice.getAllocator(), pDataBufferMemory, offset, size);
+	return vmaFlushAllocation(mDevice->getAllocator(), pDataBufferMemory, offset, size);
 }
 
 VkResult VkEngineBuffer::invalidate(const VkDeviceSize size, const VkDeviceSize offset) const {
-	return vmaInvalidateAllocation(mDevice.getAllocator(), pDataBufferMemory, offset, size);
+	return vmaInvalidateAllocation(mDevice->getAllocator(), pDataBufferMemory, offset, size);
 }
 
 VkDescriptorBufferInfo VkEngineBuffer::descriptorInfo(const VkDeviceSize size, const VkDeviceSize offset) const {

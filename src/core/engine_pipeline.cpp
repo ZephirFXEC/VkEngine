@@ -10,20 +10,20 @@
 #include "utils/memory.hpp"
 
 namespace vke {
-VkEnginePipeline::VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader,
+VkEnginePipeline::VkEnginePipeline(std::shared_ptr<VkEngineDevice> device, const std::string& vertShader,
                                    const std::string& fragShader, const PipelineConfigInfo& configInfo)
-    : mDevice(device) {
+    : mDevice(std::move(device)) {
 	createGraphicsPipeline(vertShader, fragShader, configInfo);
 }
 
 VkEnginePipeline::~VkEnginePipeline() {
 	VKINFO("Destroyed pipeline");
 
-	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pVertShaderModule, nullptr);
-	vkDestroyShaderModule(mDevice.getDevice(), mShaders.pFragShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice->getDevice(), mShaders.pVertShaderModule, nullptr);
+	vkDestroyShaderModule(mDevice->getDevice(), mShaders.pFragShaderModule, nullptr);
 
-	vkDestroyPipeline(mDevice.getDevice(), pGraphicsPipeline, nullptr);
-	vkDestroyQueryPool(mDevice.getDevice(), mPipelineData.queryPool, nullptr);
+	vkDestroyPipeline(mDevice->getDevice(), pGraphicsPipeline, nullptr);
+	vkDestroyQueryPool(mDevice->getDevice(), mPipelineData.queryPool, nullptr);
 }
 
 void VkEnginePipeline::bind(const VkCommandBuffer* const commandBuffer) const {
@@ -231,10 +231,10 @@ void VkEnginePipeline::createGraphicsPipeline(const std::string& vertShader, con
 
 	};
 
-	VK_CHECK(vkCreateQueryPool(mDevice.getDevice(), &queryPoolInfo, nullptr, &mPipelineData.queryPool));
+	VK_CHECK(vkCreateQueryPool(mDevice->getDevice(), &queryPoolInfo, nullptr, &mPipelineData.queryPool));
 
 	VK_CHECK(
-	    vkCreateGraphicsPipelines(mDevice.getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
+	    vkCreateGraphicsPipelines(mDevice->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pGraphicsPipeline));
 
 	Memory::freeMemory(vertShaderCode, vertShaderSize, MEMORY_TAG_TEXTURE);
 	Memory::freeMemory(fragShaderCode, fragShaderSize, MEMORY_TAG_TEXTURE);
@@ -247,7 +247,7 @@ void VkEnginePipeline::getQueryPool() {
 	const uint32_t stride = static_cast<uint32_t>(mPipelineData.pipelineStatNames.size()) * sizeof(uint64_t);
 	// Note: for one query both values have the same size, but to make it easier to expand this sample these are
 	// properly calculated
-	vkGetQueryPoolResults(mDevice.getDevice(), mPipelineData.queryPool, 0, 1, dataSize,
+	vkGetQueryPoolResults(mDevice->getDevice(), mPipelineData.queryPool, 0, 1, dataSize,
 	                      mPipelineData.pipelineStats.data(), stride,
 	                      VK_QUERY_RESULT_64_BIT | VK_QUERY_RESULT_WAIT_BIT);
 }
@@ -258,6 +258,6 @@ void VkEnginePipeline::createShaderModule(const char* const code, const size_t c
 	                                             .codeSize = codeSize,
 	                                             .pCode = reinterpret_cast<const u32*>(code)};
 
-	VK_CHECK(vkCreateShaderModule(mDevice.getDevice(), &createInfo, nullptr, shaderModule));
+	VK_CHECK(vkCreateShaderModule(mDevice->getDevice(), &createInfo, nullptr, shaderModule));
 }
 }  // namespace vke

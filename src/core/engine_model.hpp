@@ -40,7 +40,7 @@ class VkEngineModel {
 		void loadModel(const std::string& filepath);
 	};
 
-	VkEngineModel(VkEngineDevice& device, const MeshData& meshData);
+	VkEngineModel(std::shared_ptr<VkEngineDevice> device, const MeshData& meshData);
 
 	~VkEngineModel();
 
@@ -48,7 +48,7 @@ class VkEngineModel {
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
 	VkEngineModel(VkEngineModel&&) = default;  // Enable move semantics
 
-	static std::unique_ptr<VkEngineModel> createModelFromFile(VkEngineDevice& device, const std::string& filepath);
+	static std::unique_ptr<VkEngineModel> createModelFromFile(std::shared_ptr<VkEngineDevice> device, const std::string& filepath);
 	void bind(const VkCommandBuffer* commandBuffer) const;
 	void draw(const VkCommandBuffer* commandBuffer) const;
 
@@ -64,14 +64,9 @@ class VkEngineModel {
 
 	std::unique_ptr<VkEngineBuffer> mVertexBuffer{};
 	std::unique_ptr<VkEngineBuffer> mIndexBuffer{};
+	std::shared_ptr<VkEngineDevice> mDevice{};
 
 	VkCommandBuffer mCommandBuffer = VK_NULL_HANDLE;
-
 	size_t mIndexCount = 0;
-
-	VkEngineDevice& mDevice;
-
-	// note don't access mDevice using the swap chain, since it's a shared pointer it will be nullptr when resizing
-	// the window
 };
 }  // namespace vke

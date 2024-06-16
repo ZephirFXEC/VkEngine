@@ -12,9 +12,9 @@ class VkEngineSwapChain {
    public:
 	explicit VkEngineSwapChain() = delete;
 
-	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent);
+	VkEngineSwapChain(std::shared_ptr<VkEngineDevice> device, VkExtent2D windowExtent);
 
-	VkEngineSwapChain(VkEngineDevice& deviceRef, VkExtent2D windowExtent,
+	VkEngineSwapChain(std::shared_ptr<VkEngineDevice> device, VkExtent2D windowExtent,
 	                  const std::shared_ptr<VkEngineSwapChain>& previous);
 
 	~VkEngineSwapChain();
@@ -31,7 +31,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] const VkSwapchainKHR& getSwapChain() const { return pSwapChain; }
 	[[nodiscard]] const VkRenderPass& getRenderPass() const { return pRenderPass; }
-	[[nodiscard]] const VkEngineDevice& getEngineDevice() const { return mDevice; }
+	[[nodiscard]] std::shared_ptr<VkEngineDevice> getEngineDevice() const { return mDevice; }
 	[[nodiscard]] const VkFormat& getSwapChainImageFormat() const { return mSwapChainImageFormat; }
 	[[nodiscard]] const VkExtent2D& getSwapChainExtent() const { return mSwapChainExtent; }
 	[[nodiscard]] u32 getWidth() const { return mSwapChainExtent.width; }
@@ -74,7 +74,7 @@ class VkEngineSwapChain {
 
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
-	VkEngineDevice& mDevice;
+	std::shared_ptr<VkEngineDevice> mDevice{};
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;

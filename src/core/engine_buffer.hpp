@@ -10,7 +10,7 @@ namespace vke {
 
 class VkEngineBuffer {
    public:
-	VkEngineBuffer(VkEngineDevice& device, VkDeviceSize instanceSize, uint32_t instanceCount,
+	VkEngineBuffer(std::shared_ptr<VkEngineDevice> device, VkDeviceSize instanceSize, uint32_t instanceCount,
 	               VkBufferUsageFlags usageFlags, VmaAllocationCreateFlags flag, VmaMemoryUsage memoryUsage, VkDeviceSize minOffsetAlignment = 1);
 	~VkEngineBuffer();
 
@@ -42,7 +42,7 @@ class VkEngineBuffer {
    private:
 	static VkDeviceSize getAlignment(VkDeviceSize instanceSize, VkDeviceSize minOffsetAlignment);
 
-	const VkEngineDevice& mDevice;
+	std::shared_ptr<VkEngineDevice> mDevice{};
 	void* pMapped = nullptr;
 	VkBuffer pBuffer = VK_NULL_HANDLE;
 	VmaAllocation pDataBufferMemory = VK_NULL_HANDLE;

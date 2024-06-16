@@ -22,7 +22,7 @@ class VkEnginePipeline {
    public:
 	explicit VkEnginePipeline() = delete;
 
-	VkEnginePipeline(const VkEngineDevice& device, const std::string& vertShader, const std::string& fragShader,
+	VkEnginePipeline(std::shared_ptr<VkEngineDevice> device, const std::string& vertShader, const std::string& fragShader,
 	                 const PipelineConfigInfo& configInfo);
 
 	~VkEnginePipeline();
@@ -45,7 +45,7 @@ class VkEnginePipeline {
 
 	void createShaderModule(const char* code, size_t codeSize, VkShaderModule* shaderModule) const;
 
-	const VkEngineDevice& mDevice;
+	std::shared_ptr<VkEngineDevice> mDevice{};
 	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
 	Shader mShaders{};

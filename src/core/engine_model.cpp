@@ -28,9 +28,9 @@ struct std::hash<vke::VkEngineModel::Vertex> {
 
 namespace vke {
 
-VkEngineModel::VkEngineModel(VkEngineDevice& device, const MeshData& meshData)
+VkEngineModel::VkEngineModel(std::shared_ptr<VkEngineDevice> device, const MeshData& meshData)
 
-    : mIndexCount{meshData.pIndices.size()}, mDevice{device} {
+    : mIndexCount{meshData.pIndices.size()}, mDevice{std::move(device)} {
 	createIndexBuffers(meshData.pIndices);
 	createVertexBuffers(meshData.pVertices);
 }
@@ -95,7 +95,7 @@ void VkEngineModel::createVkBuffer(const std::span<const T>& data, const VkBuffe
 		VMA_MEMORY_USAGE_AUTO);
 
 	//vmaCopyMemoryToAllocation(mDevice.getAllocator(), stagingBuffer.getMappedMemory(), buffer->getBufferMemory(), 0, bufferSize);
-	mDevice.copyBuffer(&stagingBuffer.getBuffer(), &buffer->getBuffer(), bufferSize);
+	mDevice->copyBuffer(&stagingBuffer.getBuffer(), &buffer->getBuffer(), bufferSize);
 }
 
 
@@ -108,11 +108,11 @@ void VkEngineModel::createIndexBuffers(const std::span<const u32>& indices) {
 	createVkBuffer(indices, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, mIndexBuffer);
 }
 
-std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(VkEngineDevice& device, const std::string& filepath) {
+std::unique_ptr<VkEngineModel> VkEngineModel::createModelFromFile(std::shared_ptr<VkEngineDevice> device, const std::string& filepath) {
 	MeshData meshData{};
 	meshData.loadModel(filepath);
 
-	return std::make_unique<VkEngineModel>(device, meshData);
+	return std::make_unique<VkEngineModel>(std::move(device), meshData);
 }
 
 

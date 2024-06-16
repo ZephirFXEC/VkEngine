@@ -52,7 +52,7 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
 	pVkPipeline =
-	    std::make_unique<VkEnginePipeline>(*mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
+	    std::make_unique<VkEnginePipeline>(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
 	                                       "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 
