@@ -12,7 +12,7 @@
 namespace vke {
 class VkEngineRenderSystem {
    public:
-	VkEngineRenderSystem(const VkEngineDevice& device, VkRenderPass renderPass);
+	VkEngineRenderSystem(std::shared_ptr<VkEngineDevice> device, VkRenderPass renderPass);
 
 	~VkEngineRenderSystem();
 
@@ -30,8 +30,8 @@ class VkEngineRenderSystem {
 	void createPipeline(VkRenderPass renderPass);
 
 
-	const VkEngineDevice& mVkDevice;
-	std::unique_ptr<VkEnginePipeline> pVkPipeline = nullptr;
+	std::shared_ptr<VkEngineDevice> mVkDevice{};
+	std::unique_ptr<VkEnginePipeline> pVkPipeline{};
 	VkPipelineLayout pVkPipelineLayout = VK_NULL_HANDLE;
 };
 }  // namespace vke

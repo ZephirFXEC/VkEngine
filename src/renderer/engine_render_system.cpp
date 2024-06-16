@@ -14,14 +14,14 @@ struct PushConstants {
 	alignas(16) glm::vec3 color{};
 };
 
-VkEngineRenderSystem::VkEngineRenderSystem(const VkEngineDevice& device, const VkRenderPass renderPass)
-    : mVkDevice(device) {
+VkEngineRenderSystem::VkEngineRenderSystem(std::shared_ptr<VkEngineDevice> device, const VkRenderPass renderPass)
+    : mVkDevice(std::move(device)) {
 	createPipelineLayout();
 	createPipeline(renderPass);
 }
 
 VkEngineRenderSystem::~VkEngineRenderSystem() {
-	vkDestroyPipelineLayout(mVkDevice.getDevice(), pVkPipelineLayout, nullptr);
+	vkDestroyPipelineLayout(mVkDevice->getDevice(), pVkPipelineLayout, nullptr);
 }
 
 
@@ -39,7 +39,7 @@ void VkEngineRenderSystem::createPipelineLayout() {
 	                                                        .pushConstantRangeCount = 1,
 	                                                        .pPushConstantRanges = &pushConstantRange};
 
-	VK_CHECK(vkCreatePipelineLayout(mVkDevice.getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout));
+	VK_CHECK(vkCreatePipelineLayout(mVkDevice->getDevice(), &pipelineLayoutInfo, nullptr, &pVkPipelineLayout));
 }
 
 void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
@@ -52,7 +52,7 @@ void VkEngineRenderSystem::createPipeline(const VkRenderPass renderPass) {
 	pipelineConfig.pipelineLayout = pVkPipelineLayout;
 
 	pVkPipeline =
-	    std::make_unique<VkEnginePipeline>(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
+	    std::make_unique<VkEnginePipeline>(*mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.vert.spv",
 	                                       "C:/Users/zphrfx/Desktop/vkEngine/shaders/simple.frag.spv", pipelineConfig);
 }
 

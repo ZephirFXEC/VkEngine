@@ -15,8 +15,8 @@ struct GlobalUBO {
 
 App::App()
     : mVkWindow(std::make_shared<VkEngineWindow>(WIDTH, HEIGHT, "VkEngine")),
-      mVkDevice(mVkWindow),
-      mVkRenderer(mVkDevice, *mVkWindow) {
+      mVkDevice(std::make_shared<VkEngineDevice>(mVkWindow)),
+      mVkRenderer(mVkDevice, mVkWindow) { // error
 	initImGUI();
 	loadGameObjects();
 }
@@ -27,12 +27,12 @@ void App::initImGUI() const {
 
 	// Init ImGUI
 	ImGui_ImplVulkan_InitInfo init_info = {
-	    .Instance = mVkDevice.getInstance(),
-	    .PhysicalDevice = mVkDevice.getPhysicalDevice(),
-	    .Device = mVkDevice.getDevice(),
-	    .QueueFamily = mVkDevice.findPhysicalQueueFamilies().mGraphicsFamily.value(),
-	    .Queue = mVkDevice.getGraphicsQueue(),
-	    .DescriptorPool = mVkDevice.getDescriptorPool(),
+	    .Instance = mVkDevice->getInstance(),
+	    .PhysicalDevice = mVkDevice->getPhysicalDevice(),
+	    .Device = mVkDevice->getDevice(),
+	    .QueueFamily = mVkDevice->findPhysicalQueueFamilies().mGraphicsFamily.value(),
+	    .Queue = mVkDevice->getGraphicsQueue(),
+	    .DescriptorPool = mVkDevice->getDescriptorPool(),
 	    .RenderPass = mVkRenderer.getSwapChainRenderPass(),
 	    .MinImageCount = 2,
 	    .ImageCount = 2,
@@ -44,13 +44,13 @@ void App::initImGUI() const {
 
 
 void App::run() {
-	VkEngineBuffer globalUBO{mVkDevice,
+	VkEngineBuffer globalUBO{*mVkDevice,
 	                         sizeof(GlobalUBO),
 	                         1,
 	                         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 	                         VMA_ALLOCATION_CREATE_MAPPED_BIT,
 	                         VMA_MEMORY_USAGE_CPU_TO_GPU,
-	                         mVkDevice.getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment};
+	                         mVkDevice->getPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment};
 
 	const VkEngineRenderSystem renderSystem(mVkDevice, mVkRenderer.getSwapChainRenderPass());
 
@@ -110,7 +110,7 @@ void App::run() {
 		renderSystem.getPipeline()->getQueryPool();
 	}
 
-	vkDeviceWaitIdle(mVkDevice.getDevice());
+	vkDeviceWaitIdle(mVkDevice->getDevice());
 }
 
 void App::loadGameObjects() {
@@ -118,7 +118,7 @@ void App::loadGameObjects() {
 
 
 	const std::shared_ptr pVkModel =
-	    VkEngineModel::createModelFromFile(mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
+	    VkEngineModel::createModelFromFile(*mVkDevice, "C:/Users/zphrfx/Desktop/vkEngine/obj/pig.obj");
 
 	auto game_objects = VkEngineGameObjects::createGameObject();
 	game_objects.pModel = pVkModel;

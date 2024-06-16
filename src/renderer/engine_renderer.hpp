@@ -11,7 +11,7 @@
 namespace vke {
 class VkEngineRenderer {
    public:
-	VkEngineRenderer(VkEngineDevice& device, VkEngineWindow& window);
+	VkEngineRenderer(std::shared_ptr<VkEngineDevice> device, std::shared_ptr<VkEngineWindow> window);
 	~VkEngineRenderer();
 
 	void run();
@@ -33,10 +33,10 @@ class VkEngineRenderer {
 	void createCommandBuffers();
 	void freeCommandBuffers() const;
 
-	VkEngineDevice& mVkDevice;
-	VkEngineWindow& mVkWindow;
-
+	std::shared_ptr<VkEngineDevice> mVkDevice{};
+	std::shared_ptr<VkEngineWindow> mVkWindow{};
 	std::unique_ptr<VkEngineSwapChain> mVkSwapChain;
+
 	std::array<VkCommandBuffer, MAX_FRAMES_IN_FLIGHT> mVkCommandBuffers{VK_NULL_HANDLE};
 
 	u32 mCurrentImage = 0;

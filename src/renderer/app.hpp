@@ -24,7 +24,7 @@ class App {
 	void loadGameObjects();
 
 	std::shared_ptr<VkEngineWindow> mVkWindow{};
-	VkEngineDevice mVkDevice;
+	std::shared_ptr<VkEngineDevice> mVkDevice{};
 	VkEngineRenderer mVkRenderer;
 	std::vector<VkEngineGameObjects> mVkGameObjects{};
 };

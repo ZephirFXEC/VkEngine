@@ -8,8 +8,8 @@
 #include "utils/types.hpp"
 
 namespace vke {
-VkEngineRenderer::VkEngineRenderer(VkEngineDevice& device, VkEngineWindow& window)
-    : mVkDevice(device), mVkWindow(window) {
+VkEngineRenderer::VkEngineRenderer(std::shared_ptr<VkEngineDevice> device, std::shared_ptr<VkEngineWindow> window)
+    : mVkDevice(std::move(device)), mVkWindow(std::move(window)) {
 	recreateSwapChain();
 	createCommandBuffers();
 }
@@ -21,34 +21,34 @@ VkEngineRenderer::~VkEngineRenderer() {
 
 void VkEngineRenderer::createCommandBuffers() {
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-	                                            .commandPool = mVkDevice.getCommandPool(),
+	                                            .commandPool = mVkDevice->getCommandPool(),
 	                                            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 	                                            .commandBufferCount = static_cast<u32>(mVkCommandBuffers.size())};
 
 
-	VK_CHECK(vkAllocateCommandBuffers(mVkDevice.getDevice(), &allocInfo, mVkCommandBuffers.data()));
+	VK_CHECK(vkAllocateCommandBuffers(mVkDevice->getDevice(), &allocInfo, mVkCommandBuffers.data()));
 }
 
 
 void VkEngineRenderer::freeCommandBuffers() const {
-	vkResetCommandPool(mVkDevice.getDevice(), mVkDevice.getCommandPool(), 0);
+	vkResetCommandPool(mVkDevice->getDevice(), mVkDevice->getCommandPool(), 0);
 }
 
 void VkEngineRenderer::recreateSwapChain() {
-	auto extent = mVkWindow.getExtent();
+	auto extent = mVkWindow->getExtent();
 
 	while (extent.width == 0 || extent.height == 0) {
-		extent = mVkWindow.getExtent();
+		extent = mVkWindow->getExtent();
 		glfwWaitEvents();
 	}
 
-	VK_CHECK(vkDeviceWaitIdle(mVkDevice.getDevice()));
+	VK_CHECK(vkDeviceWaitIdle(mVkDevice->getDevice()));
 
 	if (mVkSwapChain == nullptr) {
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent);
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(*mVkDevice, extent);
 	} else {
 		const std::shared_ptr oldSwapChain = std::move(mVkSwapChain);
-		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, oldSwapChain);
+		mVkSwapChain = std::make_unique<VkEngineSwapChain>(*mVkDevice, extent, oldSwapChain);
 
 		if (!oldSwapChain->compareSwapFormats(*mVkSwapChain)) {
 			throw std::runtime_error("Swap chain image format has changed!");
@@ -94,8 +94,8 @@ void VkEngineRenderer::endFrame() {
 
 
 	if (const VkResult result = mVkSwapChain->submitCommandBuffers(&commandBuffer, &mCurrentImage);
-	    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mVkWindow.wasWindowResized()) {
-		mVkWindow.resetWindowResizedFlag();
+	    result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || mVkWindow->wasWindowResized()) {
+		mVkWindow->resetWindowResizedFlag();
 		recreateSwapChain();
 
 	} else if (result != VK_SUCCESS) {
