@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
-
 #include <memory>
 
 #include "engine_device.hpp"
@@ -75,6 +73,7 @@ class VkEngineSwapChain {
 	[[nodiscard]] VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) const;
 
 	std::shared_ptr<VkEngineDevice> mDevice{};
+	DeletionQueue mDeletionQueue{};
 
 	VkRenderPass pRenderPass = VK_NULL_HANDLE;
 	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;

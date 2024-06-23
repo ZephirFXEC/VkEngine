@@ -26,15 +26,18 @@ using Tag = enum Tag : u8 {
 struct MemoryStats {
 	std::atomic<u64> totalAllocated{};
 	std::array<std::atomic<u64>, MEMORY_TAG_COUNT> tagAllocated{};
+	u32 allocCount = 0;
 
 	void add(const u64 size, const Tag tag) {
 		totalAllocated.fetch_add(size, std::memory_order::relaxed);
 		tagAllocated.at(tag).fetch_add(size, std::memory_order::relaxed);
+		allocCount++;
 	}
 
 	void remove(const u64 size, const Tag tag) {
 		totalAllocated.fetch_sub(size, std::memory_order::relaxed);
 		tagAllocated.at(tag).fetch_sub(size, std::memory_order::relaxed);
+		allocCount--;
 	}
 
 	void reset() {
@@ -128,6 +131,7 @@ class Memory : NO_COPY_NOR_MOVE {
 		}
 
 		fmt::print("\r{}", memoryUsage);
+		fmt::print("\n{}", mMemoryStats.allocCount);
 	}
 
    private:

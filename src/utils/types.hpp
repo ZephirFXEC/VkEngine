@@ -6,10 +6,8 @@
 
 #include <vk_mem_alloc.h>
 
-#include <array>
-#include <deque>
+#include <functional>
 #include <optional>
-#include <string>
 #include <vector>
 
 
@@ -23,6 +21,37 @@ using u64 = uint64_t;
 using i64 = int64_t;
 using f32 = float;
 using f64 = double;
+
+
+struct DeletionQueue {
+	using DeletorFunc = void (*)(void*);
+
+	struct Deletor {
+		void* callable;
+		DeletorFunc call;
+
+		Deletor(void* c, const DeletorFunc f) : callable(c), call(f) {}
+	};
+
+	template <typename Callable>
+	void push_function(Callable&& function) {
+		deletors.emplace_back(new std::decay_t<Callable>(std::forward<Callable>(function)), [](void* c) {
+			auto callable = static_cast<std::decay_t<Callable>*>(c);
+			(*callable)();
+			delete callable;
+		});
+	}
+
+	void flush() {
+		for (auto it = deletors.rbegin(); it != deletors.rend(); ++it) {
+			it->call(it->callable);
+		}
+		deletors.clear();
+	}
+
+   private:
+	std::vector<Deletor> deletors;
+};
 
 
 // User defined types
@@ -56,10 +85,10 @@ struct NO_COPY_NOR_MOVE {
 
 
 struct SyncPrimitives : NO_COPY_NOR_MOVE {
-	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppImageAvailableSemaphores{};  // Semaphores for image availability
-	std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> ppRenderFinishedSemaphores{};  // Semaphores for render finishing
-	std::array<VkFence, MAX_FRAMES_IN_FLIGHT> ppInFlightFences{};                // Fences for in-flight operations
-	VkFence* ppInFlightImages = nullptr;                                         // Fences for in-flight images
+	VkSemaphore ppImageAvailableSemaphores[MAX_FRAMES_IN_FLIGHT];  // Semaphores for image availability
+	VkSemaphore ppRenderFinishedSemaphores[MAX_FRAMES_IN_FLIGHT];  // Semaphores for render finishing
+	VkFence ppInFlightFences[MAX_FRAMES_IN_FLIGHT];                // Fences for in-flight operations
+	VkFence* ppInFlightImages = nullptr;
 };
 
 
@@ -82,13 +111,4 @@ struct QueueFamilyIndices {
 	std::optional<u32> mPresentFamily{};
 
 	[[nodiscard]] bool isComplete() const { return mGraphicsFamily.has_value() && mPresentFamily.has_value(); }
-};
-
-
-struct AllocatedImage {
-	VkImage pImage;
-	VkImageView pImageView;
-	VmaAllocation pAllocation;
-	VkExtent3D mImageExtent;
-	VkFormat mImageFormat;
 };

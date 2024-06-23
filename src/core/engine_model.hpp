@@ -12,6 +12,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <span>
+#include <utils/memory.hpp>
 
 #include "engine_buffer.hpp"
 
@@ -38,6 +39,15 @@ class VkEngineModel {
 		std::span<const Vertex> pVertices;
 		std::span<const u32> pIndices;
 		void loadModel(const std::string& filepath);
+
+		~MeshData() {
+			if (!pVertices.empty()) {
+				Memory::freeMemory(pVertices.data(), pVertices.size(), MEMORY_TAG_ENGINE);
+			}
+			if (!pIndices.empty()) {
+				Memory::freeMemory(pIndices.data(), pIndices.size(), MEMORY_TAG_ENGINE);
+			}
+		}
 	};
 
 	VkEngineModel(std::shared_ptr<VkEngineDevice> device, const MeshData& meshData);
@@ -48,14 +58,15 @@ class VkEngineModel {
 	VkEngineModel& operator=(const VkEngineModel&) = delete;
 	VkEngineModel(VkEngineModel&&) = default;  // Enable move semantics
 
-	static std::unique_ptr<VkEngineModel> createModelFromFile(std::shared_ptr<VkEngineDevice> device, const std::string& filepath);
+	static std::unique_ptr<VkEngineModel> createModelFromFile(std::shared_ptr<VkEngineDevice> device,
+	                                                          const std::string& filepath);
 	void bind(const VkCommandBuffer* commandBuffer) const;
 	void draw(const VkCommandBuffer* commandBuffer) const;
 
    private:
 	template <typename T>
 	void createVkBuffer(const std::span<const T>& data, VkBufferUsageFlags usageDst,
-					   std::unique_ptr<VkEngineBuffer>& buffer);
+	                    std::unique_ptr<VkEngineBuffer>& buffer);
 
 
 	void createVertexBuffers(const std::span<const Vertex>& vertices);

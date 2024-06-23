@@ -29,8 +29,7 @@ struct std::hash<vke::VkEngineModel::Vertex> {
 namespace vke {
 
 VkEngineModel::VkEngineModel(std::shared_ptr<VkEngineDevice> device, const MeshData& meshData)
-
-    : mIndexCount{meshData.pIndices.size()}, mDevice{std::move(device)} {
+    : mDevice{std::move(device)}, mIndexCount{meshData.pIndices.size()} {
 	createIndexBuffers(meshData.pIndices);
 	createVertexBuffers(meshData.pVertices);
 }

@@ -1,4 +1,8 @@
 #define VMA_IMPLEMENTATION
+#define VMA_STATIC_VULKAN_FUNCTIONS 0
+#define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
+#define VMA_VULKAN_VERSION 1003000
+
 #include "engine_device.hpp"
 
 #include <vulkan/vulkan_core.h>
@@ -97,41 +101,16 @@ VkEngineDevice::VkEngineDevice(std::shared_ptr<VkEngineWindow> window) : pWindow
 VkEngineDevice::~VkEngineDevice() {
 	VKINFO("Destroyed device");
 
+	vkDeviceWaitIdle(pDevice);
+
 	pCommandBufferPool.cleanUp();
 
-	// Destroy the command pool
-	if (pCommandPool != VK_NULL_HANDLE) {
-		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
-		pCommandPool = VK_NULL_HANDLE;
-	}
-
-	// Destroy the allocator
-	if (pAllocator != VK_NULL_HANDLE) {
-		vmaDestroyAllocator(pAllocator);
-		pAllocator = VK_NULL_HANDLE;
-	}
+	mDeletionQueue.flush();
 
 	// Destroy the Vulkan device
 	if (pDevice != VK_NULL_HANDLE) {
 		vkDestroyDevice(pDevice, nullptr);
 		pDevice = VK_NULL_HANDLE;
-	}
-
-	// Optionally destroy the debug messenger if validation layers are enabled
-	if (enableValidationLayers) {
-		DestroyDebugUtilsMessengerEXT(&pInstance, &pDebugMessenger, nullptr);
-	}
-
-	// Destroy the surface
-	if (pSurface != VK_NULL_HANDLE) {
-		vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
-		pSurface = VK_NULL_HANDLE;
-	}
-
-	// Destroy the Vulkan instance
-	if (pInstance != VK_NULL_HANDLE) {
-		vkDestroyInstance(pInstance, nullptr);
-		pInstance = VK_NULL_HANDLE;
 	}
 }
 
@@ -163,6 +142,7 @@ void VkEngineDevice::createDescriptorPools() {
 	                                           .pPoolSizes = pool_sizes.data()};
 
 	VK_CHECK(vkCreateDescriptorPool(pDevice, &pool_info, nullptr, &pDescriptorPool));
+	mDeletionQueue.push_function([this]() { vkDestroyDescriptorPool(pDevice, pDescriptorPool, nullptr); });
 }
 
 void VkEngineDevice::createInstance() {
@@ -205,6 +185,7 @@ void VkEngineDevice::createInstance() {
 	}
 
 	VK_CHECK(vkCreateInstance(&createInfo, nullptr, &pInstance));
+	mDeletionQueue.push_function([this]() { vkDestroyInstance(pInstance, nullptr); });
 
 	hasGflwRequiredInstanceExtensions();
 	Memory::freeMemory(extensions, extensionCount, MEMORY_TAG_VULKAN);
@@ -294,6 +275,7 @@ void VkEngineDevice::createLogicalDevice() {
 	}
 
 	VK_CHECK(vkCreateDevice(pPhysicalDevice, &createInfo, nullptr, &pDevice));
+	mDeletionQueue.push_function([this]() { vkDestroyDevice(pDevice, nullptr); });
 
 	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mGraphicsFamily.value(), 0, &pGraphicsQueue);
 	vkGetDeviceQueue(pDevice, findQueueFamilies(&pPhysicalDevice).mPresentFamily.value(), 0, &pPresentQueue);
@@ -308,7 +290,7 @@ void VkEngineDevice::createAllocator() {
 	};
 
 	const VmaAllocatorCreateInfo allocatorInfo{
-	    .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+	    .flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT,
 	    .physicalDevice = pPhysicalDevice,
 	    .device = pDevice,
 	    .pVulkanFunctions = &vulkanFunctions,
@@ -317,10 +299,14 @@ void VkEngineDevice::createAllocator() {
 	};
 
 	VK_CHECK(vmaCreateAllocator(&allocatorInfo, &pAllocator));
+	mDeletionQueue.push_function([this]() { vmaDestroyAllocator(pAllocator); });
 }
 
 
-void VkEngineDevice::createSurface() { pWindow->createWindowSurface(&pInstance, &pSurface); }
+void VkEngineDevice::createSurface() {
+	pWindow->createWindowSurface(&pInstance, &pSurface);
+	mDeletionQueue.push_function([this]() { vkDestroySurfaceKHR(pInstance, pSurface, nullptr); });
+}
 
 bool VkEngineDevice::isDeviceSuitable(const VkPhysicalDevice* const device) const {
 	const QueueFamilyIndices indices = findQueueFamilies(device);
@@ -362,6 +348,7 @@ void VkEngineDevice::setupDebugMessenger() {
 	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
 	populateDebugMessengerCreateInfo(createInfo);
 	VK_CHECK(CreateDebugUtilsMessengerEXT(&pInstance, &createInfo, nullptr, &pDebugMessenger));
+	mDeletionQueue.push_function([this]() { DestroyDebugUtilsMessengerEXT(&pInstance, &pDebugMessenger, nullptr); });
 }
 
 bool VkEngineDevice::checkValidationLayerSupport() const {

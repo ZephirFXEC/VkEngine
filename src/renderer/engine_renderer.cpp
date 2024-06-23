@@ -14,10 +14,7 @@ VkEngineRenderer::VkEngineRenderer(std::shared_ptr<VkEngineDevice> device, std::
 	createCommandBuffers();
 }
 
-VkEngineRenderer::~VkEngineRenderer() {
-	VKINFO("Destroying Renderer");
-	freeCommandBuffers();
-}
+VkEngineRenderer::~VkEngineRenderer() { VKINFO("Destroying Renderer"); }
 
 void VkEngineRenderer::createCommandBuffers() {
 	const VkCommandBufferAllocateInfo allocInfo{.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -27,12 +24,13 @@ void VkEngineRenderer::createCommandBuffers() {
 
 
 	VK_CHECK(vkAllocateCommandBuffers(mVkDevice->getDevice(), &allocInfo, mVkCommandBuffers.data()));
+	mVkDevice->getDeletionQueue().push_function([device = mVkDevice, commandBuffers = mVkCommandBuffers] {
+		vkResetCommandPool(device->getDevice(), device->getCommandPool(), 0);
+	});
 }
 
 
-void VkEngineRenderer::freeCommandBuffers() const {
-	vkResetCommandPool(mVkDevice->getDevice(), mVkDevice->getCommandPool(), 0);
-}
+void VkEngineRenderer::freeCommandBuffers() const {}
 
 void VkEngineRenderer::recreateSwapChain() {
 	auto extent = mVkWindow->getExtent();
@@ -51,13 +49,15 @@ void VkEngineRenderer::recreateSwapChain() {
 		mVkSwapChain = std::make_unique<VkEngineSwapChain>(mVkDevice, extent, oldSwapChain);
 
 		if (!oldSwapChain->compareSwapFormats(*mVkSwapChain)) {
-			throw std::runtime_error("Swap chain image format has changed!");
+			VKERROR("Swap chain image format has changed!");
 		}
 	}
 }
 
 VkCommandBuffer VkEngineRenderer::beginFrame() {
-	assert(!isFrameStarted && "Can't call beginFrame while frame is in progress.");
+	if (isFrameStarted) {
+		VKERROR("Can't call beginFrame while frame is in progress.");
+	}
 
 	const VkResult result = mVkSwapChain->acquireNextImage(&mCurrentImage);
 
@@ -67,7 +67,7 @@ VkCommandBuffer VkEngineRenderer::beginFrame() {
 	}
 
 	if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-		throw std::runtime_error("Failed to acquire swap chain image!");
+		VKERROR("Failed to acquire swap chain image!");
 	}
 
 	isFrameStarted = true;
@@ -79,7 +79,7 @@ VkCommandBuffer VkEngineRenderer::beginFrame() {
 	};
 
 	if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-		throw std::runtime_error("Failed to begin recording command buffer!");
+		VKERROR("Failed to begin recording command buffer!");
 	}
 
 	return commandBuffer;
@@ -89,7 +89,7 @@ void VkEngineRenderer::endFrame() {
 	assert(isFrameStarted && "Can't call endFrame while frame is not in progress");
 	auto* const commandBuffer = getCurrentCommandBuffer();
 	if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to record command buffer!");
+		VKERROR("failed to record command buffer!");
 	}
 
 
@@ -99,7 +99,7 @@ void VkEngineRenderer::endFrame() {
 		recreateSwapChain();
 
 	} else if (result != VK_SUCCESS) {
-		throw std::runtime_error("failed to present swap chain image!");
+		VKERROR("failed to present swap chain image!");
 	}
 
 
@@ -109,7 +109,7 @@ void VkEngineRenderer::endFrame() {
 
 
 void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) const {
-	std::array<VkClearValue, 2> clearValues{};
+	VkClearValue clearValues[2]{};
 	clearValues[0].color = {{0.0f, 0.0f, 0.0f, 0.0f}};
 	clearValues[1].depthStencil = {1.0f, 0};
 
@@ -118,8 +118,8 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 	    .renderPass = mVkSwapChain->getRenderPass(),
 	    .framebuffer = mVkSwapChain->getFrameBuffer(mCurrentImage),
 	    .renderArea = {.offset = {0, 0}, .extent = mVkSwapChain->getSwapChainExtent()},
-	    .clearValueCount = static_cast<u32>(clearValues.size()),
-	    .pClearValues = clearValues.data(),
+	    .clearValueCount = 2,
+	    .pClearValues = clearValues,
 	};
 
 	const VkViewport viewport{
@@ -143,20 +143,27 @@ void VkEngineRenderer::beginSwapChainRenderPass(const VkCommandBuffer* const com
 }
 
 VkCommandBuffer VkEngineRenderer::getCurrentCommandBuffer() const {
-	assert(isFrameStarted && "Cannot get command buffer when frame not in progress.");
+	if (!isFrameStarted) {
+		VKERROR("Cannot get command buffer when frame not in progress.");
+	}
 	return mVkCommandBuffers[mCurrentFrame];
 }
 
 u32 VkEngineRenderer::getFrameIndex() const {
-	assert(isFrameStarted && "Cannot get frame index when frame not in progress.");
+	if (!isFrameStarted) {
+		VKERROR("Cannot get frame index when frame not in progress.");
+	}
 	return mCurrentFrame;
 }
 
 void VkEngineRenderer::endSwapChainRenderPass(const VkCommandBuffer* const commandBuffer) const {
-	assert(isFrameStarted && "Cannot end render pass when frame is not in progress.");
+	if (!isFrameStarted) {
+		VKERROR("Cannot end render pass when frame not in progress.");
+	}
 
-	assert(*commandBuffer == getCurrentCommandBuffer() &&
-	       "Can only end the render pass on the currently active command buffer!");
+	if (*commandBuffer != getCurrentCommandBuffer()) {
+		VKERROR("Can only end the render pass on the currently active command buffer!");
+	}
 
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *commandBuffer);
 	vkCmdEndRenderPass(*commandBuffer);

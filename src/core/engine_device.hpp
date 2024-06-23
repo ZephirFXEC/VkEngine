@@ -71,9 +71,9 @@ class VkCommandBufferPool {
 	void cleanUp() const {
 		if (pDevice && pCommandPool) {
 			std::lock_guard<std::mutex> lock(bufferMutex);
-			for (VkCommandBuffer cmd : pCommandBuffers) {
-				vkFreeCommandBuffers(*pDevice, *pCommandPool, 1, &cmd);
-			}
+
+			vkDestroyCommandPool(*pDevice, *pCommandPool, nullptr);
+
 			pCommandBuffers.clear();
 		}
 	}
@@ -113,6 +113,7 @@ class VkEngineDevice {
 	[[nodiscard]] const VkPhysicalDevice& getPhysicalDevice() const { return pPhysicalDevice; }
 	[[nodiscard]] const VkDescriptorPool& getDescriptorPool() const { return pDescriptorPool; }
 	[[nodiscard]] const VkCommandPool& getCommandPool() const { return pCommandPool; }
+	[[nodiscard]] DeletionQueue& getDeletionQueue() { return mDeletionQueue; }
 
 
 	[[nodiscard]] SwapChainSupportDetails getSwapChainSupport() const {
@@ -175,6 +176,7 @@ class VkEngineDevice {
 
 	const std::shared_ptr<VkEngineWindow> pWindow{};
 	VkDevice pDevice = VK_NULL_HANDLE;
+	DeletionQueue mDeletionQueue{};
 
 	VmaAllocator pAllocator = VK_NULL_HANDLE;
 	VkCommandBufferPool pCommandBufferPool{};
